@@ -36,13 +36,3 @@
 | **Real-time** | Socket.io |
 | **Security** | JWT, Bcrypt, Dotenv |
 
----
-
-## ⚙️ Installation & Setup
-
-Follow these steps to get the project running locally:
-
-### 1. Clone the Repository
-```bash
-git clone [https://github.com/Nothing138/Game-Routes.git](https://github.com/Nothing138/Game-Routes.git)
-cd SNJ-Global-Routes
