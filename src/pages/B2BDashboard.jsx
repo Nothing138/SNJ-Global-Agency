@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 // ─── API CONFIG ───────────────────────────────────────────────────────────────
-const API_BASE        = 'http://localhost:5000';
+const API_BASE        = 'http://snj-global-agency-production.up.railway.app';
 const AUTO_REFRESH_MS = 10_000;
 
 // ─── REGION MAPPER ────────────────────────────────────────────────────────────

@@ -12,7 +12,7 @@ const ManageRecruiters = () => {
 
     const fetchPending = async () => {
         try {
-            const res = await axios.get('http://localhost:5000/api/admin/pending-recruiters');
+            const res = await axios.get('http://snj-global-agency-production.up.railway.app/api/admin/pending-recruiters');
             setRecruiters(Array.isArray(res.data) ? res.data : []);
         } catch (error) {
             console.error("Error fetching data:", error);
@@ -32,7 +32,7 @@ const ManageRecruiters = () => {
         }).then(async (result) => {
             if (result.isConfirmed) {
                 try {
-                    const res = await axios.put(`http://localhost:5000/api/admin/approve-recruiter/${id}`);
+                    const res = await axios.put(`http://snj-global-agency-production.up.railway.app/api/admin/approve-recruiter/${id}`);
                     
                     if (res.data.success) {
                         Swal.fire({

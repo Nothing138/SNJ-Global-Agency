@@ -36,7 +36,7 @@ const B2BPartnerList = () => {
     const fetchB2B = useCallback(async () => {
         setLoading(true);
         try {
-            const res = await axios.get(`http://localhost:5000/api/b2b/list`, {
+            const res = await axios.get(`http://snj-global-agency-production.up.railway.app/api/b2b/list`, {
                 params: {
                     page,
                     limit,
@@ -97,7 +97,7 @@ const B2BPartnerList = () => {
 
         if (result.isConfirmed) {
             try {
-                const response = await axios.put(`http://localhost:5000/api/b2b/status/${id}`, { status: newStatus });
+                const response = await axios.put(`http://snj-global-agency-production.up.railway.app/api/b2b/status/${id}`, { status: newStatus });
                 if (response.data.success) {
                     Swal.fire({
                         icon: 'success',
@@ -129,7 +129,7 @@ const B2BPartnerList = () => {
 
         if (result.isConfirmed) {
             try {
-                await axios.delete(`http://localhost:5000/api/b2b/${id}`);
+                await axios.delete(`http://snj-global-agency-production.up.railway.app/api/b2b/${id}`);
                 fetchB2B();
             } catch (err) {
                 Swal.fire('Error', 'Deletion failed', 'error');

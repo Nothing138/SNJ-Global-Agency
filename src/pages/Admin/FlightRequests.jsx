@@ -9,7 +9,7 @@ const FlightRequests = () => {
 
     const fetchData = async () => {
         try {
-            const res = await axios.get('http://localhost:5000/api/admin/flight-requests');
+            const res = await axios.get('http://snj-global-agency-production.up.railway.app/api/admin/flight-requests');
             setRequests(res.data);
         } catch (err) { console.error(err); }
         setLoading(false);
@@ -50,7 +50,7 @@ const FlightRequests = () => {
 
     const updateStatus = async (id, status, cost) => {
         try {
-            await axios.patch(`http://localhost:5000/api/admin/flight-requests/${id}/status`, { status, total_cost: cost });
+            await axios.patch(`http://snj-global-agency-production.up.railway.app/api/admin/flight-requests/${id}/status`, { status, total_cost: cost });
             Swal.fire({
                 title: 'Success',
                 text: `Flight request ${status}ed`,

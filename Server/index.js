@@ -115,7 +115,9 @@ io.on('connection', (socket) => {
 // Simple Route for Testing
 app.get('/', (req, res) => res.send('🚀 GAME ROUTES Backend with Socket.io is Running...'));
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 8080;
 
 // ⚠️ MONEROBA: app.listen er poriborte server.listen hobe
-server.listen(PORT, () => console.log(`🔥 Server started on port ${PORT}`));
+server.listen(PORT, '0.0.0.0', () => {
+    console.log(`🔥 Server started on port ${PORT}`);
+});

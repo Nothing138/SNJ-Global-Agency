@@ -9,7 +9,7 @@ const BlogList = () => {
 
     const fetchBlogs = async () => {
         try {
-            const res = await axios.get('http://localhost:5000/api/admin/blogs');
+            const res = await axios.get('http://snj-global-agency-production.up.railway.app/api/admin/blogs');
             setBlogs(res.data);
         } catch (err) { console.error(err); }
     };
@@ -50,7 +50,7 @@ const BlogList = () => {
         }).then(async (result) => {
             if (result.isConfirmed) {
                 try {
-                    await axios.put(`http://localhost:5000/api/admin/blogs/${blog.id}`, result.value);
+                    await axios.put(`http://snj-global-agency-production.up.railway.app/api/admin/blogs/${blog.id}`, result.value);
                     const Toast = Swal.mixin({
                         toast: true,
                         position: 'top-end',
@@ -77,7 +77,7 @@ const BlogList = () => {
             customClass: { popup: 'rounded-none shadow-2xl' }
         }).then(async (result) => {
             if (result.isConfirmed) {
-                await axios.delete(`http://localhost:5000/api/admin/blogs/${id}`);
+                await axios.delete(`http://snj-global-agency-production.up.railway.app/api/admin/blogs/${id}`);
                 fetchBlogs();
                 Swal.fire('Deleted!', '', 'success');
             }

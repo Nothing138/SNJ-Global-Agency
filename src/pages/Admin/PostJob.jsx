@@ -20,7 +20,7 @@ const PostJob = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const url = "http://localhost:5000/api/admin/jobs/post"; 
+            const url = "http://snj-global-agency-production.up.railway.app/api/admin/jobs/post"; 
             const response = await axios.post(url, jobData, {
                 headers: { 'admin-secret-key': 'JM_IT_GLOBAL_SECURE_KEY_2024' }
             });

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 
 // ─── Config ───────────────────────────────────────────────────────────────────
-const API_BASE = "http://localhost:5000/api";
+const API_BASE = "http://snj-global-agency-production.up.railway.app/api";
 const AUTO_REFRESH_INTERVAL = 10000; // 10 seconds
 
 // ─── Status Config ────────────────────────────────────────────────────────────
@@ -88,7 +88,7 @@ export default function AdminWorkerRequests() {
     else { setLoading(true); setError(null); }
 
     try {
-      const res = await fetch(`http://localhost:5000/api/worker-requests`, {
+      const res = await fetch(`http://snj-global-agency-production.up.railway.app/api/worker-requests`, {
         headers: { "Content-Type": "application/json" },
       });
 
@@ -207,7 +207,7 @@ export default function AdminWorkerRequests() {
     setUpdating(true);
     setUpdateMsg(null);
     try {
-      const res  = await fetch(`http://localhost:5000/api/worker-requests/${selected.id}`, {
+      const res  = await fetch(`http://snj-global-agency-production.up.railway.app/api/worker-requests/${selected.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(updateForm),

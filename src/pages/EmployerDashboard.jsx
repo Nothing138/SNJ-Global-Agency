@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 // ─── Config ────────────────────────────────────────────────────────────────────
-const API_BASE = 'http://localhost:5000/api';
+const API_BASE = 'http://snj-global-agency-production.up.railway.app/api';
 const REFRESH_INTERVAL = 30000;
 
 // ─── API Helper ────────────────────────────────────────────────────────────────

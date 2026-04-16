@@ -17,7 +17,7 @@ const AppliedCandidates = () => {
     const fetchData = async () => {
         setLoading(true);
         try {
-            const res = await axios.get('http://localhost:5000/api/admin/applied-candidates');
+            const res = await axios.get('http://snj-global-agency-production.up.railway.app/api/admin/applied-candidates');
             setApplicants(res.data);
             setFilteredData(res.data);
         } catch (err) { 
@@ -52,7 +52,7 @@ const AppliedCandidates = () => {
 
     const updateStatus = async (id, newStatus) => {
         try {
-            await axios.patch(`http://localhost:5000/api/admin/applications/${id}/status`, { status: newStatus });
+            await axios.patch(`http://snj-global-agency-production.up.railway.app/api/admin/applications/${id}/status`, { status: newStatus });
             const Toast = Swal.mixin({ 
                 toast: true, 
                 position: 'top-end', 
@@ -79,7 +79,7 @@ const AppliedCandidates = () => {
         }).then(async (result) => {
             if (result.isConfirmed) {
                 try {
-                    await axios.delete(`http://localhost:5000/api/admin/applications/${id}`);
+                    await axios.delete(`http://snj-global-agency-production.up.railway.app/api/admin/applications/${id}`);
                     fetchData();
                 } catch (err) { Swal.fire('Error', 'Delete failed', 'error'); }
             }
@@ -183,7 +183,7 @@ const AppliedCandidates = () => {
 
                         {/* Action Buttons */}
                         <div className="flex items-center gap-2 w-full lg:w-auto justify-end">
-                            <a href={`http://localhost:5000${app.resume_url}`} target="_blank" rel="noreferrer" 
+                            <a href={`http://snj-global-agency-production.up.railway.app${app.resume_url}`} target="_blank" rel="noreferrer" 
                                className="p-3 text-slate-400 hover:text-[#0B1F3A] hover:bg-slate-50 transition-all" title="View Dossier">
                                 <FileText size={20}/>
                             </a>

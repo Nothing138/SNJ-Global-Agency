@@ -10,7 +10,7 @@ import {
     EyeOff, XCircle,
 } from 'lucide-react';
 
-const API = 'http://localhost:5000/api/b2b';
+const API = 'http://snj-global-agency-production.up.railway.app/api/b2b';
 
 // ── Per-service config ────────────────────────────────────────
 const SERVICE_CONFIG = {

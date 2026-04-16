@@ -5,7 +5,7 @@ import EmojiPicker from 'emoji-picker-react';
 import { motion } from 'framer-motion';
 import { Send, Smile, User, Search, MoreVertical, CheckCheck } from 'lucide-react';
 
-const socket = io("http://localhost:5000");
+const socket = io("http://snj-global-agency-production.up.railway.app");
 
 const Inbox = () => {
     const [users, setUsers] = useState([]);
@@ -19,7 +19,7 @@ const Inbox = () => {
 
     useEffect(() => {
         const fetchChatList = async () => {
-            const res = await axios.get("http://localhost:5000/api/messages/chat-list");
+            const res = await axios.get("http://snj-global-agency-production.up.railway.app/api/messages/chat-list");
             setUsers(res.data.users);
         };
         fetchChatList();
@@ -31,7 +31,7 @@ const Inbox = () => {
             socket.emit("join_chat", { room });
 
             const fetchHistory = async () => {
-                const res = await axios.get(`http://localhost:5000/api/messages/history/${adminId}/${selectedUser.id}`);
+                const res = await axios.get(`http://snj-global-agency-production.up.railway.app/api/messages/history/${adminId}/${selectedUser.id}`);
                 setMessages(res.data.messages);
             };
             fetchHistory();
@@ -63,7 +63,7 @@ const Inbox = () => {
         };
 
         socket.emit("send_message", messageData);
-        await axios.post("http://localhost:5000/api/messages/send", messageData);
+        await axios.post("http://snj-global-agency-production.up.railway.app/api/messages/send", messageData);
 
         setNewMessage("");
         setShowEmoji(false);

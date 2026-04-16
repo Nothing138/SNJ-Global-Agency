@@ -7,7 +7,7 @@ import {
   Image as ImageIcon, CheckCircle, Plus
 } from 'lucide-react';
 
-const API_BASE = "http://localhost:5000";
+const API_BASE = "http://snj-global-agency-production.up.railway.app";
 
 const TestimonyManagement = () => {
   // --- States ---

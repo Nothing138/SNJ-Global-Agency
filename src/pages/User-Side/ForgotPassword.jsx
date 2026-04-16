@@ -17,7 +17,7 @@ const ForgotPassword = () => {
         e.preventDefault();
         setLoading(true);
         try {
-            const res = await axios.post('http://localhost:5000/api/admin/check-user', { email });
+            const res = await axios.post('http://snj-global-agency-production.up.railway.app/api/admin/check-user', { email });
             if (res.data.exists) {
                 setUserExists(true);
                 Swal.fire({ icon: 'success', title: 'User Found', text: 'Now set your new password.', timer: 1500, showConfirmButton: false, background: '#0f172a', color: '#fff' });
@@ -37,7 +37,7 @@ const ForgotPassword = () => {
         }
         setLoading(true);
         try {
-            await axios.put('http://localhost:5000/api/admin/reset-password-direct', { email, newPassword });
+            await axios.put('http://snj-global-agency-production.up.railway.app/api/admin/reset-password-direct', { email, newPassword });
             Swal.fire({
                 icon: 'success',
                 title: 'Success!',

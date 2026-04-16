@@ -41,7 +41,7 @@ const Flight = () => {
             setIsLoggedIn(true);
             setUser(storedUser);
             
-            axios.get(`http://localhost:5000/api/user-details/${storedUser.id}`)
+            axios.get(`http://snj-global-agency-production.up.railway.app/api/user-details/${storedUser.id}`)
                 .then(res => {
                     const data = res.data;
                     setFormData(prev => ({
@@ -86,7 +86,7 @@ const Flight = () => {
         try {
             const response = await axios({
                 method: 'post',
-                url: 'http://localhost:5000/api/flight-request',
+                url: 'http://snj-global-agency-production.up.railway.app/api/flight-request',
                 data: { ...formData, user_id: user?.id },
                 timeout: 5000 
             });
