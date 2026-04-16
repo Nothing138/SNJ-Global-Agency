@@ -1,0 +1,125 @@
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+@keyframes logo-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+.card { padding: 2em; }
+.read-the-docs { color: #888; }
+
+/* ============================================================
+   --- GLOBAL GOOGLE TRANSLATE FIXES (Premium UI Patch) ---
+   ============================================================ */
+
+/* ১. পেজের উপরে গুগল যে গ্যাপ তৈরি করে সেটা চিরতরে বন্ধ করা */
+html, body {
+    top: 0 !important;
+    position: static !important;
+}
+
+/* ২. গুগলের সব ধরণের ব্যানার, টুলবার এবং পপআপ হাইড করা */
+iframe.skiptranslate, 
+iframe.goog-te-banner-frame,
+.goog-te-banner-frame, 
+#goog-gt-tt, 
+.goog-te-balloon-frame,
+#goog-gt-m,
+#goog-gt-s,
+.goog-te-spinner-pos {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+}
+
+/* ৩. অরিজিনাল গুগল এলিমেন্টগুলোকে ড্রপডাউন থেকে লুকানো */
+#google_translate_element,
+.goog-te-gadget {
+    display: none !important;
+}
+
+.goog-te-combo {
+    position: absolute !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    z-index: -1000 !important;
+}
+
+/* ৪. ট্রান্সলেশনের পর অটো-হাইলাইট বা নীল বর্ডার বন্ধ করা */
+.goog-text-highlight {
+    background-color: transparent !important;
+    box-shadow: none !important;
+    box-decoration-break: clone !important;
+}
+
+/* ৫. টেক্সট ট্রান্সলেট হওয়ার পর গুগলের ফন্ট স্টাইল ওভাররাইড করা */
+font {
+    background-color: transparent !important;
+    box-shadow: none !important;
+    color: inherit !important;
+    font-family: inherit !important;
+    font-size: inherit !important;
+}
+
+/* ৬. ল্যাঙ্গুয়েজ ফ্ল্যাগ এবং ড্রপডাউন স্টাইলিং */
+.language-flag {
+    font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+    font-size: 1.2rem;
+}
+
+/* গ্লাস মরফিজম ইফেক্ট (আপনার ডার্ক মোড নাভবারের জন্য) */
+.lang-dropdown-shadow {
+    background: rgba(15, 23, 42, 0.95) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(212, 175, 55, 0.2); /* আপনার গোল্ডেন কালারের হালকা বর্ডার */
+}
+
+/* কাস্টম প্রিমিয়াম স্ক্রলবার (ড্রপডাউনের জন্য) */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 5px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #D4AF37; /* গোল্ডেন স্ক্রলবার */
+    border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #f1cf6d;
+}
+
+/* পেজ ট্রানজিশন স্মুথ করার জন্য */
+body font {
+    transition: opacity 0.3s ease-in-out;
+}

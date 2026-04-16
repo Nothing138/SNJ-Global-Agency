@@ -1,0 +1,28 @@
+@import "tailwindcss";
+
+/* Tailwind v4 e Dark Mode manual selector set kora */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  /* Tomar existig theme config */
+  --color-primary: #1a73e8;
+  --color-secondary: #ff4d4d;
+  
+  @keyframes shimmer {
+    from { background-position: 200% 0; }
+    to { background-position: -200% 0; }
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 3s infinite linear;
+}
+
+/* Optional: Body color transition smooth korar jonno */
+body {
+  @apply bg-white text-slate-900 transition-colors duration-300;
+}
+
+.dark body {
+  @apply bg-slate-950 text-white;
+}

@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/company_logo.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GlobalRoutes - Official Portal</title>
+
+  <script type="text/javascript">
+    function googleTranslateElementInit() {
+      new google.translate.TranslateElement({
+        pageLanguage: 'en',
+        includedLanguages: 'en,az,bn,ar,ur,de,fr,es,pl,mt,id,ms,af,sw,tr',
+        autoDisplay: false
+      }, 'google_translate_element');
+    }
+
+    function changeLanguage(langCode) {
+      // ১. প্রথমে চেক করি ড্রপডাউনটা তৈরি হয়েছে কি না
+      const checkSelect = setInterval(() => {
+        const selectField = document.querySelector(".goog-te-combo");
+        
+        if (selectField) {
+          clearInterval(checkSelect); // ড্রপডাউন পাওয়া গেছে, তাই লুপ বন্ধ
+          selectField.value = langCode;
+          selectField.dispatchEvent(new Event('change'));
+        }
+      }, 100); // প্রতি ১০০ মিলিসেকেন্ড পর পর চেক করবে
+
+      // ৫ সেকেন্ডের বেশি সময় নিলে লুপ বন্ধ করে দেবে (Safety)
+      setTimeout(() => clearInterval(checkSelect), 5000);
+    }
+  </script>
+
+  <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+    <style>
+      /* Google-er baje top bar/banner hide korar jonno */
+      .goog-te-banner-frame.skiptranslate {
+        display: none !important;
+      }
+      body {
+        top: 0px !important;
+      }
+      /* Original combo box ke hide kora kintu DOM-e rakha jate React pay */
+      .goog-te-combo {
+        opacity: 0 !important;
+        position: absolute !important;
+        z-index: -1000 !important;
+        pointer-events: none !important;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="google_translate_element" style="position: absolute; opacity: 0; pointer-events: none;"></div>
+    
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
