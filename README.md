@@ -1,16 +1,48 @@
-# React + Vite
+# 🌍 SNJ Global Routes
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**SNJ Global Routes** is a professional, high-performance web platform designed to streamline international travel, visa processing, and global citizenship programs. It serves as a unified ecosystem for B2B partners, employers, and clients to manage global mobility efficiently.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🚀 Core Features
 
-## React Compiler
+### 🏢 Employer & B2B Management
+- **Multi-Step Registration:** Secure onboarding for employers with OTP email verification.
+- **Verification Workflow:** Integrated system for trade license, business registration, and ID verification.
+- **Task Assignment:** Admin capability to assign specific visa or travel tasks to B2B partners.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### 🛂 Global Mobility Services
+- **Visa Referral System:** Comprehensive management of visa types and requirements.
+- **Citizenship Programs:** Dedicated modules for global residency and second citizenship data.
+- **Travel Packages:** Customizable B2B and B2C pricing for international tour packages.
 
-## Expanding the ESLint configuration
+### 💬 Real-Time Connectivity
+- **Instant Messaging:** Real-time chat between administrators and partners powered by **Socket.io**.
+- **Live Notifications:** Stay updated with announcement systems and task status changes.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### 📊 Advanced Dashboard
+- **Analytics:** Visual data representation for tracking sales, tasks, and partner performance.
+- **Status Tracking:** Automated triggers to track application progress from 'Pending' to 'Completed'.
+
+---
+
+## 🛠️ Technology Stack
+
+| Layer | Technology |
+| :--- | :--- |
+| **Frontend** | React.js, Tailwind CSS, Framer Motion, Lucide Icons |
+| **Backend** | Node.js, Express.js |
+| **Database** | MySQL (MariaDB) |
+| **Real-time** | Socket.io |
+| **Security** | JWT, Bcrypt, Dotenv |
+
+---
+
+## ⚙️ Installation & Setup
+
+Follow these steps to get the project running locally:
+
+### 1. Clone the Repository
+```bash
+git clone [https://github.com/Nothing138/Game-Routes.git](https://github.com/Nothing138/Game-Routes.git)
+cd SNJ-Global-Routes
