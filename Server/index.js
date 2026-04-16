@@ -13,7 +13,7 @@ const server = http.createServer(app);
 // --- Socket.io Initializing ---
 const io = new Server(server, {
     cors: {
-        origin: "http://localhost:5173", // Tomar frontend URL
+        origin: "*", // Tomar frontend URL
         credentials: true,
         methods: ["GET", "POST"]
     }
@@ -21,7 +21,10 @@ const io = new Server(server, {
 
 
 // Middleware
-app.use(cors());
+app.use(cors({
+    origin: "https://snj-global-agency.vercel.app", 
+    credentials: true
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
