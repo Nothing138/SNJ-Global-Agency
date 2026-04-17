@@ -9,7 +9,7 @@ const {
     getPricing,
     getFiles,
     updateFileStatus,
-} = require('../controllers/b2bdashboardController'); // adjust path if needed
+} = require('../controllers/B2bdashboardcontroller'); // adjust path if needed
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  JWT Auth Middleware
