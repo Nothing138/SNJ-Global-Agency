@@ -5,7 +5,7 @@ import Navbar from '../../components/Navbar';
 import io from 'socket.io-client';
 import { toast, Toaster } from 'react-hot-toast';
 
-const socket = io.connect("http://snj-global-agency-production.up.railway.app");
+const socket = io.connect("https://snj-global-agency-backend.onrender.com");
 
 const UserProfile = () => {
     const [data, setData] = useState(null);
@@ -24,7 +24,7 @@ const UserProfile = () => {
 
     const fetchProfile = async () => {
         try {
-            const res = await axios.get(`http://snj-global-agency-production.up.railway.app/api/users/profile/${user.id}`);
+            const res = await axios.get(`https://snj-global-agency-backend.onrender.com/api/users/profile/${user.id}`);
             setData(res.data);
         } catch (err) {
             console.error("Error fetching data", err);
@@ -37,7 +37,7 @@ const UserProfile = () => {
         
         setIsSubmittingContact(true);
         try {
-            await axios.put(`http://snj-global-agency-production.up.railway.app/api/users/profile/update`, {
+            await axios.put(`https://snj-global-agency-backend.onrender.com/api/users/profile/update`, {
                 userId: user.id,
                 contact_number: newContact,
                 full_name: data?.profile?.full_name 
@@ -289,7 +289,7 @@ const SecuritySettings = ({ user }) => {
         if (passwords.new !== passwords.confirm) return toast.error("Passwords mismatch!");
         setLoading(true);
         try {
-            await axios.put(`http://snj-global-agency-production.up.railway.app/api/users/change-password`, {
+            await axios.put(`https://snj-global-agency-backend.onrender.com/api/users/change-password`, {
                 userId: user.id, oldPassword: passwords.old, newPassword: passwords.new
             });
             toast.success("Security updated!");
@@ -332,7 +332,7 @@ const SupportChat = ({ user }) => {
     useEffect(() => {
         const fetchMessages = async () => {
             try {
-                const res = await axios.get(`http://snj-global-agency-production.up.railway.app/api/users/messages/${user.id}`);
+                const res = await axios.get(`https://snj-global-agency-backend.onrender.com/api/users/messages/${user.id}`);
                 setHistory(res.data);
             } catch (err) {}
         };
@@ -350,7 +350,7 @@ const SupportChat = ({ user }) => {
         if (!msg.trim()) return;
         const chatData = { sender_id: user.id, receiver_id: 1, message: msg };
         try {
-            await axios.post('http://snj-global-agency-production.up.railway.app/api/users/messages/send', chatData);
+            await axios.post('https://snj-global-agency-backend.onrender.com/api/users/messages/send', chatData);
             socket.emit("send_message", chatData);
             setHistory(prev => [...prev, { ...chatData, created_at: new Date() }]);
             setMsg("");

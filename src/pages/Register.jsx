@@ -28,7 +28,7 @@ const Register = () => {
 
     // Google Login Logic (Mockup for UI)
     const handleGoogleLogin = () => {
-        window.location.href = 'http://snj-global-agency-production.up.railway.app/api/auth/google'; // আপনার ব্যাকএন্ডের গুগল পাথ
+        window.location.href = 'https://snj-global-agency-backend.onrender.com/api/auth/google'; // আপনার ব্যাকএন্ডের গুগল পাথ
     };
 
     const handleSendOtp = async () => {
@@ -43,7 +43,7 @@ const Register = () => {
         setLoading(true);
         try {
             // Note: ব্যাকএন্ডে অবশ্যই 'SNJ Global Routes Agency' হিসেবে ইমেইল কনফিগার করবেন
-            const res = await axios.post('http://snj-global-agency-production.up.railway.app/api/verify/send-otp', { email: formData.email });
+            const res = await axios.post('https://snj-global-agency-backend.onrender.com/api/verify/send-otp', { email: formData.email });
             if (res.data.success) {
                 setIsOtpSent(true);
                 setTimer(60);
@@ -67,7 +67,7 @@ const Register = () => {
         
         setLoading(true);
         try {
-            const res = await axios.post('http://snj-global-agency-production.up.railway.app/api/verify/register', formData);
+            const res = await axios.post('https://snj-global-agency-backend.onrender.com/api/verify/register', formData);
             if (res.data.success) {
                 Swal.fire({ 
                     icon: 'success', 

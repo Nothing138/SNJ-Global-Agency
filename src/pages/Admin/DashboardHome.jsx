@@ -14,7 +14,7 @@ const DashboardHome = () => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const res = await axios.get('http://snj-global-agency-production.up.railway.app/api/admin/dashboard-stats');
+        const res = await axios.get('https://snj-global-agency-backend.onrender.com/api/admin/dashboard-stats');
         setStatsData(res.data);
         setLoading(false);
       } catch (err) {

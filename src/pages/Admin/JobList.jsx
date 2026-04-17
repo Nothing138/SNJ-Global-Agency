@@ -10,7 +10,7 @@ const JobList = () => {
 
     const fetchJobs = async () => {
         try {
-            const res = await axios.get("http://snj-global-agency-production.up.railway.app/api/admin/jobs/all", {
+            const res = await axios.get("https://snj-global-agency-backend.onrender.com/api/admin/jobs/all", {
                 headers: { 'admin-secret-key': 'JM_IT_GLOBAL_SECURE_KEY_2026' }
             });
             setJobs(res.data.jobs);
@@ -32,7 +32,7 @@ const JobList = () => {
         });
 
         if (confirm.isConfirmed) {
-            await axios.delete(`http://snj-global-agency-production.up.railway.app/api/admin/jobs/delete/${id}`, {
+            await axios.delete(`https://snj-global-agency-backend.onrender.com/api/admin/jobs/delete/${id}`, {
                 headers: { 'admin-secret-key': 'JM_IT_GLOBAL_SECURE_KEY_2026' }
             });
             Swal.fire('Deleted!', 'Job removed successfully.', 'success');
@@ -43,7 +43,7 @@ const JobList = () => {
     const toggleStatus = async (job) => {
         const newStatus = job.status === 'active' ? 'close' : 'active';
         try {
-            await axios.put(`http://snj-global-agency-production.up.railway.app/api/admin/jobs/update/${job.id}`, 
+            await axios.put(`https://snj-global-agency-backend.onrender.com/api/admin/jobs/update/${job.id}`, 
                 { ...job, status: newStatus },
                 { headers: { 'admin-secret-key': 'JM_IT_GLOBAL_SECURE_KEY_2026' } }
             );
@@ -54,7 +54,7 @@ const JobList = () => {
     const handleUpdateSubmit = async (e) => {
         e.preventDefault();
         try {
-            await axios.put(`http://snj-global-agency-production.up.railway.app/api/admin/jobs/update/${editingJob.id}`, 
+            await axios.put(`https://snj-global-agency-backend.onrender.com/api/admin/jobs/update/${editingJob.id}`, 
                 editingJob,
                 { headers: { 'admin-secret-key': 'JM_IT_GLOBAL_SECURE_KEY_2026' } }
             );

@@ -28,7 +28,7 @@ const ApplyTours = () => {
   useEffect(() => {
     const fetchUserDetails = async () => {
       try {
-        const res = await axios.get(`http://snj-global-agency-production.up.railway.app/api/user-travel/user-info/${user.id}`);
+        const res = await axios.get(`https://snj-global-agency-backend.onrender.com/api/user-travel/user-info/${user.id}`);
         if (res.data.success) {
           const d = res.data.data;
           setFormData(prev => ({
@@ -80,7 +80,7 @@ const ApplyTours = () => {
     }
 
     try {
-      const res = await axios.post('http://snj-global-agency-production.up.railway.app/api/user-travel/apply-tour', {
+      const res = await axios.post('https://snj-global-agency-backend.onrender.com/api/user-travel/apply-tour', {
         ...formData,
         user_id: user.id,
         package_id: id

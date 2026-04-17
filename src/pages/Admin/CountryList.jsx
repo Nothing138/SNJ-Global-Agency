@@ -18,8 +18,8 @@ const CountryList = () => {
 
     const fetchData = async () => {
         try {
-            const countryRes = await axios.get('http://snj-global-agency-production.up.railway.app/api/admin/visa-countries');
-            const categoryRes = await axios.get('http://snj-global-agency-production.up.railway.app/api/admin/visa-categories');
+            const countryRes = await axios.get('https://snj-global-agency-backend.onrender.com/api/admin/visa-countries');
+            const categoryRes = await axios.get('https://snj-global-agency-backend.onrender.com/api/admin/visa-categories');
             setCountries(countryRes.data);
             setCategories(categoryRes.data);
         } catch (err) { console.error(err); }
@@ -36,7 +36,7 @@ const CountryList = () => {
         if (file) data.append('image', file);
 
         try {
-            await axios.post('http://snj-global-agency-production.up.railway.app/api/admin/visa-countries', data, {
+            await axios.post('https://snj-global-agency-backend.onrender.com/api/admin/visa-countries', data, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
             Swal.fire({ 
@@ -56,7 +56,7 @@ const CountryList = () => {
     const handleToggleTop = async (id, currentStatus) => {
         try {
             const newStatus = currentStatus === 1 ? 0 : 1;
-            await axios.put(`http://snj-global-agency-production.up.railway.app/api/admin/visa-countries/toggle-top/${id}`, { is_top: newStatus });
+            await axios.put(`https://snj-global-agency-backend.onrender.com/api/admin/visa-countries/toggle-top/${id}`, { is_top: newStatus });
             fetchData();
         } catch (err) { console.error(err); }
     };
@@ -64,7 +64,7 @@ const CountryList = () => {
     const toggleStatus = async (country) => {
         const newStatus = country.status === 'active' ? 'inactive' : 'active';
         try {
-            await axios.put(`http://snj-global-agency-production.up.railway.app/api/admin/visa-countries/status/${country.id}`, { status: newStatus });
+            await axios.put(`https://snj-global-agency-backend.onrender.com/api/admin/visa-countries/status/${country.id}`, { status: newStatus });
             fetchData();
         } catch (err) { console.error(err); }
     };
@@ -80,7 +80,7 @@ const CountryList = () => {
             confirmButtonText: 'CONFIRM'
         }).then(async (res) => {
             if (res.isConfirmed) {
-                await axios.delete(`http://snj-global-agency-production.up.railway.app/api/admin/visa-countries/${id}`);
+                await axios.delete(`https://snj-global-agency-backend.onrender.com/api/admin/visa-countries/${id}`);
                 fetchData();
             }
         });
@@ -194,7 +194,7 @@ const CountryList = () => {
 
                         <div className="h-64 w-full relative overflow-hidden shrink-0">
                             {country.image_url ? (
-                                <img src={`http://snj-global-agency-production.up.railway.app${country.image_url}`} className="w-full h-full object-cover grayscale-[40%] group-hover:grayscale-0 transition-all duration-1000 group-hover:scale-105" alt={country.country_name} />
+                                <img src={`https://snj-global-agency-backend.onrender.com${country.image_url}`} className="w-full h-full object-cover grayscale-[40%] group-hover:grayscale-0 transition-all duration-1000 group-hover:scale-105" alt={country.country_name} />
                             ) : (
                                 <div className="w-full h-full bg-[#0B1F3A] flex items-center justify-center text-white italic opacity-20 text-xl tracking-widest">NO ASSET</div>
                             )}

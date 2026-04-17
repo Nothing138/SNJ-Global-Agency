@@ -10,7 +10,7 @@ const RecruiterManager = () => {
 
     const fetchRecruiters = async () => {
         try {
-            const res = await axios.get('http://snj-global-agency-production.up.railway.app/api/admin/recruiters/manage');
+            const res = await axios.get('https://snj-global-agency-backend.onrender.com/api/admin/recruiters/manage');
             setRecruiters(res.data);
         } catch (err) { console.error(err); }
     };
@@ -29,7 +29,7 @@ const RecruiterManager = () => {
             confirmButtonText: `Yes, ${actionText}`
         }).then(async (result) => {
             if (result.isConfirmed) {
-                await axios.patch(`http://snj-global-agency-production.up.railway.app/api/admin/recruiters/${id}/status`, { status });
+                await axios.patch(`https://snj-global-agency-backend.onrender.com/api/admin/recruiters/${id}/status`, { status });
                 Swal.fire('Updated!', `Recruiter status is now ${status}.`, 'success');
                 fetchRecruiters();
             }
@@ -47,7 +47,7 @@ const RecruiterManager = () => {
             confirmButtonText: 'Delete Permanently'
         }).then(async (result) => {
             if (result.isConfirmed) {
-                await axios.delete(`http://snj-global-agency-production.up.railway.app/api/admin/recruiters/${id}`);
+                await axios.delete(`https://snj-global-agency-backend.onrender.com/api/admin/recruiters/${id}`);
                 fetchRecruiters();
             }
         });

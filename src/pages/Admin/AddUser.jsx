@@ -8,7 +8,7 @@ const AddUser = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            await axios.post('http://snj-global-agency-production.up.railway.app/api/auth/register', formData);
+            await axios.post('https://snj-global-agency-backend.onrender.com/api/auth/register', formData);
             alert("New User Added Successfully!");
         } catch (err) {
             alert("Error adding user!");

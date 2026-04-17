@@ -11,7 +11,7 @@ const AnnouncementManager = () => {
 
     const fetchAnnouncements = async () => {
         try {
-            const res = await axios.get("http://snj-global-agency-production.up.railway.app/api/announcements/all");
+            const res = await axios.get("https://snj-global-agency-backend.onrender.com/api/announcements/all");
             setAnnouncements(res.data.announcements);
             setLoading(false);
         } catch (err) { console.error(err); }
@@ -22,7 +22,7 @@ const AnnouncementManager = () => {
     const handleCreate = async () => {
         if (!content.trim()) return;
         try {
-            await axios.post("http://snj-global-agency-production.up.railway.app/api/announcements/save", {
+            await axios.post("https://snj-global-agency-backend.onrender.com/api/announcements/save", {
                 content,
                 is_active: isActive ? 1 : 0
             });
@@ -44,7 +44,7 @@ const AnnouncementManager = () => {
     const toggleStatus = async (id, currentStatus) => {
         try {
             const newStatus = currentStatus === 1 ? 0 : 1;
-            await axios.put(`http://snj-global-agency-production.up.railway.app/api/announcements/toggle/${id}`, { is_active: newStatus });
+            await axios.put(`https://snj-global-agency-backend.onrender.com/api/announcements/toggle/${id}`, { is_active: newStatus });
             fetchAnnouncements();
         } catch (err) { console.error(err); }
     };
@@ -63,7 +63,7 @@ const AnnouncementManager = () => {
         });
 
         if (result.isConfirmed) {
-            await axios.delete(`http://snj-global-agency-production.up.railway.app/api/announcements/${id}`);
+            await axios.delete(`https://snj-global-agency-backend.onrender.com/api/announcements/${id}`);
             fetchAnnouncements();
             Swal.fire('Deleted!', 'Announcement removed.', 'success');
         }

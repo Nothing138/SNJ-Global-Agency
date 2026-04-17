@@ -11,7 +11,7 @@ const StaffManager = () => {
 
     const fetchMembers = async () => {
         try {
-            const res = await axios.get('http://snj-global-agency-production.up.railway.app/api/staff/all-members');
+            const res = await axios.get('https://snj-global-agency-backend.onrender.com/api/staff/all-members');
             setMembers(res.data);
         } catch (err) { 
             console.error("Fetch Error:", err); 
@@ -44,7 +44,7 @@ const StaffManager = () => {
         }).then(async (result) => {
             if (result.isConfirmed) {
                 try {
-                    await axios.delete(`http://snj-global-agency-production.up.railway.app/api/staff/delete/${id}`);
+                    await axios.delete(`https://snj-global-agency-backend.onrender.com/api/staff/delete/${id}`);
                     Swal.fire('Deactivated!', 'Authority Revoked successfully.', 'success');
                     fetchMembers();
                 } catch (err) { Swal.fire('Error', 'Action failed', 'error'); }
@@ -55,7 +55,7 @@ const StaffManager = () => {
     const toggleStatus = async (id, currentStatus) => {
         const newStatus = currentStatus === 'approved' ? 'suspended' : 'approved';
         try {
-            await axios.put(`http://snj-global-agency-production.up.railway.app/api/staff/update-status/${id}`, { status: newStatus });
+            await axios.put(`https://snj-global-agency-backend.onrender.com/api/staff/update-status/${id}`, { status: newStatus });
             fetchMembers();
             Swal.fire({ title: 'System Synced', icon: 'success', timer: 800, showConfirmButton: false });
         } catch (err) { Swal.fire('Error', 'Update failed', 'error'); }
@@ -65,7 +65,7 @@ const StaffManager = () => {
         e.preventDefault();
         setLoading(true);
         try {
-            await axios.post('http://snj-global-agency-production.up.railway.app/api/auth/register', { ...formData, status: 'approved', registeredBy: 'superadmin' });
+            await axios.post('https://snj-global-agency-backend.onrender.com/api/auth/register', { ...formData, status: 'approved', registeredBy: 'superadmin' });
             Swal.fire('Success', `${formData.role.replace('_', ' ').toUpperCase()} Appointed!`, 'success');
             setShowForm(false);
             fetchMembers();

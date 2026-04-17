@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import Swal from 'sweetalert2';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://snj-global-agency-production.up.railway.app';
+const API_BASE = import.meta.env.VITE_API_URL || 'https://snj-global-agency-backend.onrender.com';
 
 const fmt = (n) => Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2 });
 

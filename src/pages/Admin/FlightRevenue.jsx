@@ -11,7 +11,7 @@ const FlightRevenue = () => {
     const fetchAnalytics = async () => {
         try {
             setLoading(true);
-            const res = await axios.get(`http://snj-global-agency-production.up.railway.app/api/admin/flight-analytics?range=${range}`);
+            const res = await axios.get(`https://snj-global-agency-backend.onrender.com/api/admin/flight-analytics?range=${range}`);
             setData(res.data);
         } catch (err) {
             console.error("Error fetching analytics:", err);

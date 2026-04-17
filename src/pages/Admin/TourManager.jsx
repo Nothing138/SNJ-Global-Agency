@@ -13,7 +13,7 @@ const TourManager = () => {
         description: '', itinerary: '', inclusions: '', exclusions: '' 
     });
 
-    const BASE_URL = "http://snj-global-agency-production.up.railway.app";
+    const BASE_URL = "https://snj-global-agency-backend.onrender.com";
 
     const fetchPackages = async () => {
         try {

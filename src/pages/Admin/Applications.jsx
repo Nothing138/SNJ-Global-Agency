@@ -11,7 +11,7 @@ const Applications = () => {
 
     const fetchData = async () => {
         try {
-            const res = await axios.get('http://snj-global-agency-production.up.railway.app/api/admin/visa-applications');
+            const res = await axios.get('https://snj-global-agency-backend.onrender.com/api/admin/visa-applications');
             setApps(res.data);
         } catch (err) {
             console.error("Fetch Error:", err);
@@ -55,7 +55,7 @@ const Applications = () => {
 
         if (formValues) {
             try {
-                await axios.put(`http://snj-global-agency-production.up.railway.app/api/admin/visa-applications/${app.id}`, formValues);
+                await axios.put(`https://snj-global-agency-backend.onrender.com/api/admin/visa-applications/${app.id}`, formValues);
                 Swal.fire({ title: 'Synced!', icon: 'success', confirmButtonColor: '#EAB308' });
                 fetchData();
             } catch (err) { Swal.fire('Error', 'Update failed', 'error'); }
@@ -75,7 +75,7 @@ const Applications = () => {
         }).then(async (result) => {
             if (result.isConfirmed) {
                 try {
-                    await axios.delete(`http://snj-global-agency-production.up.railway.app/api/admin/visa-applications/${id}`);
+                    await axios.delete(`https://snj-global-agency-backend.onrender.com/api/admin/visa-applications/${id}`);
                     fetchData();
                     Swal.fire('Deleted!', '', 'success');
                 } catch (err) { Swal.fire('Error', 'Delete failed', 'error'); }

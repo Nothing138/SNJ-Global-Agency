@@ -10,7 +10,7 @@ const Analytics = () => {
 
     const fetchData = async () => {
         try {
-            const res = await axios.get(`http://snj-global-agency-production.up.railway.app/api/admin/stats?filter=${filter}`);
+            const res = await axios.get(`https://snj-global-agency-backend.onrender.com/api/admin/stats?filter=${filter}`);
             if (res.data.success) setData(res.data);
         } catch (err) {
             console.error("Fetch Error:", err);

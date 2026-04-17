@@ -21,7 +21,7 @@ const ApplyVisa = () => {
     });
 
     useEffect(() => {
-        axios.get(`http://snj-global-agency-production.up.railway.app/api/visas`).then(res => {
+        axios.get(`https://snj-global-agency-backend.onrender.com/api/visas`).then(res => {
             setVisaInfo(res.data.find(v => v.id == visaId));
         });
     }, [visaId]);
@@ -66,7 +66,7 @@ const ApplyVisa = () => {
         if (passportFile) data.append('passport_file', passportFile);
 
         try {
-            const res = await axios.post('http://snj-global-agency-production.up.railway.app/api/visas/apply', data, {
+            const res = await axios.post('https://snj-global-agency-backend.onrender.com/api/visas/apply', data, {
                 headers: { 
                     'Content-Type': 'multipart/form-data',
                     'Authorization': `Bearer ${token}`

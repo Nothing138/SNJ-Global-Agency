@@ -8,7 +8,7 @@ const BookingManager = () => {
 
     const fetchBookings = async () => {
         try {
-            const res = await axios.get('http://snj-global-agency-production.up.railway.app/api/tours/bookings');
+            const res = await axios.get('https://snj-global-agency-backend.onrender.com/api/tours/bookings');
             setBookings(res.data);
         } catch (err) { console.error(err); }
     };
@@ -17,7 +17,7 @@ const BookingManager = () => {
 
     const handleStatus = async (id, status) => {
         try {
-            await axios.put(`http://snj-global-agency-production.up.railway.app/api/tours/update-booking/${id}`, { status });
+            await axios.put(`https://snj-global-agency-backend.onrender.com/api/tours/update-booking/${id}`, { status });
             Swal.fire({ 
                 title: `<span style="font-family: Times New Roman, serif;">Booking ${status}</span>`, 
                 icon: 'success', 

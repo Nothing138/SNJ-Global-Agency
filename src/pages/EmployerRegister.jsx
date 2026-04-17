@@ -10,7 +10,7 @@ import Swal from 'sweetalert2';
 import { useNavigate, Link } from 'react-router-dom';
 
 // ─── Config ───────────────────────────────────────────────────────────────────
-const API = 'http://snj-global-agency-production.up.railway.app/api';
+const API = 'https://snj-global-agency-backend.onrender.com/api';
 
 const INDUSTRIES = [
   'Manufacturing', 'Construction', 'Food & Beverage', 'Oil & Gas',

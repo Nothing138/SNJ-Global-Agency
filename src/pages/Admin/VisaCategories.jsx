@@ -10,7 +10,7 @@ const VisaCategories = () => {
 
     const fetchCats = async () => {
         try {
-            const res = await axios.get('http://snj-global-agency-production.up.railway.app/api/admin/visa-categories');
+            const res = await axios.get('https://snj-global-agency-backend.onrender.com/api/admin/visa-categories');
             setCategories(res.data);
         } catch (err) { console.error(err); }
     };
@@ -22,7 +22,7 @@ const VisaCategories = () => {
         e.preventDefault();
         if (!name.trim()) return;
         try {
-            const res = await axios.post('http://snj-global-agency-production.up.railway.app/api/admin/visa-categories', { category_name: name });
+            const res = await axios.post('https://snj-global-agency-backend.onrender.com/api/admin/visa-categories', { category_name: name });
             if (res.data.success) {
                 Swal.fire({ 
                     icon: 'success', 
@@ -52,7 +52,7 @@ const VisaCategories = () => {
         }).then(async (result) => {
             if (result.isConfirmed) {
                 try {
-                    const res = await axios.delete(`http://snj-global-agency-production.up.railway.app/api/admin/visa-categories/${id}`);
+                    const res = await axios.delete(`https://snj-global-agency-backend.onrender.com/api/admin/visa-categories/${id}`);
                     if (res.data.success) {
                         Swal.fire('Deleted!', 'Category has been removed.', 'success');
                         fetchCats();
@@ -78,7 +78,7 @@ const VisaCategories = () => {
         }).then(async (result) => {
             if (result.isConfirmed) {
                 try {
-                    const res = await axios.put(`http://snj-global-agency-production.up.railway.app/api/admin/visa-categories/${cat.id}`, { 
+                    const res = await axios.put(`https://snj-global-agency-backend.onrender.com/api/admin/visa-categories/${cat.id}`, { 
                         category_name: result.value 
                     });
                     if (res.data.success) {

@@ -67,7 +67,7 @@ const B2BRegister = () => {
     }
     setLoading(true);
     try {
-      const res = await axios.post('http://snj-global-agency-production.up.railway.app/api/b2b/send-otp', { email: formData.email });
+      const res = await axios.post('https://snj-global-agency-backend.onrender.com/api/b2b/send-otp', { email: formData.email });
       if (res.data.success) {
         setIsOtpSent(true);
         setTimer(60);
@@ -85,7 +85,7 @@ const B2BRegister = () => {
     if (!isOtpSent) return;
     setLoading(true);
     try {
-      const res = await axios.post('http://snj-global-agency-production.up.railway.app/api/b2b/register', formData);
+      const res = await axios.post('https://snj-global-agency-backend.onrender.com/api/b2b/register', formData);
       if (res.data.success) {
         Swal.fire({ icon: 'success', title: 'B2B Partner Registered!', text: 'Welcome to SNJ GlobalRoutes Partner Network.', timer: 2000, showConfirmButton: false });
         setTimeout(() => navigate('/login'), 2000);
