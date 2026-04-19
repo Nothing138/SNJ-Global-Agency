@@ -1,3 +1,4 @@
+//blog
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Calendar, ArrowRight, Sparkles, Clock, Hash, Zap, ChevronLeft, ChevronRight, Monitor } from 'lucide-react';

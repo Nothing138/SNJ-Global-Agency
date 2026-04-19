@@ -1,3 +1,4 @@
+//info section
 import React, { useState } from 'react';
 import { 
   MapPin, 

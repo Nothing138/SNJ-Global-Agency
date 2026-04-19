@@ -1,3 +1,4 @@
+//service area
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Globe, Search } from 'lucide-react';

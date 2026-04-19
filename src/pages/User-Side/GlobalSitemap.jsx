@@ -1,3 +1,4 @@
+//global site map
 import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion'; // Corrected import source

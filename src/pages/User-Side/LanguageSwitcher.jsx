@@ -1,3 +1,4 @@
+//language switcher
 import React, { useState } from 'react';
 import { Globe, ChevronDown } from 'lucide-react';
 

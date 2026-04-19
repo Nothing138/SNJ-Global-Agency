@@ -1,3 +1,4 @@
+//User side AboutSection .jsx
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Users, Headphones, Star, Building2, ArrowRight, ShieldCheck, Globe } from 'lucide-react';
