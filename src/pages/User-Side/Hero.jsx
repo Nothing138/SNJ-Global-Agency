@@ -38,7 +38,7 @@ const Hero = () => {
   ];
 
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-white pt-24 sm:pt-32 pb-12 font-['Times_New_Roman',_serif]">
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-white pt-30 sm:pt-32 pb-12 font-['Times_New_Roman',_serif]">
       
       {/* Background Glows */}
       <div className="absolute top-0 left-0 w-full h-full pointer-events-none">

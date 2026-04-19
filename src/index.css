@@ -1,5 +1,5 @@
 @import "tailwindcss";
-/*@import './style/responsive.css';*/
+@import './style/responsive.css';
 
 /* Tailwind v4 e Dark Mode manual selector set kora */
 @custom-variant dark (&:where(.dark, .dark *));
