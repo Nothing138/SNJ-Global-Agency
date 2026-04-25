@@ -7,7 +7,7 @@ import Footer from './components/Footer';
 import NotFound from './pages/NotFound';
 import Register from './pages/Register';
 import GlobalDisclaimer from './pages/User-Side/GlobalDisclaimer';
-
+import PaymentPage from './pages/PaymentPage.jsx';
 // Admin Pages
 import AdminLogin from './pages/Admin/AdminLogin';
 import DashboardHome from './pages/Admin/DashboardHome';
@@ -96,6 +96,14 @@ function App() {
         <Route element={<MainLayout />}>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/payment" element={<PaymentPage />} />
+          <Route path="/payment-success" element={
+            <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
+              <h2 className="text-3xl font-bold text-[#0B1F3A]">PAYMENT <span className="text-[#EAB308]">SUCCESSFUL!</span></h2>
+              <p className="mt-2 text-slate-500">Thank you for choosing SNJ Global Routes.</p>
+              <button onClick={() => window.location.href='/'} className="mt-6 bg-[#0B1F3A] text-white px-6 py-2 rounded-lg font-bold uppercase text-xs tracking-widest">Back to Home</button>
+            </div>
+          } />
           <Route path="/blogs/:slug" element={<BlogDetail />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/terms-engagement" element={<TermsConditions />} />

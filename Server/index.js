@@ -55,7 +55,7 @@ const employerRoutes = require('./routes/employerRoutes');
 const b2bDashboardRoutes = require('./routes/B2bdashboardroutes');
 const assignTaskRoutes = require('./routes/AssigntaskRoute');
 const b2bPricingRoutes = require('./routes/b2bPricingRoutes');
-//const adminworkerRequestRoutes = require("./routes/adminworkerRequestRoutes");
+const paymentRoutes = require('./routes/paymentRoutes');
 
 // ✅ Routes Registration
 app.use('/api/auth', authRoutes);
@@ -80,7 +80,7 @@ app.use('/api', employerRoutes);
 app.use('/api/b2b/pricing', b2bPricingRoutes);//app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 app.use('/api/b2b/dashboard', b2bDashboardRoutes);
 app.use('/api/admin', assignTaskRoutes);
-//app.use("/api/worker-requests", adminworkerRequestRoutes);
+app.use('/api/payment', paymentRoutes);
 
 // Static Folder for Images
 app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
