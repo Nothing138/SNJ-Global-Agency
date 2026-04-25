@@ -28,6 +28,3 @@ body {
   @apply bg-slate-950 text-white;
 }
 
-.stripe-button {
-    display: none !important;
-}

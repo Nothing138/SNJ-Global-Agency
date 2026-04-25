@@ -1726,6 +1726,10 @@ header nav {
   animation: snj-spin 0.7s linear infinite;
 }
 
+.stripe-button {
+    display: none !important;
+}
+
 @keyframes snj-spin {
   to { transform: rotate(360deg); }
 }
