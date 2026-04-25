@@ -28,20 +28,16 @@ body {
   @apply bg-slate-950 text-white;
 }
 
-/* ১. স্ট্রাইপের ডাইনামিক বাটন হাইড করার জন্য */
-.__privateStripeMetricsController, 
-iframe[name^="__privateStripeMetricsController"],
-#stripe-inspector-root,
-.stripe-inspector {
+#stripe-inspector-root, 
+.StripeInspector,
+.Stripe-Inspector,
+[data-stripe-inspector-root],
+iframe[name^="__privateStripeController"],
+iframe[src*="stripe.com"] + div[style*="z-index: 2147483647"] {
     display: none !important;
     visibility: hidden !important;
-    pointer-events: none !important;
     opacity: 0 !important;
+    pointer-events: none !important;
     width: 0 !important;
     height: 0 !important;
-}
-
-/* ২. আপনার স্ক্রিনশটে থাকা স্পেসিফিক প্যানেলটি হাইড করতে */
-div[class*="Stripe"] {
-    /* খেয়াল রাখবেন আপনার পেমেন্ট ফর্ম যেন হাইড না হয়, তাই শুধু ভাসমান এলিমেন্ট টার্গেট করছি */
 }

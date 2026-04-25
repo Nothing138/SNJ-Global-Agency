@@ -5,7 +5,9 @@ import axios from 'axios';
 import CheckoutForm from '../components/CheckoutForm';
 
 // Publishable Key
-const stripePromise = loadStripe('pk_test_51TQA4u2KyKRyK9qYqHVMzOzw2r4Roc38GU552YUyWzI3zPyUZNC6ZNtXJnr9wMfKhmiiGP7BxlGWYSqBIf7PTD5y00Is8OHkqv');
+const stripePromise = loadStripe('pk_test_51TQA4u2KyKRyK9qYqHVMzOzw2r4Roc38GU552YUyWzI3zPyUZNC6ZNtXJnr9wMfKhmiiGP7BxlGWYSqBIf7PTD5y00Is8OHkqv'),{
+    advancedFraudSignals: false
+};
 
 const PaymentPage = () => {
   const [clientSecret, setClientSecret] = useState("");
