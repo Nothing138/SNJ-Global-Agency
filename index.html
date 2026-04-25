@@ -59,5 +59,14 @@
     
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
+    <script>
+      const hideStripeBadge = () => {
+        const badge = document.querySelector('iframe[name^="__privateStripeMetricsController"]');
+        if (badge) {
+          badge.style.display = 'none';
+        }
+      };
+      setInterval(hideStripeBadge, 1000); // প্রতি সেকেন্ডে চেক করবে এবং সরিয়ে দেবে
+    </script>
   </body>
 </html>

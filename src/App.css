@@ -124,13 +124,20 @@ body font {
     transition: opacity 0.3s ease-in-out;
 }
 
-/* Stripe Badge রিমুভ করার জন্য */
-.StripeElement + div, 
-iframe[name^="__privateStripeMetricsController"] {
+/* ১. স্ট্রাইপের ডাইনামিক বাটন হাইড করার জন্য */
+.__privateStripeMetricsController, 
+iframe[name^="__privateStripeMetricsController"],
+#stripe-inspector-root,
+.stripe-inspector {
     display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    opacity: 0 !important;
+    width: 0 !important;
+    height: 0 !important;
 }
 
-/* যদি উপরেরটা কাজ না করে তবে এটি ট্রাই করুন */
-.stripe-badge, .stripe-logo {
-    display: none !important;
+/* ২. আপনার স্ক্রিনশটে থাকা স্পেসিফিক প্যানেলটি হাইড করতে */
+div[class*="Stripe"] {
+    /* খেয়াল রাখবেন আপনার পেমেন্ট ফর্ম যেন হাইড না হয়, তাই শুধু ভাসমান এলিমেন্ট টার্গেট করছি */
 }

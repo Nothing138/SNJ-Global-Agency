@@ -36,7 +36,7 @@ const PaymentPage = () => {
       borderRadius: '12px',
     },
   };
-  const options = { clientSecret, appearance };
+  const options = { clientSecret, appearance, loader: 'never'};
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center py-40 px-4 sm:px-6 lg:px-8">
