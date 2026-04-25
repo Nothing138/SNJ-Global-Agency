@@ -19,61 +19,60 @@ const WHITE  = '#FFFFFF';
 const LIGHT  = '#F8FAFC';
 
 /* ─────────────────────────────────────────────
-   INLINE STYLE HELPERS
+   INLINE STYLE HELPERS  — RESPONSIVE via clamp()
 ───────────────────────────────────────────── */
 const S = {
-  // Page shell
   page: {
     fontFamily: '"Times New Roman", serif',
     background: WHITE,
     color: GRAY,
   },
 
-  // Section wrappers
-  sectionWhite: { padding: '80px 0', background: WHITE },
-  sectionLight:  { padding: '80px 0', background: LIGHT },
-  sectionNavy:   { padding: '80px 0', background: NAVY },
+  // Responsive section wrappers
+  sectionWhite: { padding: 'clamp(40px, 8vw, 80px) 0', background: WHITE },
+  sectionLight:  { padding: 'clamp(40px, 8vw, 80px) 0', background: LIGHT },
+  sectionNavy:   { padding: 'clamp(40px, 8vw, 80px) 0', background: NAVY },
 
-  inner: { maxWidth: 1160, margin: '0 auto', padding: '0 32px' },
+  // Responsive inner container
+  inner: { maxWidth: 1160, margin: '0 auto', padding: '0 clamp(16px, 4vw, 32px)' },
 
-  // Typography
   h1: {
     fontFamily: '"Times New Roman", serif',
-    fontSize: 'clamp(40px, 6vw, 56px)',
+    fontSize: 'clamp(32px, 6vw, 56px)',
     fontWeight: 'bold',
     color: WHITE,
     lineHeight: 1.15,
   },
   h2Navy: {
     fontFamily: '"Times New Roman", serif',
-    fontSize: 'clamp(28px, 3.5vw, 34px)',
+    fontSize: 'clamp(22px, 3.5vw, 34px)',
     fontWeight: 'bold',
     color: NAVY2,
     lineHeight: 1.3,
   },
   h2White: {
     fontFamily: '"Times New Roman", serif',
-    fontSize: 'clamp(28px, 3.5vw, 34px)',
+    fontSize: 'clamp(22px, 3.5vw, 34px)',
     fontWeight: 'bold',
     color: WHITE,
     lineHeight: 1.3,
   },
   h3: {
     fontFamily: '"Times New Roman", serif',
-    fontSize: 28,
+    fontSize: 'clamp(20px, 2.5vw, 28px)',
     fontWeight: 'bold',
     color: NAVY2,
     marginBottom: 16,
   },
   body: {
     fontFamily: '"Times New Roman", serif',
-    fontSize: 17,
+    fontSize: 'clamp(15px, 1.6vw, 17px)',
     color: GRAY,
     lineHeight: 1.75,
   },
   bodyWhite: {
     fontFamily: '"Times New Roman", serif',
-    fontSize: 17,
+    fontSize: 'clamp(15px, 1.6vw, 17px)',
     color: 'rgba(255,255,255,0.78)',
     lineHeight: 1.75,
   },
@@ -104,10 +103,10 @@ const S = {
    REUSABLE: Section Header (centred)
 ───────────────────────────────────────────── */
 const SectionHeader = ({ label, title, titleColor = NAVY2, center = true }) => (
-  <div style={{ textAlign: center ? 'center' : 'left', marginBottom: 56 }}>
+  <div style={{ textAlign: center ? 'center' : 'left', marginBottom: 'clamp(32px, 5vw, 56px)' }}>
     <span style={S.label}>{label}</span>
     <h2 style={{ ...S.h2Navy, color: titleColor }}>{title}</h2>
-    <div style={{ ...S.dividerGold, ...(center ? { margin: '20px auto 0' } : {}) }} />
+    <div style={{ width: 56, height: 3, background: GOLD, borderRadius: 2, margin: center ? '20px auto 0' : '20px 0 0' }} />
   </div>
 );
 
@@ -118,7 +117,6 @@ const About = () => {
   useEffect(() => { window.scrollTo(0, 0); }, []);
   const [activeFaq, setActiveFaq] = useState(null);
 
-  /* ── Expansion timeline data ── */
   const timeline = [
     {
       year: 'Sep 2026',
@@ -140,7 +138,6 @@ const About = () => {
     },
   ];
 
-  /* ── Values ── */
   const values = [
     { icon: <ShieldCheck size={22} color={GOLD} />, title: 'Transparency', desc: 'No hidden fees, no false promises. Every process is explained clearly.' },
     { icon: <Scale size={22} color={GOLD} />,       title: 'Integrity',    desc: 'We do not promise visas. We guide honestly through legal, proven paths.' },
@@ -150,7 +147,6 @@ const About = () => {
     { icon: <Zap size={22} color={GOLD} />,         title: 'Awareness',    desc: 'We believe wrong decisions happen because better options are unknown.' },
   ];
 
-  /* ── FAQs ── */
   const faqs = [
     {
       q: 'What makes SNJ Global Routes different from other consultancies?',
@@ -170,15 +166,12 @@ const About = () => {
     },
   ];
 
-  /* ─── RENDER ─── */
   return (
     <>
       <Navbar />
       <div style={S.page}>
 
-        {/* ════════════════════════════════
-            HERO
-        ════════════════════════════════ */}
+        {/* ════════════ HERO ════════════ */}
         <section style={{
           position: 'relative',
           minHeight: '88vh',
@@ -188,24 +181,16 @@ const About = () => {
           overflow: 'hidden',
           background: NAVY,
         }}>
-          {/* Background image */}
           <img
             src="/src/assets/about us.jpg"
             alt="SNJ Global Routes"
-            style={{
-              position: 'absolute', inset: 0,
-              width: '100%', height: '100%',
-              objectFit: 'cover',
-              opacity: 0.32,
-            }}
+            loading="lazy"
+            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.32 }}
           />
-          {/* Gradient overlay */}
           <div style={{
             position: 'absolute', inset: 0,
             background: `linear-gradient(160deg, ${NAVY}E0 0%, ${NAVY}99 50%, ${NAVY}F0 100%)`,
           }} />
-
-          {/* Gold accent lines */}
           <div style={{
             position: 'absolute', top: 0, left: 0, right: 0,
             height: 4, background: `linear-gradient(90deg, transparent, ${GOLD}, transparent)`,
@@ -215,7 +200,7 @@ const About = () => {
             initial={{ opacity: 0, y: 36 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1.1, ease: 'easeOut' }}
-            style={{ position: 'relative', zIndex: 2, textAlign: 'center', padding: '0 32px', maxWidth: 860 }}
+            style={{ position: 'relative', zIndex: 2, textAlign: 'center', padding: '0 clamp(16px, 4vw, 32px)', maxWidth: 860 }}
           >
             <span style={S.label}>Est. 2024 · Bangladesh</span>
             <h1 style={S.h1}>
@@ -224,7 +209,7 @@ const About = () => {
                 Global Routes
               </span>
             </h1>
-            <p style={{ ...S.bodyWhite, maxWidth: 640, margin: '24px auto 0', fontSize: 18 }}>
+            <p style={{ ...S.bodyWhite, maxWidth: 640, margin: '24px auto 0', fontSize: 'clamp(15px, 2vw, 18px)' }}>
               Bridging the gap between capable people and global opportunities — through
               <em style={{ color: GOLD }}> transparency, honesty, and proper guidance.</em>
             </p>
@@ -233,12 +218,15 @@ const About = () => {
         </section>
 
 
-        {/* ════════════════════════════════
-            WHO WE ARE
-        ════════════════════════════════ */}
+        {/* ════════════ WHO WE ARE ════════════ */}
         <section style={S.sectionWhite}>
           <div style={S.inner}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 64, alignItems: 'center' }}>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(min(300px, 100%), 1fr))',
+              gap: 'clamp(32px, 5vw, 64px)',
+              alignItems: 'center',
+            }}>
 
               {/* Image block */}
               <motion.div
@@ -256,27 +244,31 @@ const About = () => {
                 <img
                   src="/src/assets/about us.jpg"
                   alt="Who We Are"
+                  loading="lazy"
+                  className="snj-about-img"
                   style={{
                     width: '100%',
-                    height: 520,
+                    height: 'clamp(280px, 45vw, 520px)',
                     objectFit: 'cover',
                     borderRadius: 32,
                     display: 'block',
                   }}
                 />
                 {/* Quote card */}
-                <div style={{
-                  position: 'absolute',
-                  bottom: 28, left: 28, right: 28,
-                  background: 'rgba(255,255,255,0.95)',
-                  backdropFilter: 'blur(8px)',
-                  borderRadius: 16,
-                  padding: '20px 24px',
-                  borderLeft: `4px solid ${GOLD}`,
-                }}>
+                <div
+                  className="snj-quote-card"
+                  style={{
+                    position: 'absolute',
+                    bottom: 28, left: 28, right: 28,
+                    background: 'rgba(255,255,255,0.95)',
+                    backdropFilter: 'blur(8px)',
+                    borderRadius: 16,
+                    padding: '20px 24px',
+                    borderLeft: `4px solid ${GOLD}`,
+                  }}>
                   <p style={{
                     fontFamily: '"Times New Roman", serif',
-                    fontSize: 15,
+                    fontSize: 'clamp(13px, 1.5vw, 15px)',
                     color: NAVY,
                     fontStyle: 'italic',
                     fontWeight: 'bold',
@@ -318,14 +310,15 @@ const About = () => {
         </section>
 
 
-        {/* ════════════════════════════════
-            OUR MISSION
-        ════════════════════════════════ */}
+        {/* ════════════ OUR MISSION ════════════ */}
         <section style={S.sectionLight}>
           <div style={S.inner}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 64, alignItems: 'center' }}>
-
-              {/* Text block */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(min(300px, 100%), 1fr))',
+              gap: 'clamp(32px, 5vw, 64px)',
+              alignItems: 'center',
+            }}>
               <motion.div
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -338,7 +331,6 @@ const About = () => {
                   <span style={S.goldItalic}>Transparent &amp; Honest</span>
                 </h2>
                 <div style={S.dividerGold} />
-
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
                   {[
                     `Our mission is to make global opportunities easier to access, more transparent, and more honest, while also reducing illegal migration and exploitation.`,
@@ -359,7 +351,11 @@ const About = () => {
                 viewport={{ once: true }}
                 transition={{ duration: 0.85, delay: 0.15 }}
               >
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(min(140px, 100%), 1fr))',
+                  gap: 20,
+                }}>
                   {[
                     { icon: <Globe size={28} color={GOLD} />,       label: 'Global Access',       sub: 'Opportunities for everyone' },
                     { icon: <ShieldCheck size={28} color={GOLD} />, label: 'Safe Pathways',        sub: 'Legal, clear, honest routes' },
@@ -371,28 +367,24 @@ const About = () => {
                     <div key={i} style={{
                       background: WHITE,
                       borderRadius: 16,
-                      padding: '24px 20px',
+                      padding: 'clamp(16px, 2.5vw, 24px) clamp(12px, 2vw, 20px)',
                       border: `1px solid #E2E8F0`,
                       borderBottom: `3px solid ${GOLD}`,
                     }}>
                       <div style={{ marginBottom: 12 }}>{item.icon}</div>
-                      <p style={{ fontFamily: '"Times New Roman", serif', fontSize: 14, fontWeight: 'bold', color: NAVY2, marginBottom: 4 }}>{item.label}</p>
-                      <p style={{ fontFamily: '"Times New Roman", serif', fontSize: 12, color: GRAY }}>{item.sub}</p>
+                      <p style={{ fontFamily: '"Times New Roman", serif', fontSize: 'clamp(12px, 1.5vw, 14px)', fontWeight: 'bold', color: NAVY2, marginBottom: 4 }}>{item.label}</p>
+                      <p style={{ fontFamily: '"Times New Roman", serif', fontSize: 'clamp(11px, 1.3vw, 12px)', color: GRAY }}>{item.sub}</p>
                     </div>
                   ))}
                 </div>
               </motion.div>
-
             </div>
           </div>
         </section>
 
 
-        {/* ════════════════════════════════
-            OUR VISION
-        ════════════════════════════════ */}
+        {/* ════════════ OUR VISION ════════════ */}
         <section style={{ ...S.sectionNavy, position: 'relative', overflow: 'hidden' }}>
-          {/* Subtle pattern */}
           <div style={{
             position: 'absolute', inset: 0,
             backgroundImage: `radial-gradient(circle at 20% 50%, ${GOLD}10 0%, transparent 50%), radial-gradient(circle at 80% 20%, ${GOLD}08 0%, transparent 40%)`,
@@ -405,8 +397,12 @@ const About = () => {
               titleColor={WHITE}
             />
 
-            {/* Vision paragraphs */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 24, marginBottom: 64 }}>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(min(280px, 100%), 1fr))',
+              gap: 24,
+              marginBottom: 'clamp(32px, 5vw, 64px)',
+            }}>
               {[
                 {
                   heading: 'The Platform We\'re Building',
@@ -432,12 +428,12 @@ const About = () => {
                     border: '1px solid rgba(255,255,255,0.12)',
                     borderTop: `3px solid ${GOLD}`,
                     borderRadius: 20,
-                    padding: '32px 28px',
+                    padding: 'clamp(20px, 3vw, 32px) clamp(16px, 2.5vw, 28px)',
                   }}
                 >
                   <h4 style={{
                     fontFamily: '"Times New Roman", serif',
-                    fontSize: 18,
+                    fontSize: 'clamp(15px, 1.8vw, 18px)',
                     fontWeight: 'bold',
                     color: GOLD,
                     fontStyle: 'italic',
@@ -453,11 +449,11 @@ const About = () => {
               background: 'rgba(255,255,255,0.04)',
               border: '1px solid rgba(255,255,255,0.10)',
               borderRadius: 24,
-              padding: '40px 36px',
+              padding: 'clamp(24px, 4vw, 40px) clamp(16px, 3vw, 36px)',
             }}>
               <h3 style={{
                 fontFamily: '"Times New Roman", serif',
-                fontSize: 22,
+                fontSize: 'clamp(16px, 2vw, 22px)',
                 fontWeight: 'bold',
                 color: WHITE,
                 marginBottom: 36,
@@ -465,30 +461,27 @@ const About = () => {
               }}>
                 Global Expansion Roadmap
               </h3>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 24 }}>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(min(240px, 100%), 1fr))',
+                gap: 24,
+              }}>
                 {timeline.map((phase, i) => (
                   <div key={i} style={{
                     background: 'rgba(255,255,255,0.05)',
                     borderRadius: 16,
-                    padding: '24px 20px',
+                    padding: 'clamp(16px, 2.5vw, 24px) clamp(12px, 2vw, 20px)',
                     borderLeft: `4px solid ${GOLD}`,
                   }}>
                     <span style={{
                       fontFamily: '"Times New Roman", serif',
-                      fontSize: 13,
-                      fontWeight: 'bold',
-                      color: GOLD,
-                      letterSpacing: 2,
-                      textTransform: 'uppercase',
-                      display: 'block',
-                      marginBottom: 8,
+                      fontSize: 13, fontWeight: 'bold', color: GOLD,
+                      letterSpacing: 2, textTransform: 'uppercase',
+                      display: 'block', marginBottom: 8,
                     }}>{phase.year}</span>
                     <p style={{
                       fontFamily: '"Times New Roman", serif',
-                      fontSize: 15,
-                      fontWeight: 'bold',
-                      color: WHITE,
-                      marginBottom: 16,
+                      fontSize: 15, fontWeight: 'bold', color: WHITE, marginBottom: 16,
                     }}>{phase.title}</p>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                       {phase.cities.map((city, j) => (
@@ -510,12 +503,11 @@ const About = () => {
                 ))}
               </div>
 
-              {/* 2030 stat bar */}
               <div style={{
                 marginTop: 32,
                 display: 'flex',
                 flexWrap: 'wrap',
-                gap: 24,
+                gap: 'clamp(12px, 3vw, 24px)',
                 justifyContent: 'center',
               }}>
                 {[
@@ -523,20 +515,16 @@ const About = () => {
                   { num: '6',   label: 'Cities — Phase 1 (2026)' },
                   { num: '3',   label: 'Continents in Year One' },
                 ].map((stat, i) => (
-                  <div key={i} style={{ textAlign: 'center', padding: '16px 32px' }}>
+                  <div key={i} style={{ textAlign: 'center', padding: 'clamp(10px, 2vw, 16px) clamp(16px, 3vw, 32px)' }}>
                     <p style={{
                       fontFamily: '"Times New Roman", serif',
-                      fontSize: 40,
-                      fontWeight: 'bold',
-                      color: GOLD,
-                      lineHeight: 1,
+                      fontSize: 'clamp(28px, 5vw, 40px)',
+                      fontWeight: 'bold', color: GOLD, lineHeight: 1,
                     }}>{stat.num}</p>
                     <p style={{
                       fontFamily: '"Times New Roman", serif',
-                      fontSize: 13,
-                      color: 'rgba(255,255,255,0.55)',
-                      marginTop: 8,
-                      letterSpacing: 1,
+                      fontSize: 13, color: 'rgba(255,255,255,0.55)',
+                      marginTop: 8, letterSpacing: 1,
                     }}>{stat.label}</p>
                   </div>
                 ))}
@@ -546,14 +534,15 @@ const About = () => {
         </section>
 
 
-        {/* ════════════════════════════════
-            OUR COMMITMENT
-        ════════════════════════════════ */}
+        {/* ════════════ OUR COMMITMENT ════════════ */}
         <section style={S.sectionWhite}>
           <div style={S.inner}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 64, alignItems: 'center' }}>
-
-              {/* Commitment text */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(min(300px, 100%), 1fr))',
+              gap: 'clamp(32px, 5vw, 64px)',
+              alignItems: 'center',
+            }}>
               <motion.div
                 initial={{ opacity: 0, x: -30 }}
                 whileInView={{ opacity: 1, x: 0 }}
@@ -566,15 +555,10 @@ const About = () => {
                   <span style={S.goldItalic}>to Sell Dreams.</span>
                 </h2>
                 <div style={S.dividerGold} />
-
-                <p style={{ ...S.body, marginBottom: 24 }}>
-                  We are not here to sell dreams.
-                </p>
+                <p style={{ ...S.body, marginBottom: 24 }}>We are not here to sell dreams.</p>
                 <p style={{ ...S.body, marginBottom: 24 }}>
                   We are here to make sure that when someone decides to take a step toward their future, they do it with the right information, a clear process, and someone they can rely on.
                 </p>
-
-                {/* Commitment pillars */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginTop: 32 }}>
                   {[
                     'Right information — always honest, always current.',
@@ -583,10 +567,8 @@ const About = () => {
                   ].map((point, i) => (
                     <div key={i} style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
                       <div style={{
-                        width: 28, height: 28, minWidth: 28,
-                        borderRadius: '50%',
-                        background: `${GOLD}18`,
-                        border: `2px solid ${GOLD}`,
+                        width: 28, height: 28, minWidth: 28, borderRadius: '50%',
+                        background: `${GOLD}18`, border: `2px solid ${GOLD}`,
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                       }}>
                         <CheckCircle2 size={14} color={GOLD} />
@@ -604,25 +586,27 @@ const About = () => {
                 viewport={{ once: true }}
                 transition={{ duration: 0.85 }}
               >
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(min(160px, 100%), 1fr))',
+                  gap: 16,
+                }}>
                   {values.map((v, i) => (
                     <div key={i} style={{
                       background: i % 3 === 0 ? NAVY : LIGHT,
                       borderRadius: 18,
-                      padding: '24px 20px',
+                      padding: 'clamp(16px, 2.5vw, 24px) clamp(12px, 2vw, 20px)',
                       border: `1px solid ${i % 3 === 0 ? 'transparent' : '#E2E8F0'}`,
                     }}>
                       <div style={{ marginBottom: 12 }}>{v.icon}</div>
                       <p style={{
                         fontFamily: '"Times New Roman", serif',
-                        fontSize: 15,
-                        fontWeight: 'bold',
-                        color: i % 3 === 0 ? WHITE : NAVY2,
-                        marginBottom: 6,
+                        fontSize: 'clamp(13px, 1.5vw, 15px)', fontWeight: 'bold',
+                        color: i % 3 === 0 ? WHITE : NAVY2, marginBottom: 6,
                       }}>{v.title}</p>
                       <p style={{
                         fontFamily: '"Times New Roman", serif',
-                        fontSize: 13,
+                        fontSize: 'clamp(11px, 1.3vw, 13px)',
                         color: i % 3 === 0 ? 'rgba(255,255,255,0.65)' : GRAY,
                         lineHeight: 1.6,
                       }}>{v.desc}</p>
@@ -630,55 +614,35 @@ const About = () => {
                   ))}
                 </div>
               </motion.div>
-
             </div>
           </div>
         </section>
 
 
-        {/* ════════════════════════════════
-            FAQ
-        ════════════════════════════════ */}
+        {/* ════════════ FAQ ════════════ */}
         <section style={S.sectionLight}>
           <div style={{ ...S.inner, maxWidth: 860 }}>
-            <SectionHeader
-              label="Common Questions"
-              title="What People Ask Us"
-            />
-
+            <SectionHeader label="Common Questions" title="What People Ask Us" />
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {faqs.map((faq, idx) => (
                 <div key={idx} style={{
-                  background: WHITE,
-                  borderRadius: 16,
-                  border: `1px solid #E2E8F0`,
-                  overflow: 'hidden',
+                  background: WHITE, borderRadius: 16,
+                  border: `1px solid #E2E8F0`, overflow: 'hidden',
                   borderLeft: activeFaq === idx ? `4px solid ${GOLD}` : `4px solid transparent`,
                   transition: 'border-left 0.25s',
                 }}>
                   <button
                     onClick={() => setActiveFaq(activeFaq === idx ? null : idx)}
                     style={{
-                      width: '100%',
-                      padding: '20px 24px',
-                      textAlign: 'left',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      background: 'none',
-                      border: 'none',
-                      cursor: 'pointer',
-                      gap: 16,
+                      width: '100%', padding: 'clamp(14px, 2vw, 20px) clamp(14px, 2vw, 24px)',
+                      textAlign: 'left', display: 'flex', justifyContent: 'space-between',
+                      alignItems: 'center', background: 'none', border: 'none', cursor: 'pointer', gap: 16,
                     }}
                   >
                     <span style={{
                       fontFamily: '"Times New Roman", serif',
-                      fontSize: 16,
-                      fontWeight: 'bold',
-                      color: NAVY2,
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 12,
+                      fontSize: 'clamp(14px, 1.6vw, 16px)', fontWeight: 'bold', color: NAVY2,
+                      display: 'flex', alignItems: 'center', gap: 12,
                     }}>
                       <HelpCircle size={18} color={GOLD} style={{ minWidth: 18 }} />
                       {faq.q}
@@ -699,7 +663,7 @@ const About = () => {
                       >
                         <p style={{
                           ...S.body,
-                          padding: '0 24px 20px 54px',
+                          padding: '0 clamp(14px, 2vw, 24px) 20px clamp(40px, 5vw, 54px)',
                           borderTop: `1px solid #F1F5F9`,
                           paddingTop: 16,
                         }}>
@@ -715,19 +679,14 @@ const About = () => {
         </section>
 
 
-        {/* ════════════════════════════════
-            CONTACT CTA
-        ════════════════════════════════ */}
+        {/* ════════════ CONTACT CTA ════════════ */}
         <section style={{
           background: NAVY,
-          padding: '80px 32px',
-          textAlign: 'center',
-          position: 'relative',
-          overflow: 'hidden',
+          padding: 'clamp(48px, 8vw, 80px) clamp(16px, 4vw, 32px)',
+          textAlign: 'center', position: 'relative', overflow: 'hidden',
         }}>
           <div style={{
-            position: 'absolute', top: 0, left: 0, right: 0,
-            height: 3,
+            position: 'absolute', top: 0, left: 0, right: 0, height: 3,
             background: `linear-gradient(90deg, transparent, ${GOLD}, transparent)`,
           }} />
 
@@ -752,39 +711,23 @@ const About = () => {
                 target="_blank"
                 rel="noreferrer"
                 style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 10,
-                  padding: '16px 36px',
-                  background: '#25D366',
-                  color: WHITE,
-                  borderRadius: 12,
-                  fontFamily: '"Times New Roman", serif',
-                  fontSize: 14,
-                  fontWeight: 'bold',
-                  textDecoration: 'none',
-                  letterSpacing: 1,
-                  textTransform: 'uppercase',
+                  display: 'inline-flex', alignItems: 'center', gap: 10,
+                  padding: 'clamp(12px, 2vw, 16px) clamp(20px, 4vw, 36px)',
+                  background: '#25D366', color: WHITE, borderRadius: 12,
+                  fontFamily: '"Times New Roman", serif', fontSize: 14, fontWeight: 'bold',
+                  textDecoration: 'none', letterSpacing: 1, textTransform: 'uppercase',
                 }}
               >
                 <Phone size={18} /> WhatsApp Us
               </a>
               <a
-                href="mailto:supplyinfo365@gmail.com"
+                href="mailto:directorsnj932@gmail.com"
                 style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 10,
-                  padding: '16px 36px',
-                  background: GOLD,
-                  color: NAVY,
-                  borderRadius: 12,
-                  fontFamily: '"Times New Roman", serif',
-                  fontSize: 14,
-                  fontWeight: 'bold',
-                  textDecoration: 'none',
-                  letterSpacing: 1,
-                  textTransform: 'uppercase',
+                  display: 'inline-flex', alignItems: 'center', gap: 10,
+                  padding: 'clamp(12px, 2vw, 16px) clamp(20px, 4vw, 36px)',
+                  background: GOLD, color: NAVY, borderRadius: 12,
+                  fontFamily: '"Times New Roman", serif', fontSize: 14, fontWeight: 'bold',
+                  textDecoration: 'none', letterSpacing: 1, textTransform: 'uppercase',
                 }}
               >
                 <Mail size={18} /> Email Us

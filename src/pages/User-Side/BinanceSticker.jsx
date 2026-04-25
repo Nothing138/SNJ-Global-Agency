@@ -1,3 +1,4 @@
+//binance sticker
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Copy, CheckCircle2 } from 'lucide-react';

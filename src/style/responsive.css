@@ -1,0 +1,1731 @@
+/* ================================================================
+   SNJ Global Routes — Responsive CSS (Full Update)
+   Covers: Mobile 320px+, Tablet 768px+, Desktop 1024px+, TV 1920px+
+   
+   ✅ HOW TO USE:
+   1. src/index.css এর একদম উপরে এই line যোগ করো:
+      @import './responsive.css';
+   
+   অথবা যদি index.css না থাকে তাহলে App.jsx বা main.jsx এর উপরে:
+      import './responsive.css';
+   
+   2. এই একটি ফাইলই সব করবে — আলাদা কিছু করার দরকার নেই।
+================================================================ */
+
+/* ================================================================
+   GLOBAL RESET & PERFORMANCE
+================================================================ */
+*, *::before, *::after { box-sizing: border-box; }
+html { overflow-x: hidden; scroll-behavior: smooth; }
+body { overflow-x: hidden; -webkit-font-smoothing: antialiased; }
+img, video { max-width: 100%; display: block; }
+
+/* GPU acceleration for animated elements */
+[data-motion], .motion-div,
+[class*="animate"], [class*="transition"] {
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ================================================================
+   NAVBAR — ensure it doesn't overlap content on small screens
+================================================================ */
+@media (max-width: 640px) {
+  main { padding-top: env(safe-area-inset-top, 0); }
+}
+
+/* ================================================================
+   HERO.JSX — Service Cards
+================================================================ */
+.snj-service-card {
+  padding: clamp(14px, 3vw, 40px);
+  height: clamp(160px, 35vw, 256px);
+  border-radius: clamp(20px, 4vw, 48px);
+}
+.snj-service-card-icon { font-size: clamp(20px, 4vw, 42px); }
+.snj-service-card-label { font-size: clamp(14px, 2.5vw, 24px); }
+
+@media (max-width: 400px) {
+  .snj-service-card { padding: 12px; height: 150px; }
+}
+
+/* ================================================================
+   INFOSECTION.JSX — Step numbers
+================================================================ */
+@media (max-width: 500px) {
+  .snj-step-flow { gap: 12px !important; }
+  .snj-step-circle { width: 44px !important; height: 44px !important; font-size: 16px !important; }
+}
+
+/* ================================================================
+   DESTINATIONS / SERVICE AREA — Flag card padding
+================================================================ */
+@media (max-width: 640px) {
+  .snj-flag-card { padding: 14px 10px !important; }
+  .snj-flag-img  { width: 64px !important; height: 64px !important; }
+}
+
+/* ================================================================
+   BLOG PAGE — Swiper card height auto on mobile
+================================================================ */
+@media (max-width: 768px) {
+  .swiper-slide > div { height: auto !important; min-height: 460px; }
+}
+
+/* ================================================================
+   CITIZENSHIP / TRAVEL — Hero large padding fix
+================================================================ */
+@media (max-width: 640px) {
+  .snj-pt-hero { padding-top: 100px !important; }
+}
+
+/* ================================================================
+   FLIGHT FORM — form inner spacing
+================================================================ */
+@media (max-width: 640px) {
+  .snj-form-card { padding: 24px 16px !important; border-radius: 28px !important; }
+}
+
+/* ================================================================
+   USER PROFILE — Tab buttons overflow
+================================================================ */
+@media (max-width: 640px) {
+  .snj-profile-tabs { flex-direction: column !important; }
+  .snj-profile-tabs button { flex: none !important; width: 100%; }
+}
+
+/* ================================================================
+   BINANCE STICKER — safe area for mobile bottom
+================================================================ */
+@media (max-width: 640px) {
+  .snj-binance-sticker {
+    bottom: calc(16px + env(safe-area-inset-bottom, 0px)) !important;
+    right: 12px !important;
+  }
+  .snj-binance-sticker .snj-sticker-label { display: none; }
+}
+
+/* ================================================================
+   ABOUT / GLOBAL DISCLAIMER / POLICY — Inline style overrides
+================================================================ */
+.snj-inner-pad { padding-left: clamp(16px, 4vw, 32px) !important; padding-right: clamp(16px, 4vw, 32px) !important; }
+.snj-section-v { padding-top: clamp(40px, 8vw, 80px) !important; padding-bottom: clamp(40px, 8vw, 80px) !important; }
+.snj-two-col {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)) !important;
+}
+.snj-hero-pad { padding: 0 clamp(16px, 4vw, 32px) !important; }
+.snj-clause-row {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 12px !important;
+}
+
+@media (min-width: 640px) {
+  .snj-clause-row {
+    display: grid !important;
+    grid-template-columns: auto 1fr !important;
+    gap: 28px !important;
+    flex-direction: unset !important;
+  }
+  .snj-clause-number { min-width: 60px !important; }
+}
+
+@media (max-width: 640px) {
+  .snj-clause-number { font-size: 32px !important; }
+  .snj-general-nature { flex-direction: column !important; }
+  .snj-general-nature svg { display: none !important; }
+  .snj-about-img { height: clamp(280px, 60vw, 520px) !important; }
+  .snj-quote-card { 
+    position: static !important; 
+    margin-top: -20px; 
+    border-radius: 16px !important;
+  }
+}
+
+/* ================================================================
+   TAILWIND RESPONSIVE PATCHES
+================================================================ */
+.swiper { overflow: visible !important; }
+.swiper-wrapper { overflow: visible; }
+.swiper-container { overflow: hidden !important; }
+
+@media (max-width: 360px) {
+  [class*="px-10"], [class*="py-10"] { padding-left: 16px !important; padding-right: 16px !important; }
+  [class*="text-5xl"] { font-size: 2rem !important; }
+  [class*="text-6xl"] { font-size: 2.5rem !important; }
+  [class*="text-7xl"] { font-size: 3rem !important; }
+}
+
+@supports (padding: env(safe-area-inset-left)) {
+  .snj-safe-left  { padding-left:  max(16px, env(safe-area-inset-left));  }
+  .snj-safe-right { padding-right: max(16px, env(safe-area-inset-right)); }
+}
+
+
+/* ================================================================
+   ▼▼▼ NEW ADDITIONS BELOW ▼▼▼
+================================================================ */
+
+
+/* ================================================================
+   LOGIN.JSX — Full responsive
+================================================================ */
+
+/* Background polygon shape — mobile e height kome jay */
+@media (max-width: 640px) {
+  .snj-login-bg-poly {
+    height: 200px !important;
+    clip-path: polygon(0 0, 100% 0, 100% 80%, 0% 100%) !important;
+  }
+}
+
+/* Login card — mobile padding fix */
+@media (max-width: 480px) {
+  .snj-login-card {
+    border-radius: 20px !important;
+    margin: 0 8px !important;
+  }
+  .snj-login-card-inner {
+    padding: 20px 18px !important;
+  }
+  .snj-login-title {
+    font-size: 28px !important;
+  }
+}
+
+/* ================================================================
+   REGISTER.JSX — Two-column layout collapse on mobile
+================================================================ */
+@media (max-width: 767px) {
+  /* Left panel (navy side) — hide on mobile to save space */
+  .snj-register-left {
+    display: none !important;
+  }
+  /* Right panel becomes full width */
+  .snj-register-right {
+    width: 100% !important;
+    padding: 28px 20px !important;
+  }
+  /* Title size reduce */
+  .snj-register-title {
+    font-size: 28px !important;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  /* Tablet — left panel smaller */
+  .snj-register-left {
+    padding: 28px 20px !important;
+  }
+}
+
+/* ================================================================
+   B2BREGISTER.JSX — Multi-col form collapse
+================================================================ */
+@media (max-width: 767px) {
+  /* Left panel hide on mobile */
+  .snj-b2b-left {
+    display: none !important;
+  }
+  .snj-b2b-right {
+    width: 100% !important;
+    padding: 24px 18px !important;
+  }
+  /* Grid cols become single col on mobile */
+  .snj-b2b-grid-2 {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .snj-b2b-title { font-size: 26px !important; }
+  /* OTP input font shrink */
+  .snj-otp-input {
+    font-size: 16px !important;
+    letter-spacing: 0.3em !important;
+  }
+}
+
+/* ================================================================
+   REGISTERSELECT.JSX — 3-card grid
+================================================================ */
+@media (max-width: 767px) {
+  /* Stack cards vertically */
+  .snj-register-select-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+  .snj-register-select-title {
+    font-size: 28px !important;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  /* Tablet — 2 columns, third card centered */
+  .snj-register-select-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+}
+
+/* ================================================================
+   WORKFLOW.JSX — 4-step grid
+================================================================ */
+@media (max-width: 640px) {
+  /* Tab buttons scroll horizontally on small screens */
+  .snj-workflow-tabs {
+    overflow-x: auto !important;
+    flex-wrap: nowrap !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .snj-workflow-tabs::-webkit-scrollbar { display: none; }
+  
+  .snj-workflow-tab-btn {
+    padding: 10px 16px !important;
+    font-size: 9px !important;
+    white-space: nowrap;
+  }
+  
+  .snj-workflow-title {
+    font-size: 32px !important;
+  }
+}
+
+@media (max-width: 767px) {
+  /* Cards stack vertically on mobile */
+  .snj-workflow-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+  /* Hide horizontal connector line on mobile */
+  .snj-workflow-line {
+    display: none !important;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  /* Tablet — 2 columns */
+  .snj-workflow-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+}
+
+/* ================================================================
+   ADMINLAYOUT.JSX — Sidebar + main layout
+================================================================ */
+
+/* On mobile, sidebar overlays as a drawer */
+@media (max-width: 1023px) {
+  /* Sidebar becomes fixed overlay */
+  .snj-admin-sidebar {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    z-index: 100;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+  }
+  .snj-admin-sidebar.open {
+    transform: translateX(0) !important;
+  }
+  /* Backdrop overlay when sidebar open */
+  .snj-sidebar-backdrop {
+    display: block !important;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 99;
+  }
+  /* Main content full width when sidebar hidden */
+  .snj-admin-main {
+    margin-left: 0 !important;
+    width: 100% !important;
+  }
+  /* Header padding reduce */
+  .snj-admin-header {
+    padding: 0 16px !important;
+    height: 64px !important;
+  }
+  .snj-admin-header-links { display: none !important; }
+}
+
+@media (max-width: 640px) {
+  /* Admin content area padding */
+  .snj-admin-content {
+    padding: 16px 12px !important;
+  }
+  /* Header banner reduce */
+  .snj-admin-banner {
+    padding: 20px 18px !important;
+    border-radius: 20px !important;
+  }
+  .snj-admin-banner-title {
+    font-size: 28px !important;
+  }
+}
+
+/* ================================================================
+   ADMINLOGIN.JSX — Login card
+================================================================ */
+@media (max-width: 480px) {
+  .snj-admin-login-card {
+    padding: 24px 18px !important;
+    border-radius: 16px !important;
+    margin: 0 12px;
+  }
+  .snj-admin-login-title {
+    font-size: 32px !important;
+  }
+}
+
+/* ================================================================
+   ADDUSER.JSX — Form card
+================================================================ */
+@media (max-width: 640px) {
+  .snj-adduser-card {
+    padding: 24px 16px !important;
+    border-radius: 18px !important;
+    margin: 0 8px;
+  }
+  .snj-adduser-title { font-size: 28px !important; }
+}
+
+/* ================================================================
+   ANALYTICSDASHBOARD.JSX — Stats + chart grid
+================================================================ */
+@media (max-width: 640px) {
+  /* Stat cards — 2 per row on mobile */
+  .snj-analytics-stats {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 12px !important;
+  }
+  .snj-analytics-stat-val { font-size: 22px !important; }
+  
+  /* Main chart grid — stack vertically */
+  .snj-analytics-chart-grid {
+    grid-template-columns: 1fr !important;
+  }
+  
+  /* Chart height reduce on mobile */
+  .snj-analytics-chart-inner {
+    height: 240px !important;
+  }
+  
+  .snj-analytics-title { font-size: 28px !important; }
+  
+  /* Filter buttons compact */
+  .snj-analytics-filter {
+    width: 100%;
+  }
+  .snj-analytics-filter button {
+    flex: 1;
+    padding: 8px 12px !important;
+  }
+  
+  /* Header wrap on mobile */
+  .snj-analytics-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 1023px) {
+  /* Tablet — 2-col stats */
+  .snj-analytics-stats {
+    grid-template-columns: 1fr 1fr !important;
+  }
+  .snj-analytics-chart-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ================================================================
+   ANNOUNCEMENT.JSX — Create + list layout
+================================================================ */
+@media (max-width: 767px) {
+  .snj-announcement-form-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .snj-announcement-form-actions {
+    flex-direction: column !important;
+  }
+  .snj-announcement-title { font-size: 28px !important; }
+}
+
+@media (max-width: 640px) {
+  /* List items stack vertically */
+  .snj-announcement-item {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+  }
+  .snj-announcement-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
+
+/* ================================================================
+   APPLICATIONS.JSX — Big table horizontal scroll
+================================================================ */
+
+/* Table wrapper — horizontal scroll on mobile/tablet */
+.snj-applications-table-wrap {
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+.snj-applications-table-wrap table {
+  min-width: 900px; /* prevent collapse */
+}
+
+@media (max-width: 767px) {
+  .snj-applications-title { font-size: 28px !important; }
+  .snj-applications-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+  }
+  .snj-applications-search-row {
+    width: 100% !important;
+    flex-direction: column !important;
+  }
+  .snj-applications-search-row > div,
+  .snj-applications-search-row > select {
+    width: 100% !important;
+  }
+}
+
+/* Table cell padding reduce on tablet */
+@media (max-width: 1024px) {
+  .snj-applications-table-wrap td,
+  .snj-applications-table-wrap th {
+    padding: 16px 12px !important;
+  }
+}
+
+/* ================================================================
+   B2BDASHBOARD.JSX — inline-style heavy dashboard
+   (uses CSS variable overrides since JSX uses inline styles)
+================================================================ */
+
+/* Sidebar collapse helper for B2B dashboard */
+@media (max-width: 1023px) {
+  /* .sb class from EmployerDashboard/B2BDashboard global styles */
+  .root { flex-direction: column !important; height: auto !important; min-height: 100vh; }
+  
+  .sb {
+    width: 100% !important;
+    min-width: 100% !important;
+    height: auto !important;
+    flex-direction: row !important;
+    position: sticky !important;
+    top: 0;
+    z-index: 50;
+    overflow-x: auto;
+  }
+  .sb.col { width: 100% !important; min-width: 100% !important; }
+  
+  .sb-nav {
+    display: flex !important;
+    flex-direction: row !important;
+    padding: 6px 8px !important;
+    overflow-x: auto;
+    overflow-y: hidden;
+    margin-top: 0 !important;
+    gap: 4px;
+  }
+  .sb-nav::-webkit-scrollbar { display: none; }
+  
+  .ni {
+    flex-shrink: 0;
+    padding: 8px 12px !important;
+    flex-direction: column !important;
+    gap: 4px !important;
+    font-size: 9px !important;
+    min-width: 60px;
+    align-items: center !important;
+  }
+  .nl { font-size: 8px !important; text-align: center; }
+  
+  .sb-logo { padding: 10px 14px !important; }
+  .sb-user, .sb-bot { display: none !important; }
+  
+  .main { flex: 1; overflow-y: auto; }
+  .pc { padding: 14px 12px !important; }
+  .topbar { padding: 0 14px !important; height: 52px !important; }
+  .tt { font-size: 14px !important; }
+}
+
+@media (max-width: 640px) {
+  /* B2B/Employer dashboard inner cards */
+  .hbox { padding: 18px 16px !important; border-radius: 12px !important; }
+  
+  /* Grid cards — single column */
+  .snj-dash-grid-3 { grid-template-columns: 1fr !important; gap: 12px !important; }
+  .snj-dash-grid-2 { grid-template-columns: 1fr !important; gap: 12px !important; }
+  
+  /* File/record table — horizontal scroll */
+  .snj-dash-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .snj-dash-table-wrap table { min-width: 600px; }
+  
+  /* Modal full width on mobile */
+  .snj-modal-inner {
+    max-width: 100% !important;
+    margin: 12px !important;
+    border-radius: 18px !important;
+  }
+}
+
+/* ================================================================
+   EMPLOYERREGISTER.JSX — Multi-step form
+================================================================ */
+@media (max-width: 767px) {
+  .snj-emp-register-left { display: none !important; }
+  .snj-emp-register-right {
+    width: 100% !important;
+    padding: 24px 18px !important;
+  }
+  /* Step indicator compact */
+  .snj-step-indicator {
+    gap: 6px !important;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .snj-step-indicator::-webkit-scrollbar { display: none; }
+  .snj-step-label { font-size: 8px !important; }
+}
+
+@media (max-width: 640px) {
+  /* Two-col grids in employer form */
+  .snj-emp-grid-2 { grid-template-columns: 1fr !important; }
+  .snj-emp-register-title { font-size: 24px !important; }
+}
+
+/* ================================================================
+   VISA.JSX / VISITVISADETAIL.JSX / WORKVISADETAIL.JSX — Detail pages
+================================================================ */
+@media (max-width: 640px) {
+  .snj-visa-hero-title { font-size: clamp(26px, 7vw, 48px) !important; }
+  .snj-visa-hero { padding: 80px 16px 40px !important; }
+  
+  /* Two-col info grids → single col */
+  .snj-visa-info-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+  
+  /* Country flag grid → 2 cols on mobile */
+  .snj-visa-country-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 10px !important;
+  }
+  
+  /* Document checklist compact */
+  .snj-visa-doc-item { padding: 12px !important; }
+  
+  /* Tab navigation scroll */
+  .snj-visa-tabs {
+    overflow-x: auto !important;
+    flex-wrap: nowrap !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .snj-visa-tabs::-webkit-scrollbar { display: none; }
+  .snj-visa-tab-btn { white-space: nowrap; padding: 8px 16px !important; font-size: 9px !important; }
+}
+
+@media (min-width: 641px) and (max-width: 1023px) {
+  .snj-visa-country-grid { grid-template-columns: repeat(3, 1fr) !important; }
+  .snj-visa-info-grid { grid-template-columns: 1fr 1fr !important; }
+}
+
+/* ================================================================
+   TERMSCONDITIONS.JSX — Long text page
+================================================================ */
+@media (max-width: 640px) {
+  .snj-terms-hero { padding: 80px 16px 32px !important; }
+  .snj-terms-title { font-size: 28px !important; }
+  .snj-terms-body { padding: 24px 16px !important; }
+  .snj-terms-section { padding: 20px 16px !important; border-radius: 16px !important; }
+}
+
+/* ================================================================
+   HOME.JSX — Section spacing
+================================================================ */
+@media (max-width: 640px) {
+  /* WorkFlow section padding */
+  .snj-workflow-section { padding: 48px 0 !important; }
+  /* Section titles general */
+  .snj-section-title { font-size: clamp(28px, 7vw, 48px) !important; }
+}
+
+/* ================================================================
+   GENERAL FORM ELEMENTS — touch-friendly sizes
+================================================================ */
+@media (max-width: 768px) {
+  /* Buttons minimum tap target */
+  button, [role="button"] { min-height: 40px; }
+  
+  /* Input fields larger for touch */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="tel"],
+  input[type="number"],
+  select,
+  textarea {
+    font-size: 16px !important; /* prevents iOS zoom on focus */
+    min-height: 44px;
+  }
+}
+
+/* ================================================================
+   MODAL — full screen on very small devices
+================================================================ */
+@media (max-width: 480px) {
+  /* SweetAlert2 modal full width */
+  .swal2-popup {
+    width: 94% !important;
+    border-radius: 20px !important;
+    padding: 20px 16px !important;
+  }
+  
+  /* Custom modals (FileDetailsModal etc.) */
+  .snj-modal-backdrop > div:not(.snj-modal-backdrop) {
+    width: calc(100% - 24px) !important;
+    max-width: 100% !important;
+    max-height: 90vh;
+    overflow-y: auto;
+    border-radius: 18px !important;
+  }
+}
+
+/* ================================================================
+   TV / ULTRA-WIDE SCREENS (1920px+)
+================================================================ */
+@media (min-width: 1920px) {
+  .container, [class*="max-w-7xl"] { max-width: 1600px; margin-left: auto; margin-right: auto; }
+  body { font-size: 18px; }
+  /* AdminLayout main banner larger */
+  .snj-admin-banner-title { font-size: 72px !important; }
+}
+
+@media (min-width: 2560px) {
+  .container, [class*="max-w-7xl"] { max-width: 2000px; }
+  body { font-size: 20px; }
+}
+
+/* ================================================================
+   SCROLLBAR — global custom style (non-mobile)
+================================================================ */
+@media (min-width: 768px) {
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
+}
+
+/* Hide scrollbar on mobile but keep scrollability */
+@media (max-width: 767px) {
+  ::-webkit-scrollbar { display: none; }
+  * { scrollbar-width: none; }
+}
+
+/* ================================================================
+   UTILITY — Responsive text helpers (use in any component)
+================================================================ */
+
+/* Fluid headings — add class snj-fluid-h1/h2/h3 to any heading */
+.snj-fluid-h1 { font-size: clamp(28px, 5vw, 64px) !important; }
+.snj-fluid-h2 { font-size: clamp(22px, 4vw, 48px) !important; }
+.snj-fluid-h3 { font-size: clamp(18px, 3vw, 32px) !important; }
+.snj-fluid-body { font-size: clamp(14px, 2vw, 18px) !important; }
+
+/* Responsive padding container */
+.snj-container {
+  width: 100%;
+  max-width: 1400px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: clamp(16px, 4vw, 48px);
+  padding-right: clamp(16px, 4vw, 48px);
+}
+
+/* Hide on mobile */
+.snj-hide-mobile { }
+@media (max-width: 640px) { .snj-hide-mobile { display: none !important; } }
+
+/* Hide on desktop */
+.snj-hide-desktop { }
+@media (min-width: 1024px) { .snj-hide-desktop { display: none !important; } }
+
+/* ================================================================
+   SAFE AREA INSETS — Notched phones (iPhone X+, Android notch)
+================================================================ */
+@supports (padding: env(safe-area-inset-left)) {
+  .snj-safe-left  { padding-left:  max(16px, env(safe-area-inset-left));  }
+  .snj-safe-right { padding-right: max(16px, env(safe-area-inset-right)); }
+  .snj-safe-bottom { padding-bottom: max(16px, env(safe-area-inset-bottom)); }
+  
+  /* Fixed bottom elements */
+  .snj-fixed-bottom {
+    bottom: max(16px, env(safe-area-inset-bottom)) !important;
+  }
+}
+
+/* ================================================================
+   ADMIN DASHBOARD PAGES — Full Responsive Update
+   Covers: DashboardHome, Applications, Announcement, BlogList,
+           FlightRequests, FlightRevenue, Inbox, JobList,
+           ManageRecruiters, ManageUsers, RecruiterManager,
+           StaffManager, UploadBlog, UploadTestimony,
+           AssignTask, B2BPartnerList, B2BPricing,
+           Employee-List, WorkerRequest
+   
+   Breakpoints:
+     Mobile  : max-width 480px / 640px
+     Tablet  : 641px – 1023px
+     Desktop : 1024px – 1919px
+     TV/4K   : 1920px+
+================================================================ */
+
+/* ================================================================
+   SHARED ADMIN — Page-level padding & fluid headings
+================================================================ */
+@media (max-width: 640px) {
+  /* All admin page wrappers use p-6/p-10 — reduce on mobile */
+  .snj-admin-page { padding: 16px 14px !important; }
+
+  /* Fluid big headings used across all pages (text-[48px] pattern) */
+  [class*="text-[48px]"],
+  [class*="text-[40px]"] {
+    font-size: clamp(26px, 7vw, 40px) !important;
+  }
+  [class*="text-[34px]"],
+  [class*="text-[28px]"] {
+    font-size: clamp(20px, 5vw, 28px) !important;
+  }
+}
+
+@media (min-width: 1920px) {
+  /* 4K / TV — scale up all admin page headings */
+  [class*="text-[48px]"] { font-size: 64px !important; }
+  [class*="text-[40px]"] { font-size: 56px !important; }
+  [class*="text-[34px]"] { font-size: 48px !important; }
+}
+
+/* ================================================================
+   DASHBOARDHOME.JSX
+================================================================ */
+
+/* Welcome Banner */
+@media (max-width: 640px) {
+  .snj-dash-home-banner {
+    padding: 28px 20px !important;
+  }
+  .snj-dash-home-title { font-size: 28px !important; }
+}
+
+/* Stats Grid — 2 per row on mobile, 4 on desktop */
+@media (max-width: 640px) {
+  .snj-dash-stats-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 12px !important;
+  }
+  .snj-dash-stat-card { padding: 20px 14px !important; }
+  .snj-dash-stat-val { font-size: 22px !important; }
+}
+
+@media (min-width: 641px) and (max-width: 1023px) {
+  .snj-dash-stats-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 16px !important;
+  }
+}
+
+/* Bottom 3-col grid (activity + notifications) */
+@media (max-width: 1023px) {
+  .snj-dash-bottom-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+}
+
+/* Activity list items */
+@media (max-width: 640px) {
+  .snj-dash-activity-item {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 6px !important;
+    padding: 16px !important;
+  }
+}
+
+/* ================================================================
+   ANNOUNCEMENT.JSX — Already has base styles, adding extras
+================================================================ */
+@media (max-width: 640px) {
+  /* Create card inner — reduce padding */
+  .snj-announcement-create-card {
+    padding: 24px 18px !important;
+    border-radius: 20px !important;
+  }
+  /* Header icon + text row */
+  .snj-announcement-header-row {
+    flex-direction: column !important;
+    gap: 12px !important;
+    margin-bottom: 24px !important;
+  }
+  /* Deploy/status buttons — stack vertically */
+  .snj-announcement-btn-row {
+    flex-direction: column !important;
+  }
+  /* History item text truncate */
+  .snj-announcement-item p {
+    font-size: 15px !important;
+    line-height: 1.5 !important;
+  }
+}
+
+/* ================================================================
+   APPLICATIONS.JSX (Visa Control)
+================================================================ */
+
+/* Wrap the table for horizontal scroll (add class in JSX or rely on wrapper) */
+.snj-visa-table-wrap {
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 40px;
+}
+.snj-visa-table-wrap table { min-width: 960px; }
+
+@media (max-width: 767px) {
+  /* Header row stack */
+  .snj-visa-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 14px !important;
+  }
+  /* Search + filter full width */
+  .snj-visa-search-row {
+    flex-direction: column !important;
+    width: 100% !important;
+  }
+  .snj-visa-search-row > div,
+  .snj-visa-search-row > select {
+    width: 100% !important;
+  }
+  /* Table cell padding */
+  .snj-visa-table-wrap td,
+  .snj-visa-table-wrap th {
+    padding: 14px 12px !important;
+    font-size: 13px !important;
+  }
+  .snj-visa-table-wrap td p:first-child { font-size: 16px !important; }
+}
+
+/* ================================================================
+   BLOGLIST.JSX (Content Vault)
+================================================================ */
+@media (max-width: 640px) {
+  /* Header row stack */
+  .snj-blog-list-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 14px !important;
+    padding-bottom: 24px !important;
+  }
+  /* Grid → single column */
+  .snj-blog-list-grid {
+    grid-template-columns: 1fr !important;
+    gap: 24px !important;
+  }
+  /* Blog card image height reduce */
+  .snj-blog-card-img { height: 200px !important; }
+  /* Blog card title */
+  .snj-blog-card-title { font-size: 22px !important; }
+  .snj-blog-card-inner { padding: 20px 16px !important; }
+}
+
+@media (min-width: 641px) and (max-width: 1023px) {
+  .snj-blog-list-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 20px !important;
+  }
+}
+
+/* ================================================================
+   FLIGHTREQUESTS.JSX (Flight Registry)
+================================================================ */
+@media (max-width: 640px) {
+  /* Page header row */
+  .snj-flight-req-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+  }
+  /* Card grid — single col */
+  .snj-flight-req-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+  /* Card inner padding */
+  .snj-flight-req-card { padding: 20px 16px !important; }
+  /* Journey detail grid — 1 col */
+  .snj-flight-journey-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+    padding: 14px !important;
+  }
+  /* Action footer — wrap */
+  .snj-flight-action-footer {
+    flex-direction: column !important;
+    gap: 12px !important;
+    align-items: flex-start !important;
+  }
+  .snj-flight-action-btns {
+    width: 100%;
+    justify-content: flex-end !important;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 1280px) {
+  .snj-flight-req-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ================================================================
+   FLIGHTREVENUE.JSX (Revenue Insights)
+================================================================ */
+@media (max-width: 640px) {
+  /* Top header + toggle */
+  .snj-revenue-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 14px !important;
+  }
+  /* Toggle buttons full width */
+  .snj-revenue-toggle { width: 100% !important; }
+  .snj-revenue-toggle button { flex: 1; }
+
+  /* Stat cards — 2 per row */
+  .snj-revenue-stats-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 12px !important;
+  }
+  .snj-revenue-stat-card { padding: 16px 12px !important; }
+  .snj-revenue-stat-val { font-size: 22px !important; }
+
+  /* Chart + sidebar — stack */
+  .snj-revenue-main-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+
+  /* Chart height reduce */
+  .snj-revenue-chart-area { height: 250px !important; }
+
+  /* Audit log table horizontal scroll */
+  .snj-revenue-table-wrap {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+  .snj-revenue-table-wrap table { min-width: 640px; }
+
+  /* Table cell reduce */
+  .snj-revenue-table-wrap td,
+  .snj-revenue-table-wrap th {
+    padding: 10px 8px !important;
+    font-size: 13px !important;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 1023px) {
+  .snj-revenue-stats-grid { grid-template-columns: 1fr 1fr !important; }
+  .snj-revenue-main-grid { grid-template-columns: 1fr !important; }
+}
+
+/* ================================================================
+   INBOX.JSX (Messaging)
+================================================================ */
+@media (max-width: 767px) {
+  /* Chat layout — stack vertically */
+  .snj-inbox-wrap {
+    flex-direction: column !important;
+    height: auto !important;
+    min-height: 85vh;
+  }
+  /* User list — full width, fixed height */
+  .snj-inbox-sidebar {
+    width: 100% !important;
+    max-height: 260px;
+    border-right: none !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+  }
+  .snj-inbox-sidebar .snj-inbox-search-bar { padding: 14px !important; }
+
+  /* Chat window */
+  .snj-inbox-chat { flex: 1; min-height: 0; }
+
+  /* User list items compact */
+  .snj-inbox-user-item { padding: 10px 14px !important; }
+  .snj-inbox-user-item h4 { font-size: 14px !important; }
+  
+  /* Message bubbles max-width increase on mobile */
+  .snj-inbox-bubble { max-width: 88% !important; font-size: 14px !important; }
+
+  /* Input bar */
+  .snj-inbox-form { padding: 12px !important; gap: 8px !important; }
+  .snj-inbox-input { padding: 12px 14px !important; font-size: 14px !important; }
+  .snj-inbox-send-btn { padding: 12px !important; }
+}
+
+@media (max-width: 480px) {
+  .snj-inbox-sidebar { max-height: 200px; }
+  .snj-inbox-header { padding: 14px 12px !important; }
+  .snj-inbox-title { font-size: 20px !important; }
+}
+
+/* ================================================================
+   JOBLIST.JSX (Live Job Operations)
+================================================================ */
+@media (max-width: 640px) {
+  /* Header row stack */
+  .snj-job-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 14px !important;
+    margin-bottom: 28px !important;
+  }
+  /* Stat badge full width */
+  .snj-job-stat-badge { width: 100% !important; }
+
+  /* Job card grid — single col */
+  .snj-job-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+  .snj-job-card { padding: 20px 16px !important; }
+  .snj-job-card h2 { font-size: 22px !important; }
+
+  /* Edit modal full width */
+  .snj-job-modal-inner {
+    max-width: calc(100% - 24px) !important;
+    padding: 24px 18px !important;
+  }
+  .snj-job-modal-title { font-size: 24px !important; }
+}
+
+@media (min-width: 641px) and (max-width: 1023px) {
+  .snj-job-grid { grid-template-columns: 1fr 1fr !important; }
+}
+
+/* ================================================================
+   MANAGERECRUITERS.JSX (Recruiter Requests)
+================================================================ */
+@media (max-width: 640px) {
+  .snj-manage-rec-header { margin-bottom: 24px !important; padding-bottom: 20px !important; }
+  
+  /* List items — vertical stack */
+  .snj-manage-rec-item {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 16px !important;
+    padding: 20px 16px !important;
+  }
+  /* Buttons full width */
+  .snj-manage-rec-actions {
+    flex-direction: column !important;
+    width: 100% !important;
+    gap: 10px !important;
+  }
+  .snj-manage-rec-actions button { width: 100% !important; }
+}
+
+/* ================================================================
+   MANAGEUSERS.JSX (Authorize New Personnel)
+================================================================ */
+@media (max-width: 640px) {
+  .snj-manage-users-card {
+    padding: 28px 18px !important;
+    margin: 16px 8px !important;
+    max-width: 100% !important;
+  }
+  .snj-manage-users-title { font-size: 26px !important; }
+}
+
+/* ================================================================
+   RECRUITERMANAGER.JSX (Recruiter HQ)
+================================================================ */
+@media (max-width: 767px) {
+  /* Tab buttons */
+  .snj-rec-hq-tabs {
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+  .snj-rec-hq-tabs button { width: 100% !important; text-align: center; }
+
+  /* Header row stack */
+  .snj-rec-hq-header {
+    flex-direction: column !important;
+    gap: 16px !important;
+  }
+  .snj-rec-hq-search { width: 100% !important; }
+
+  /* Recruiter card layout — vertical */
+  .snj-rec-hq-card {
+    flex-direction: column !important;
+    gap: 16px !important;
+    padding: 20px 16px !important;
+  }
+  .snj-rec-hq-profile { width: 100% !important; }
+  .snj-rec-hq-stats {
+    grid-template-columns: 1fr 1fr !important;
+    border-left: none !important;
+    border-right: none !important;
+    padding: 0 !important;
+    border-top: 1px solid #f1f5f9;
+    border-bottom: 1px solid #f1f5f9;
+    padding: 14px 0 !important;
+  }
+  .snj-rec-hq-actions {
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    width: 100% !important;
+    justify-content: flex-end;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 1023px) {
+  .snj-rec-hq-card { flex-direction: column !important; gap: 14px !important; }
+  .snj-rec-hq-stats { grid-template-columns: repeat(4, 1fr) !important; }
+}
+
+/* ================================================================
+   STAFFMANAGER.JSX (Internal Authority)
+================================================================ */
+@media (max-width: 767px) {
+  /* Header area — stack */
+  .snj-staff-header-area {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 14px !important;
+    padding: 24px 18px !important;
+  }
+  .snj-staff-appoint-btn { width: 100% !important; justify-content: center; }
+
+  /* Appointment form — single col */
+  .snj-staff-form-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+    padding: 24px 18px !important;
+  }
+
+  /* Table wrap scroll */
+  .snj-staff-table-wrap {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+  .snj-staff-table-wrap table { min-width: 700px; }
+
+  /* Table cell padding reduce */
+  .snj-staff-table-wrap td,
+  .snj-staff-table-wrap th {
+    padding: 16px 10px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .snj-staff-form-grid { padding: 16px 14px !important; }
+  /* Avatar size */
+  .snj-staff-avatar {
+    width: 48px !important;
+    height: 48px !important;
+    font-size: 18px !important;
+  }
+}
+
+/* ================================================================
+   UPLOADBLOG.JSX (Publish Manuscript)
+================================================================ */
+@media (max-width: 1023px) {
+  /* Two-col layout → single col */
+  .snj-upload-blog-layout {
+    grid-template-columns: 1fr !important;
+    gap: 24px !important;
+  }
+  /* Preview panel — un-sticky on mobile */
+  .snj-upload-blog-preview { position: static !important; }
+}
+
+@media (max-width: 640px) {
+  .snj-upload-blog-page { padding: 40px 16px !important; }
+  .snj-upload-blog-title { font-size: 32px !important; }
+  .snj-upload-blog-form { padding: 28px 18px !important; }
+  .snj-upload-blog-input-title { font-size: 18px !important; }
+  /* Preview card */
+  .snj-upload-blog-preview-card img { height: 200px !important; }
+  .snj-upload-blog-preview-body { padding: 24px 18px !important; }
+  .snj-upload-blog-preview-heading { font-size: 22px !important; }
+}
+
+/* ================================================================
+   UPLOADTESTIMONY.JSX (Register Testimony)
+================================================================ */
+@media (max-width: 1023px) {
+  /* Form grid — 2 col instead of 3 */
+  .snj-testimony-form-grid {
+    grid-template-columns: 1fr !important;
+    gap: 20px !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .snj-testimony-upload-card { padding: 24px 16px !important; }
+  /* Name + designation 2-col → 1 col */
+  .snj-testimony-name-row {
+    grid-template-columns: 1fr !important;
+  }
+  /* Image upload area height */
+  .snj-testimony-img-upload { height: 160px !important; }
+
+  /* Data table scroll */
+  .snj-testimony-table-wrap {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+  .snj-testimony-table-wrap table { min-width: 640px; }
+  .snj-testimony-table-wrap td,
+  .snj-testimony-table-wrap th {
+    padding: 12px 10px !important;
+  }
+
+  /* Pagination bar */
+  .snj-testimony-pagination {
+    flex-direction: column !important;
+    gap: 10px !important;
+    align-items: flex-start !important;
+    padding: 16px !important;
+  }
+
+  /* Header row */
+  .snj-testimony-table-header {
+    flex-direction: column !important;
+    gap: 12px !important;
+    padding: 16px !important;
+  }
+  .snj-testimony-search { width: 100% !important; }
+}
+
+/* ================================================================
+   ASSIGNTASK.JSX
+================================================================ */
+@media (max-width: 767px) {
+  .snj-assign-task-layout {
+    flex-direction: column !important;
+    gap: 16px !important;
+  }
+  .snj-assign-task-form,
+  .snj-assign-task-list {
+    width: 100% !important;
+    padding: 20px 16px !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .snj-assign-task-title { font-size: 26px !important; }
+  .snj-assign-task-card { padding: 14px 12px !important; }
+}
+
+/* ================================================================
+   B2BPARTNERLIST.JSX
+================================================================ */
+@media (max-width: 767px) {
+  .snj-b2b-partner-grid {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
+  .snj-b2b-partner-header {
+    flex-direction: column !important;
+    gap: 12px !important;
+  }
+  .snj-b2b-partner-card { padding: 18px 14px !important; }
+}
+
+@media (max-width: 640px) {
+  .snj-b2b-partner-title { font-size: 26px !important; }
+}
+
+/* ================================================================
+   B2BPRICING.JSX
+================================================================ */
+@media (max-width: 767px) {
+  .snj-b2b-pricing-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+  .snj-b2b-pricing-card { padding: 24px 18px !important; }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .snj-b2b-pricing-grid { grid-template-columns: 1fr 1fr !important; }
+}
+
+@media (max-width: 640px) {
+  .snj-b2b-pricing-title { font-size: 26px !important; }
+}
+
+/* ================================================================
+   EMPLOYEE-LIST.JSX
+================================================================ */
+.snj-employee-table-wrap {
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch;
+}
+.snj-employee-table-wrap table { min-width: 720px; }
+
+@media (max-width: 767px) {
+  .snj-employee-header {
+    flex-direction: column !important;
+    gap: 12px !important;
+  }
+  .snj-employee-search { width: 100% !important; }
+  .snj-employee-table-wrap td,
+  .snj-employee-table-wrap th {
+    padding: 12px 10px !important;
+    font-size: 13px !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .snj-employee-title { font-size: 26px !important; }
+}
+
+/* ================================================================
+   WORKERREQUEST.JSX
+================================================================ */
+@media (max-width: 767px) {
+  /* Request cards — vertical layout */
+  .snj-worker-req-grid {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
+  .snj-worker-req-card {
+    flex-direction: column !important;
+    gap: 12px !important;
+    padding: 18px 14px !important;
+  }
+  .snj-worker-req-actions {
+    width: 100% !important;
+    flex-direction: row !important;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+  }
+  .snj-worker-req-header {
+    flex-direction: column !important;
+    gap: 12px !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .snj-worker-req-title { font-size: 26px !important; }
+}
+
+/* ================================================================
+   TABLET MID-RANGE (768px – 1023px) — Shared grid fixes
+================================================================ */
+@media (min-width: 768px) and (max-width: 1023px) {
+  /* Flight request grid */
+  .snj-flight-req-grid { grid-template-columns: 1fr 1fr !important; }
+  /* Blog grid */
+  .snj-blog-list-grid { grid-template-columns: 1fr 1fr !important; }
+  /* Job grid */
+  .snj-job-grid { grid-template-columns: 1fr 1fr !important; }
+  /* Worker request */
+  .snj-worker-req-grid { grid-template-columns: 1fr 1fr !important; }
+}
+
+/* ================================================================
+   TV / 4K SCREENS — Admin pages scale up
+================================================================ */
+@media (min-width: 1920px) {
+  /* Give all admin page wrappers more max-width */
+  .snj-admin-page-inner { max-width: 1800px; margin: 0 auto; }
+
+  /* Table cells bigger */
+  .snj-visa-table-wrap td,
+  .snj-visa-table-wrap th,
+  .snj-staff-table-wrap td,
+  .snj-staff-table-wrap th,
+  .snj-revenue-table-wrap td,
+  .snj-revenue-table-wrap th {
+    padding: 24px 20px !important;
+    font-size: 16px !important;
+  }
+
+  /* Card paddings increase */
+  .snj-job-card,
+  .snj-flight-req-card,
+  .snj-rec-hq-card {
+    padding: 40px 36px !important;
+  }
+
+  /* Revenue chart taller */
+  .snj-revenue-chart-area { height: 500px !important; }
+
+  /* Inbox — bigger bubbles */
+  .snj-inbox-bubble { font-size: 18px !important; }
+}
+
+/* ================================================================
+   PERFORMANCE — will-change for heavy transition elements
+================================================================ */
+.snj-job-card,
+.snj-flight-req-card,
+.snj-blog-card,
+.snj-rec-hq-card,
+.snj-manage-rec-item {
+  will-change: transform, box-shadow;
+  transform: translateZ(0);
+}
+
+/* Smooth image transitions in blog/testimony */
+.snj-blog-card-img img,
+.snj-testimony-table-wrap img {
+  will-change: filter, transform;
+}
+
+/* ================================================================
+   TOUCH SCROLL IMPROVEMENTS — all horizontal scroll areas
+================================================================ */
+.snj-visa-table-wrap,
+.snj-staff-table-wrap,
+.snj-revenue-table-wrap,
+.snj-testimony-table-wrap,
+.snj-employee-table-wrap {
+  scroll-snap-type: none;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: #CBD5E1 transparent;
+}
+
+.snj-visa-table-wrap::-webkit-scrollbar,
+.snj-staff-table-wrap::-webkit-scrollbar,
+.snj-revenue-table-wrap::-webkit-scrollbar,
+.snj-testimony-table-wrap::-webkit-scrollbar,
+.snj-employee-table-wrap::-webkit-scrollbar {
+  height: 4px;
+}
+
+.snj-visa-table-wrap::-webkit-scrollbar-thumb,
+.snj-staff-table-wrap::-webkit-scrollbar-thumb,
+.snj-revenue-table-wrap::-webkit-scrollbar-thumb,
+.snj-testimony-table-wrap::-webkit-scrollbar-thumb,
+.snj-employee-table-wrap::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 4px;
+}
+
+/* ================================================================
+   NAVBAR.JSX — Full Responsive (All Breakpoints)
+   Mobile 320px+ / Tablet 768px+ / Desktop 1024px+ / TV 1920px+
+================================================================ */
+
+/* --- Top Utility Bar --- */
+/* Already hidden on mobile via 'hidden lg:block' in JSX */
+/* Ensure it never overflows */
+@media (max-width: 1023px) {
+  .snj-nav-utility-bar { display: none !important; }
+}
+
+/* --- Main Nav container height fix --- */
+@media (max-width: 640px) {
+  /* Reduce nav logo size on very small screens */
+  .snj-nav-logo-img { width: 40px !important; height: 40px !important; }
+  .snj-nav-brand-name { font-size: 18px !important; }
+  .snj-nav-brand-sub { display: none !important; }
+}
+
+@media (max-width: 360px) {
+  /* Tiny screens — hide brand sub and shrink padding */
+  header nav > div { padding-left: 14px !important; padding-right: 14px !important; }
+  .snj-nav-logo-wrap { gap: 8px !important; }
+}
+
+/* --- Language dropdown scroll on tablet --- */
+@media (max-width: 1280px) {
+  .snj-lang-dropdown {
+    max-height: 320px;
+    overflow-y: auto;
+  }
+}
+
+/* --- Mobile Drawer Menu --- */
+/* Drawer takes max 100vw on very small phones */
+@media (max-width: 380px) {
+  .snj-mobile-drawer { max-width: 100% !important; padding: 24px 20px !important; }
+  .snj-mobile-drawer .snj-nav-item-link { font-size: 26px !important; }
+}
+
+/* Mobile language grid — 3 cols on mid-size phones */
+@media (min-width: 400px) and (max-width: 640px) {
+  .snj-mobile-lang-grid { grid-template-columns: repeat(3, 1fr) !important; }
+}
+
+/* Drawer nav items spacing reduce on short screens */
+@media (max-height: 700px) {
+  .snj-mobile-drawer { padding-top: 20px !important; padding-bottom: 20px !important; }
+  .snj-mobile-nav-list { gap: 14px !important; }
+  .snj-mobile-nav-item { font-size: 22px !important; }
+  .snj-mobile-lang-section { margin-bottom: 16px !important; }
+  .snj-mobile-lang-section .snj-mobile-lang-grid { grid-template-columns: repeat(3, 1fr) !important; gap: 6px !important; }
+  .snj-mobile-footer { padding-top: 16px !important; }
+}
+
+/* Ensure framer-motion drawer doesn't cause horizontal overflow */
+body.menu-open { overflow: hidden !important; }
+.snj-mobile-backdrop { touch-action: none; }
+
+/* --- Scrolled state nav --- */
+/* No CSS needed — handled by Tailwind classes in JSX */
+/* Just ensure smooth transition is GPU accelerated */
+header nav {
+  will-change: background-color, padding, box-shadow;
+  transform: translateZ(0);
+}
+
+/* --- User dropdown & Join dropdown alignment on tablet --- */
+@media (min-width: 768px) and (max-width: 1023px) {
+  /* These dropdowns are hidden on tablet (mobile menu shows instead) */
+  /* Ensure they don't leak */
+  .snj-user-dropdown,
+  .snj-join-dropdown { display: none !important; }
+}
+
+/* --- TV/4K Navbar scale up --- */
+@media (min-width: 1920px) {
+  header nav > div { max-width: 1800px; }
+  .snj-nav-brand-name { font-size: 28px !important; }
+  .snj-nav-item { font-size: 14px !important; padding: 12px 20px !important; }
+  .snj-nav-utility-bar { height: 48px !important; font-size: 12px !important; }
+}
+
+@media (min-width: 2560px) {
+  header nav > div { max-width: 2200px; }
+}
+
+/* ================================================================
+   FOOTER.JSX (AgencyFooter) — Full Responsive
+================================================================ */
+
+/* Footer wrapper margin/padding adjustments */
+@media (max-width: 640px) {
+  /* Outer margin reduce — was mx-2 mt-12 mb-6 */
+  .snj-footer-outer {
+    margin: 24px 8px 16px !important;
+  }
+
+  /* Inner card padding */
+  .snj-footer-inner {
+    padding: 18px 16px !important;
+    border-radius: 20px !important;
+  }
+
+  /* Content row — already has flex-col via md: in JSX but add explicit */
+  .snj-footer-row {
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
+    gap: 16px !important;
+  }
+
+  /* Developer credit text size */
+  .snj-footer-dev-label { font-size: 8px !important; letter-spacing: 2px !important; }
+  .snj-footer-dev-name { font-size: 13px !important; }
+
+  /* Right side — center on mobile */
+  .snj-footer-right {
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 12px !important;
+  }
+
+  /* Email link */
+  .snj-footer-email { font-size: 10px !important; }
+
+  /* Social icons */
+  .snj-footer-socials { gap: 10px !important; }
+  .snj-footer-social-btn {
+    width: 38px !important;
+    height: 38px !important;
+  }
+}
+
+/* Tablet — keep row layout but tighter */
+@media (min-width: 641px) and (max-width: 1023px) {
+  .snj-footer-inner {
+    padding: 20px 24px !important;
+  }
+  .snj-footer-row { gap: 16px !important; }
+}
+
+/* TV/4K — scale up footer */
+@media (min-width: 1920px) {
+  .snj-footer-outer { margin: 40px 16px 24px !important; }
+  .snj-footer-inner { padding: 28px 40px !important; border-radius: 40px !important; }
+  .snj-footer-dev-label { font-size: 11px !important; }
+  .snj-footer-dev-name { font-size: 16px !important; }
+  .snj-footer-email { font-size: 13px !important; }
+  .snj-footer-social-btn { width: 48px !important; height: 48px !important; }
+}
+
+/* Footer glass blur — ensure performance */
+.snj-footer-inner {
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  will-change: box-shadow;
+  transform: translateZ(0);
+}
+
+/* ================================================================
+   PROTECTEDROUTE.JSX
+   Pure logic component — no CSS needed.
+   Adding a loading skeleton fallback style just in case.
+================================================================ */
+.snj-route-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: #fff;
+}
+
+.snj-route-loading::after {
+  content: '';
+  width: 48px;
+  height: 48px;
+  border: 4px solid #EAB308;
+  border-top-color: #0B1F3A;
+  border-radius: 50%;
+  animation: snj-spin 0.7s linear infinite;
+}
+
+@keyframes snj-spin {
+  to { transform: rotate(360deg); }
+}
