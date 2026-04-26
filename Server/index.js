@@ -23,7 +23,7 @@ const io = new Server(server, {
 // Middleware
 app.use(cors({
   origin: [
-    'https://snj-global-agency.netlify.app',
+    'https://snj-global-agency.onrender.com',
     'https://snj-global-agency-backend.onrender.com',
     'http://localhost:5173'
   ],
