@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 // ─── Config ────────────────────────────────────────────────────────────────────
-const API_BASE = 'https://snj-global-agency-backend.onrender.com/api';
+const API_BASE = 'http://localhost:5000/api';
 const REFRESH_INTERVAL = 30000;
 
 // ─── API Helper ────────────────────────────────────────────────────────────────
@@ -31,7 +31,7 @@ const UserIcon    = () => <Ic d={['M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2','M12
 const BellIcon    = () => <Ic d={['M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9','M13.73 21a2 2 0 01-3.46 0']} />;
 const FileIcon    = () => <Ic d={['M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z','M14 2v6h6']} />;
 const ChartIcon   = () => <Ic d={['M18 20V10','M12 20V4','M6 20v-6']} />;
-const Dollar   = () => <Ic d={['M18 20V10','M12 20V4','M6 20v-6']} />;
+const Dollar      = () => <Ic d={['M18 20V10','M12 20V4','M6 20v-6']} />;
 const GlobeIcon   = ({ size = 18 }) => <Ic size={size} d={['M12 2a10 10 0 100 20A10 10 0 0012 2z','M2 12h20','M12 2a15.3 15.3 0 010 20']} />;
 const PhoneIcon   = ({ size = 18 }) => <Ic size={size} d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 010 1.11 2 2 0 012 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92z" />;
 const MailIcon    = ({ size = 18 }) => <Ic size={size} d={['M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z','M22 6l-10 7L2 6']} />;
@@ -53,8 +53,6 @@ const PlusIcon    = () => <Ic d={['M12 5v14','M5 12h14']} />;
 const XIcon       = () => <Ic d={['M18 6L6 18','M6 6l12 12']} size={16} />;
 const ChevronIcon = () => <Ic size={12} d="M9 18l6-6-6-6" />;
 const ArrowIcon   = ({ size = 12 }) => <Ic size={size} d="M5 12h14M12 5l7 7-7 7" />;
-
-
 
 // ─── Static Data ───────────────────────────────────────────────────────────────
 const OFFICES = [
@@ -261,7 +259,6 @@ const G = `
   .toast.ok{background:#059669;color:#fff}
   .toast.err{background:#DC2626;color:#fff}
   .r2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-  /* ── Logout Confirm Modal ── */
   .lco{position:fixed;inset:0;background:rgba(11,31,58,.7);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px}
   .lcm{background:#fff;border-radius:20px;width:100%;max-width:380px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.3)}
   .lch{background:var(--navy);padding:24px 28px}
@@ -299,7 +296,6 @@ function useAutoRefresh(fetchFn, interval = REFRESH_INTERVAL) {
 
   return { data, loading, error, lastUpdated, refreshing, refresh: () => load(false) };
 }
-
 
 // ─── Shared UI ─────────────────────────────────────────────────────────────────
 const Footer = () => (
@@ -364,7 +360,6 @@ const Err = ({ message, onRetry }) => (
 const Toast = ({ msg, type }) => msg ? <div className={`toast ${type}`}>{type === 'ok' ? '✓' : '✕'} {msg}</div> : null;
 
 // ─── Logout Confirm Modal ──────────────────────────────────────────────────────
-// ✅ onConfirm prop দিয়ে actual logout logic pass করা হয়
 function LogoutModal({ onConfirm, onCancel }) {
   return (
     <div className="lco" onClick={e => e.target === e.currentTarget && onCancel()}>
@@ -385,16 +380,10 @@ function LogoutModal({ onConfirm, onCancel }) {
             Are you sure you want to sign out of the Employer Portal? You will need to log in again to access your account.
           </p>
           <div style={{ display: 'flex', gap: 10 }}>
-            <button
-              onClick={onCancel}
-              style={{ flex: 1, padding: '11px 0', background: '#F1F5F9', color: 'var(--ts)', fontSize: 11, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '.1em', border: 'none', borderRadius: 11, cursor: 'pointer' }}
-            >
+            <button onClick={onCancel} style={{ flex: 1, padding: '11px 0', background: '#F1F5F9', color: 'var(--ts)', fontSize: 11, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '.1em', border: 'none', borderRadius: 11, cursor: 'pointer' }}>
               Cancel
             </button>
-            <button
-              onClick={onConfirm}
-              style={{ flex: 1.5, padding: '11px 0', background: 'linear-gradient(135deg,#DC2626,#B91C1C)', color: '#fff', fontSize: 11, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '.1em', border: 'none', borderRadius: 11, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}
-            >
+            <button onClick={onConfirm} style={{ flex: 1.5, padding: '11px 0', background: 'linear-gradient(135deg,#DC2626,#B91C1C)', color: '#fff', fontSize: 11, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '.1em', border: 'none', borderRadius: 11, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}>
               <LogoutIcon /> Sign Out Now
             </button>
           </div>
@@ -423,9 +412,9 @@ function SubmitRequestModal({ employerId, onClose, onSuccess }) {
 
   const validate = () => {
     const e = {};
-    if (!form.company_name.trim())        e.company_name       = 'Company name is required';
-    if (!form.job_title.trim())           e.job_title          = 'Job title is required';
-    if (!form.workers_requested)          e.workers_requested  = 'Number of workers required';
+    if (!form.company_name.trim())        e.company_name        = 'Company name is required';
+    if (!form.job_title.trim())           e.job_title           = 'Job title is required';
+    if (!form.workers_requested)          e.workers_requested   = 'Number of workers required';
     else if (parseInt(form.workers_requested) <= 0) e.workers_requested = 'Must be greater than 0';
     if (!form.destination_country.trim()) e.destination_country = 'Destination country is required';
     setErrors(e);
@@ -524,7 +513,7 @@ function SubmitRequestModal({ employerId, onClose, onSuccess }) {
 const OverviewPage = ({ setTab, employerId, showSubmit }) => {
   const fR = useCallback(() => apiFetch(`/worker-requests?employer_id=${employerId}&limit=4`), [employerId]);
   const { data, loading, error, refresh, refreshing } = useAutoRefresh(fR);
-  const reqs = data?.data || [];
+  const reqs     = data?.data || [];
   const totalReq = reqs.reduce((a, r) => a + (r.workers_requested || 0), 0);
   const totalDel = reqs.reduce((a, r) => a + (r.workers_delivered || 0), 0);
   const pending  = reqs.filter(r => r.status === 'pending_review' || r.status === 'pending').length;
@@ -548,8 +537,8 @@ const OverviewPage = ({ setTab, employerId, showSubmit }) => {
         {[
           { label: 'Workers Requested', value: loading ? '…' : totalReq.toLocaleString(), bg: '#0B1F3A', fg: '#fff' },
           { label: 'Workers Delivered', value: loading ? '…' : totalDel.toLocaleString(), bg: '#EAB308', fg: '#0B1F3A' },
-          { label: 'Pending Review',    value: loading ? '…' : pending, bg: '#DC2626', fg: '#fff' },
-          { label: 'Active Contracts',  value: loading ? '…' : active,  bg: '#059669', fg: '#fff' },
+          { label: 'Pending Review',    value: loading ? '…' : pending,                   bg: '#DC2626', fg: '#fff' },
+          { label: 'Active Contracts',  value: loading ? '…' : active,                    bg: '#059669', fg: '#fff' },
         ].map((s, i) => (
           <div key={i} className="sc" style={{ background: s.bg }}>
             <div className="sv" style={{ color: s.fg }}>{s.value}</div>
@@ -560,9 +549,9 @@ const OverviewPage = ({ setTab, employerId, showSubmit }) => {
       <div className="sl">Quick Actions</div>
       <div className="svgrid">
         {[
-          { title: 'Submit New Request', sub: 'Request workers for a new destination', count: 'Click to submit', bg: '#FFFBEB', border: '#FDE68A', action: showSubmit },
-          { title: 'Progress Dashboard', sub: 'Track delivery & pipeline status', count: `${totalReq} Workers Tracked`, bg: '#F0FDF4', border: '#BBF7D0', action: () => setTab('progress') },
-          { title: 'Global Network',     sub: 'Our offices & contact channels', count: '6 Global Offices', bg: '#F5F3FF', border: '#DDD6FE', action: () => setTab('network') },
+          { title: 'Submit New Request', sub: 'Request workers for a new destination', count: 'Click to submit',          bg: '#FFFBEB', border: '#FDE68A', action: showSubmit },
+          { title: 'Progress Dashboard', sub: 'Track delivery & pipeline status',       count: `${totalReq} Workers Tracked`, bg: '#F0FDF4', border: '#BBF7D0', action: () => setTab('progress') },
+          { title: 'Global Network',     sub: 'Our offices & contact channels',         count: '6 Global Offices',        bg: '#F5F3FF', border: '#DDD6FE', action: () => setTab('network') },
         ].map((s, i) => (
           <div key={i} className="svc" onClick={s.action} style={{ background: s.bg, borderColor: s.border }}>
             <div style={{ marginBottom: 12 }}><GlobeIcon size={24} /></div>
@@ -679,10 +668,10 @@ const ProfilePage = ({ employerId }) => {
 const NotificationsPage = ({ employerId }) => {
   const fN = useCallback(() => apiFetch(`/notifications?employer_id=${employerId}`), [employerId]);
   const { data, loading, error, refresh, refreshing } = useAutoRefresh(fN);
-  const notifs = data?.data || [];
-  const unread = notifs.filter(n => !n.is_read).length;
+  const notifs  = data?.data || [];
+  const unread  = notifs.filter(n => !n.is_read).length;
   const markAllRead = async () => { try { await apiFetch(`/notifications/read-all?employer_id=${employerId}`, { method: 'PUT' }); refresh(); } catch {} };
-  const markOne = async (id) => { try { await apiFetch(`/notifications/${id}/read`, { method: 'PUT' }); refresh(); } catch {} };
+  const markOne     = async (id) => { try { await apiFetch(`/notifications/${id}/read`, { method: 'PUT' }); refresh(); } catch {} };
   const iBg    = { deal: '#DBEAFE', verify: '#DCFCE7', supply: '#FEF3C7', message: '#EDE9FE', info: '#F1F5F9', alert: '#FEE2E2' };
   const iColor = { deal: '#2563EB', verify: '#16A34A', supply: '#B45309', message: '#7C3AED', info: '#64748B', alert: '#DC2626' };
   return (
@@ -724,9 +713,9 @@ const NotificationsPage = ({ employerId }) => {
 const RequestsPage = ({ employerId, showSubmit }) => {
   const fR = useCallback(() => apiFetch(`/worker-requests?employer_id=${employerId}`), [employerId]);
   const { data, loading, error, refresh, refreshing } = useAutoRefresh(fR);
-  const reqs = data?.data || [];
+  const reqs         = data?.data || [];
   const STATUS_ORDER = ['pending_review', 'pending', 'in_progress', 'delivering', 'completed', 'cancelled'];
-  const counts = {};
+  const counts       = {};
   STATUS_ORDER.forEach(s => { counts[s] = reqs.filter(r => r.status === s).length; });
   return (
     <div>
@@ -787,14 +776,14 @@ const RequestsPage = ({ employerId, showSubmit }) => {
 const ProgressPage = ({ employerId }) => {
   const fR = useCallback(() => apiFetch(`/worker-requests?employer_id=${employerId}`), [employerId]);
   const { data, loading, error, refresh, refreshing } = useAutoRefresh(fR);
-  const all = data?.data || [];
+  const all     = data?.data || [];
   const [filters, setFilters] = useState({ country: 'all', job: 'all', status: 'all' });
   const countries = [...new Set(all.map(r => r.destination_country).filter(Boolean))];
   const jobs      = [...new Set(all.map(r => r.job_title).filter(Boolean))];
   const filtered  = all.filter(r => {
     const cf = filters.country === 'all' || r.destination_country === filters.country;
-    const jf = filters.job    === 'all' || r.job_title            === filters.job;
-    const sf = filters.status === 'all' || r.status               === filters.status;
+    const jf = filters.job     === 'all' || r.job_title            === filters.job;
+    const sf = filters.status  === 'all' || r.status               === filters.status;
     return cf && jf && sf;
   });
   const totReq = filtered.reduce((a, r) => a + (r.workers_requested || 0), 0);
@@ -823,10 +812,10 @@ const ProgressPage = ({ employerId }) => {
       {error && <Err message={error} onRetry={refresh} />}
       <div className="psum">
         {[
-          { val: loading ? '…' : totReq,         lbl: 'Total Requested',   bg: '#0B1F3A', fg: '#fff' },
-          { val: loading ? '…' : totDel,         lbl: 'Workers Delivered', bg: '#EAB308', fg: '#0B1F3A' },
-          { val: loading ? '…' : totReq - totDel, lbl: 'Remaining',        bg: '#3B82F6', fg: '#fff' },
-          { val: loading ? '…' : pct + '%',      lbl: 'Completion Rate',   bg: '#059669', fg: '#fff' },
+          { val: loading ? '…' : totReq,          lbl: 'Total Requested',   bg: '#0B1F3A', fg: '#fff' },
+          { val: loading ? '…' : totDel,          lbl: 'Workers Delivered', bg: '#EAB308', fg: '#0B1F3A' },
+          { val: loading ? '…' : totReq - totDel, lbl: 'Remaining',         bg: '#3B82F6', fg: '#fff' },
+          { val: loading ? '…' : pct + '%',       lbl: 'Completion Rate',   bg: '#059669', fg: '#fff' },
         ].map((s, i) => (
           <div key={i} className="psc" style={{ background: s.bg }}>
             <div className="psv" style={{ color: s.fg }}>{s.val}</div>
@@ -881,60 +870,148 @@ const ProgressPage = ({ employerId }) => {
   );
 };
 
+// ─── ✅ UPDATED Payment Component — Dynamic amount & reference ─────────────────
 const Payment = () => {
   const navigate = useNavigate();
-  const handlePaymentRedirect = () => navigate('/payment');
+
+  // ── Local state for form inputs ───────────────────────────────────────────
+  const [payAmount, setPayAmount] = useState('');
+  const [payRef,    setPayRef]    = useState('');
+  const [amtError,  setAmtError]  = useState('');
+
+  const handlePaymentRedirect = () => {
+    // Validation
+    if (!payAmount || parseFloat(payAmount) <= 0) {
+      setAmtError('Please enter a valid amount greater than 0');
+      return;
+    }
+    setAmtError('');
+
+    // Navigate to /payment with dynamic state
+    navigate('/payment', {
+      state: {
+        amount:    parseFloat(payAmount),
+        reference: payRef.trim() || 'SNJ-GENERAL',
+        currency:  'usd',
+        label:     'Worker Placement Service Fee',
+      },
+    });
+  };
+
   return (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12 }}>
-                                {[
-                                    { label: 'Total Paid',      value: '$0', bg: '#f0fdf4', border: '#bbf7d0', color: '#15803d' },
-                                    { label: 'Pending Payment', value: '$0', bg: '#fffbeb', border: '#fde68a', color: '#b45309' },
-                                    { label: 'Credit Balance',  value: '$0', bg: '#eff6ff', border: '#bfdbfe', color: '#1d4ed8' },
-                                ].map((st, i) => (
-                                    <div key={i} style={{ background: st.bg, border: `1px solid ${st.border}`, borderRadius: 16, padding: 20 }}>
-                                        <div style={{ fontSize: 9, fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1, color: '#64748b' }}>{st.label}</div>
-                                        <div style={{ fontSize: 26, fontWeight: 900, color: st.color, marginTop: 6 }}>{st.value}</div>
-                                    </div>
-                                ))}
-                            </div>
-                            <div style={{ background: '#fff', border: '1px solid #f1f5f9', borderRadius: 18, padding: 22 }}>
-                                <div style={{ fontSize: 10, fontWeight: 900, color: '#0B1F3A', textTransform: 'uppercase', letterSpacing: 2, marginBottom: 20 }}>Make a Payment</div>
-                                <div style={{ maxWidth: 520 }}>
-                                    {[{ label: 'Payment Amount (USD)', type: 'number', placeholder: 'Enter amount' }, { label: 'Payment Reference (File ID)', type: 'text', placeholder: 'e.g. SNJ-2024-001' }].map((f, i) => (
-                                        <div key={i} style={{ marginBottom: 14 }}>
-                                            <label style={{ display: 'block', fontSize: 9, fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1.5, color: '#0B1F3A', marginBottom: 6, fontFamily: '"Times New Roman", serif' }}>{f.label}</label>
-                                            <input type={f.type} placeholder={f.placeholder} style={{ width: '100%', padding: '12px 16px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 12, fontSize: 13, fontFamily: '"Times New Roman", serif', outline: 'none', boxSizing: 'border-box' }} />
-                                        </div>
-                                    ))}
-                                    <div style={{ background: '#0B1F3A', borderRadius: 16, padding: 22, marginTop: 8 }}>
-                                        <div style={{ color: '#EAB308', fontSize: 9, fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 8 }}>Payment Gateway — Stripe</div>
-                                        <div style={{ color: '#94a3b8', fontSize: 12, lineHeight: 1.5 }}>Stripe payment gateway will be integrated here. Contact SNJ admin to activate.</div>
-                                        <button 
-                                            onClick={handlePaymentRedirect}
-                                            style={{ 
-                                                width: '100%', 
-                                                background: '#EAB308', 
-                                                color: '#0B1F3A', 
-                                                border: 'none', 
-                                                padding: 13, 
-                                                borderRadius: 12, 
-                                                fontWeight: 900, 
-                                                textTransform: 'uppercase', 
-                                                fontSize: 12, 
-                                                fontFamily: '"Times New Roman", serif', 
-                                                letterSpacing: 1, 
-                                                cursor: 'pointer', 
-                                                marginTop: 14 
-                                            }}
-                                            >
-                                            💳 Proceed to Stripe Payment
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                            <Footer />
-                        </div>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+
+      {/* Summary Cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12 }}>
+        {[
+          { label: 'Total Paid',      value: '$0', sub: 'Completed invoices', bg: '#f0fdf4', border: '#bbf7d0', color: '#15803d', icon: '✅' },
+          { label: 'Pending Payment', value: '$0', sub: 'Active files total',  bg: '#fffbeb', border: '#fde68a', color: '#b45309', icon: '⏳' },
+          
+        ].map((st, i) => (
+          <div key={i} style={{ background: st.bg, border: `1px solid ${st.border}`, borderRadius: 16, padding: 20 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+              <div style={{ fontSize: 9, fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1, color: '#64748b' }}>{st.label}</div>
+              <span style={{ fontSize: 16 }}>{st.icon}</span>
+            </div>
+            <div style={{ fontSize: 26, fontWeight: 900, color: st.color }}>{st.value}</div>
+            <div style={{ fontSize: 9, color: '#94a3b8', marginTop: 4, fontWeight: 700 }}>{st.sub}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Payment Form */}
+      <div style={{ background: '#fff', border: '1px solid #f1f5f9', borderRadius: 18, padding: 22 }}>
+        <div style={{ fontSize: 10, fontWeight: 900, color: '#0B1F3A', textTransform: 'uppercase', letterSpacing: 2, marginBottom: 20 }}>
+          Make a Payment
+        </div>
+        <div style={{ maxWidth: 520 }}>
+
+          {/* ── Amount Input ── */}
+          <div style={{ marginBottom: 14 }}>
+            <label style={{ display: 'block', fontSize: 9, fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1.5, color: '#0B1F3A', marginBottom: 6, fontFamily: '"Times New Roman", serif' }}>
+              Payment Amount (USD) *
+            </label>
+            <input
+              type="number"
+              placeholder="Enter amount e.g. 150"
+              min="1"
+              value={payAmount}
+              onChange={e => { setPayAmount(e.target.value); setAmtError(''); }}
+              style={{
+                width: '100%', padding: '12px 16px',
+                background: '#f8fafc',
+                border: `1px solid ${amtError ? '#ef4444' : '#e2e8f0'}`,
+                borderRadius: 12, fontSize: 13,
+                fontFamily: '"Times New Roman", serif',
+                outline: 'none', boxSizing: 'border-box',
+              }}
+            />
+            {amtError && (
+              <div style={{ fontSize: 11, color: '#ef4444', marginTop: 4, fontWeight: 600 }}>{amtError}</div>
+            )}
+          </div>
+
+          {/* ── Reference Input ── */}
+          <div style={{ marginBottom: 14 }}>
+            <label style={{ display: 'block', fontSize: 9, fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1.5, color: '#0B1F3A', marginBottom: 6, fontFamily: '"Times New Roman", serif' }}>
+              Payment Reference (File ID)
+            </label>
+            <input
+              type="text"
+              placeholder="e.g. SNJ-2024-001"
+              value={payRef}
+              onChange={e => setPayRef(e.target.value)}
+              style={{
+                width: '100%', padding: '12px 16px',
+                background: '#f8fafc', border: '1px solid #e2e8f0',
+                borderRadius: 12, fontSize: 13,
+                fontFamily: '"Times New Roman", serif',
+                outline: 'none', boxSizing: 'border-box',
+              }}
+            />
+          </div>
+
+          {/* ── Live Preview ── */}
+          {payAmount && parseFloat(payAmount) > 0 && (
+            <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 12, padding: '12px 16px', marginBottom: 14, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div>
+                <div style={{ fontSize: 9, fontWeight: 900, textTransform: 'uppercase', color: '#64748b', letterSpacing: 1 }}>You will be charged</div>
+                <div style={{ fontSize: 20, fontWeight: 900, color: '#15803d', marginTop: 2 }}>${parseFloat(payAmount).toFixed(2)} USD</div>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontSize: 9, fontWeight: 900, textTransform: 'uppercase', color: '#64748b', letterSpacing: 1 }}>Reference</div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: '#0B1F3A', marginTop: 2 }}>{payRef.trim() || 'SNJ-GENERAL'}</div>
+              </div>
+            </div>
+          )}
+
+          {/* ── Stripe Box ── */}
+          <div style={{ background: '#0B1F3A', borderRadius: 16, padding: 22, marginTop: 8 }}>
+            <div style={{ color: '#EAB308', fontSize: 9, fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 8 }}>
+              Payment Gateway — Stripe
+            </div>
+            <div style={{ color: '#94a3b8', fontSize: 12, lineHeight: 1.5 }}>
+              Enter the amount above, then proceed to Stripe checkout.
+            </div>
+            <button
+              onClick={handlePaymentRedirect}
+              style={{
+                width: '100%', background: '#EAB308', color: '#0B1F3A',
+                border: 'none', padding: 13, borderRadius: 12,
+                fontWeight: 900, textTransform: 'uppercase', fontSize: 12,
+                fontFamily: '"Times New Roman", serif',
+                letterSpacing: 1, cursor: 'pointer', marginTop: 14,
+              }}
+            >
+              💳 Proceed to Stripe Payment
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+      <Footer />
+    </div>
   );
 };
 
@@ -943,12 +1020,12 @@ const WhyChoosePage = () => (
     <HBox tag="Our Commitment" title="Why Choose SNJ GlobalRoutes" sub="The trusted partner for transparent, legal, and effective global worker placement." />
     <div className="wg">
       {[
-        { icon: <EyeIcon />,     c: '#EFF6FF', ic: '#2563EB', t: 'Transparent Process',      d: 'Every step of the hiring process is fully visible — from job posting to worker arrival. No hidden fees, no surprises.' },
-        { icon: <ShieldIcon />,  c: '#DCFCE7', ic: '#16A34A', t: 'Fraud Prevention',          d: 'We verify every document, employer license, and worker profile. All pathways are fully compliant with international labor laws.' },
+        { icon: <EyeIcon />,     c: '#EFF6FF', ic: '#2563EB', t: 'Transparent Process',        d: 'Every step of the hiring process is fully visible — from job posting to worker arrival. No hidden fees, no surprises.' },
+        { icon: <ShieldIcon />,  c: '#DCFCE7', ic: '#16A34A', t: 'Fraud Prevention',            d: 'We verify every document, employer license, and worker profile. All pathways are fully compliant with international labor laws.' },
         { icon: <LinkIcon />,    c: '#F5F3FF', ic: '#7C3AED', t: 'Real Talent, Real Companies', d: 'We connect genuine job seekers with verified, reputable employers. Every employer undergoes rigorous screening.' },
-        { icon: <CompassIcon />, c: '#FFF7ED', ic: '#C2410C', t: 'Legal Pathways',            d: 'Our expert team provides end-to-end guidance on visas, work permits, and legal migration in every destination country.' },
-        { icon: <TrendIcon />,   c: '#F0FDF4', ic: '#059669', t: 'Global Reach',              d: "With offices in Dhaka, Dubai, London, KL, Warsaw, and Berlin — bridging talent from Bangladesh to the world's top markets." },
-        { icon: <CheckIcon />,   c: '#FEF3C7', ic: '#B45309', t: 'End-to-End Support',        d: 'From initial application to successful placement, our dedicated team is with you at every stage.' },
+        { icon: <CompassIcon />, c: '#FFF7ED', ic: '#C2410C', t: 'Legal Pathways',              d: 'Our expert team provides end-to-end guidance on visas, work permits, and legal migration in every destination country.' },
+        { icon: <TrendIcon />,   c: '#F0FDF4', ic: '#059669', t: 'Global Reach',                d: "With offices in Dhaka, Dubai, London, KL, Warsaw, and Berlin — bridging talent from Bangladesh to the world's top markets." },
+        { icon: <CheckIcon />,   c: '#FEF3C7', ic: '#B45309', t: 'End-to-End Support',          d: 'From initial application to successful placement, our dedicated team is with you at every stage.' },
       ].map((w, i) => (
         <div key={i} className="wcard">
           <div className="wi" style={{ background: w.c }}><span style={{ color: w.ic }}>{w.icon}</span></div>
@@ -976,9 +1053,9 @@ const AboutPage = () => (
     <HBox tag="Company Overview" title="About SNJ Global Routes" sub="Connecting talent, empowering futures, building a safer world of work." />
     <div className="apg">
       {[
-        { icon: <UsersIcon />, c: '#EFF6FF', ic: '#2563EB', t: 'Job Seekers',        s: 'We connect skilled workers from Bangladesh and beyond to verified opportunities across the globe — safely and legally.' },
-        { icon: <EyeIcon />,   c: '#F0FDF4', ic: '#059669', t: 'Students & Graduates', s: 'We help students and fresh graduates access international internships, training programs, and entry-level positions abroad.' },
-        { icon: <TrendIcon />, c: '#F5F3FF', ic: '#7C3AED', t: 'Employers',           s: 'We partner with companies worldwide to source reliable, skilled, and pre-verified talent to fill their workforce needs.' },
+        { icon: <UsersIcon />, c: '#EFF6FF', ic: '#2563EB', t: 'Job Seekers',          s: 'We connect skilled workers from Bangladesh and beyond to verified opportunities across the globe — safely and legally.' },
+        { icon: <EyeIcon />,   c: '#F0FDF4', ic: '#059669', t: 'Students & Graduates',  s: 'We help students and fresh graduates access international internships, training programs, and entry-level positions abroad.' },
+        { icon: <TrendIcon />, c: '#F5F3FF', ic: '#7C3AED', t: 'Employers',             s: 'We partner with companies worldwide to source reliable, skilled, and pre-verified talent to fill their workforce needs.' },
       ].map((p, i) => (
         <div key={i} className="apc">
           <div className="api" style={{ background: p.c, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px', width: 56, height: 56, borderRadius: 16 }}><span style={{ color: p.ic }}>{p.icon}</span></div>
@@ -1069,18 +1146,17 @@ const NAV = [
 
 // ─── Main Dashboard ────────────────────────────────────────────────────────────
 export default function EmployerDashboard() {
-  // ✅ localStorage থেকে employer id নাও — login এর সময় save করা হয়েছে
   const employerData = JSON.parse(localStorage.getItem('employer') || '{}');
-  const employerId   = employerData?.id || 1; // fallback 1
+  const employerId   = employerData?.id || 1;
 
-  const [tab,          setTab]    = useState('overview');
-  const [sbOpen,       setSB]     = useState(true);
-  const [showForm,     setForm]   = useState(false);
-  const [showLogout,   setShowLogout] = useState(false); // ✅ logout confirm modal state
-  const [toast,        setToast]  = useState({ msg: '', type: 'ok' });
-  const [notifCnt,     setNC]     = useState(0);
-  const [pendCnt,      setPC]     = useState(0);
-  const navigate    = useNavigate();
+  const [tab,        setTab]        = useState('overview');
+  const [sbOpen,     setSB]         = useState(true);
+  const [showForm,   setForm]       = useState(false);
+  const [showLogout, setShowLogout] = useState(false);
+  const [toast,      setToast]      = useState({ msg: '', type: 'ok' });
+  const [notifCnt,   setNC]         = useState(0);
+  const [pendCnt,    setPC]         = useState(0);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchCounts = async () => {
@@ -1101,14 +1177,12 @@ export default function EmployerDashboard() {
     setTimeout(() => setToast({ msg: '', type: 'ok' }), 4000);
   };
 
-  // ✅ handleLogout — EmployerDashboard এর ভেতরে সঠিক জায়গায় define করা হয়েছে
   const handleLogout = () => {
     localStorage.removeItem('employer_token');
     localStorage.removeItem('employer');
     sessionStorage.clear();
-        window.dispatchEvent(new Event('authChange'));
-        navigate('/login', { replace: true });
-    //window.location.href = '/login';
+    window.dispatchEvent(new Event('authChange'));
+    navigate('/login', { replace: true });
   };
 
   const navWithBadges = NAV.map(n => ({
@@ -1121,12 +1195,12 @@ export default function EmployerDashboard() {
   const renderPage = () => {
     const p = { employerId, setTab };
     switch (tab) {
-      case 'overview':      return <OverviewPage  {...p} showSubmit={() => setForm(true)} />;
-      case 'profile':       return <ProfilePage   {...p} />;
-      case 'notifications': return <NotificationsPage {...p} />;
-      case 'requests':      return <RequestsPage  {...p} showSubmit={() => setForm(true)} />;
-      case 'progress':      return <ProgressPage  {...p} />;
-      case 'payment':     return <Payment {...p} />;
+      case 'overview':      return <OverviewPage       {...p} showSubmit={() => setForm(true)} />;
+      case 'profile':       return <ProfilePage        {...p} />;
+      case 'notifications': return <NotificationsPage  {...p} />;
+      case 'requests':      return <RequestsPage       {...p} showSubmit={() => setForm(true)} />;
+      case 'progress':      return <ProgressPage       {...p} />;
+      case 'payment':       return <Payment            {...p} />;
       case 'whychoose':     return <WhyChoosePage />;
       case 'about':         return <AboutPage />;
       case 'network':       return <NetworkPage />;
@@ -1147,7 +1221,7 @@ export default function EmployerDashboard() {
           {sbOpen && (
             <div className="sb-user">
               <div className="sb-ui">
-                <div className="ui">{employerData?.company_name ? employerData.company_name.slice(0,2).toUpperCase() : 'EM'}</div>
+                <div className="ui">{employerData?.company_name ? employerData.company_name.slice(0, 2).toUpperCase() : 'EM'}</div>
                 <div>
                   <div className="un" style={{ maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {employerData?.company_name || 'Employer Portal'}
@@ -1177,7 +1251,6 @@ export default function EmployerDashboard() {
               {sbOpen ? <CloseIcon /> : <MenuIcon />}
               {sbOpen && <span style={{ fontSize: 11, fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '.08em' }}>Collapse</span>}
             </button>
-            {/* ✅ Logout button — setShowLogout(true) দিয়ে confirm modal খোলে */}
             <button className="lb" onClick={() => setShowLogout(true)}>
               <LogoutIcon />
               {sbOpen && <span style={{ fontSize: 11, fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '.08em' }}>Logout</span>}
@@ -1211,23 +1284,13 @@ export default function EmployerDashboard() {
         </main>
       </div>
 
-      {/* ✅ Logout Confirm Modal */}
-      {showLogout && (
-        <LogoutModal
-          onConfirm={handleLogout}
-          onCancel={() => setShowLogout(false)}
-        />
-      )}
+      {showLogout && <LogoutModal onConfirm={handleLogout} onCancel={() => setShowLogout(false)} />}
 
-      {/* Submit Modal */}
       {showForm && (
         <SubmitRequestModal
           employerId={employerId}
           onClose={() => setForm(false)}
-          onSuccess={(msg) => {
-            showToast(msg, 'ok');
-            setTab('requests');
-          }}
+          onSuccess={(msg) => { showToast(msg, 'ok'); setTab('requests'); }}
         />
       )}
 

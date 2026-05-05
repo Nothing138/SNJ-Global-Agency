@@ -17,7 +17,7 @@ const AppliedCandidates = () => {
     const fetchData = async () => {
         setLoading(true);
         try {
-            const res = await axios.get('https://snj-global-agency-backend.onrender.com/api/admin/applied-candidates');
+            const res = await axios.get('http://localhost:5000/api/admin/applied-candidates');
             setApplicants(res.data);
             setFilteredData(res.data);
         } catch (err) { 
@@ -52,7 +52,7 @@ const AppliedCandidates = () => {
 
     const updateStatus = async (id, newStatus) => {
         try {
-            await axios.patch(`https://snj-global-agency-backend.onrender.com/api/admin/applications/${id}/status`, { status: newStatus });
+            await axios.patch(`http://localhost:5000/api/admin/applications/${id}/status`, { status: newStatus });
             const Toast = Swal.mixin({ 
                 toast: true, 
                 position: 'top-end', 
@@ -79,7 +79,7 @@ const AppliedCandidates = () => {
         }).then(async (result) => {
             if (result.isConfirmed) {
                 try {
-                    await axios.delete(`https://snj-global-agency-backend.onrender.com/api/admin/applications/${id}`);
+                    await axios.delete(`http://localhost:5000/api/admin/applications/${id}`);
                     fetchData();
                 } catch (err) { Swal.fire('Error', 'Delete failed', 'error'); }
             }

@@ -125,7 +125,6 @@ exports.getPricing = async (req, res) => {
              FROM b2b_pricing
              ORDER BY country ASC`
         );
-
         return res.json({ success: true, data: rows, total: rows.length });
 
     } catch (err) {
@@ -210,6 +209,55 @@ exports.updateFileStatus = async (req, res) => {
 
     } catch (err) {
         console.error('[updateFileStatus] Error:', err.message);
+        return res.status(500).json({ success: false, message: 'Server error', error: err.message });
+    }
+};
+
+// ── GET /api/b2b/dashboard/payment-summary ────────────────────────────────────
+// Total Paid    → completed tasks এর selected_price SUM
+// Pending       → active tasks (pending/processing/confirmed) এর selected_price SUM
+// Credit Balance→ b2b_partners.credit_balance
+exports.getPaymentSummary = async (req, res) => {
+    try {
+        const [totalPaidRows, pendingRows, creditRows] = await Promise.all([
+
+            query(
+                `SELECT COALESCE(SUM(selected_price), 0) AS total_paid
+                 FROM assigned_tasks
+                 WHERE partner_id = ?
+                   AND status = 'completed'
+                   AND selected_price IS NOT NULL`,
+                [req.partnerId]
+            ),
+
+            query(
+                `SELECT COALESCE(SUM(selected_price), 0) AS pending_payment
+                 FROM assigned_tasks
+                 WHERE partner_id = ?
+                   AND selected_price IS NOT NULL
+                   AND status IN ('pending', 'processing', 'confirmed')`,
+                [req.partnerId]
+            ),
+
+            query(
+                `SELECT COALESCE(credit_balance, 0) AS credit_balance
+                 FROM b2b_partners
+                 WHERE id = ?`,
+                [req.partnerId]
+            ),
+        ]);
+
+        return res.json({
+            success: true,
+            data: {
+                total_paid:      parseFloat(totalPaidRows[0]?.total_paid)    || 0,
+                pending_payment: parseFloat(pendingRows[0]?.pending_payment) || 0,
+                credit_balance:  parseFloat(creditRows[0]?.credit_balance)   || 0,
+            },
+        });
+
+    } catch (err) {
+        console.error('[getPaymentSummary] Error:', err.message);
         return res.status(500).json({ success: false, message: 'Server error', error: err.message });
     }
 };

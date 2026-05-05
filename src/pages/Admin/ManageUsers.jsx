@@ -8,7 +8,7 @@ const ManageUsers = () => {
     const handleAddUser = async (e) => {
         e.preventDefault();
         try {
-            await axios.post('https://snj-global-agency-backend.onrender.com/api/auth/register', formData);
+            await axios.post('http://localhost:5000/api/auth/register', formData);
             Swal.fire({
                 title: 'Success',
                 text: 'New Staff Authorized!',

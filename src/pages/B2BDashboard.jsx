@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 // ─── API CONFIG ───────────────────────────────────────────────────────────────
-const API_BASE        = 'https://snj-global-agency-backend.onrender.com';
+const API_BASE        = 'http://localhost:5000';
 const AUTO_REFRESH_MS = 10_000;
 
 // ─── REGION MAPPER ────────────────────────────────────────────────────────────
@@ -115,41 +115,22 @@ const RefreshBadge = ({ time, refreshing }) => (
 // ─── FILE DETAILS MODAL ───────────────────────────────────────────────────────
 const FileDetailsModal = ({ file, onClose }) => {
     if (!file) return null;
-
     const sc = fileStatusColors[file.status] || { bg: '#f1f5f9', color: '#64748b', border: '#e2e8f0' };
     const st = statusConfig[file.status]     || { label: file.status, icon: '•' };
-
     const details = [
-        { icon: '👤', label: 'Client Name',     value: file.client_name    },
-        { icon: '🛂', label: 'Passport No.',    value: file.passport_number },
-        { icon: '📞', label: 'Contact Number',  value: file.contact_number  },
-        { icon: '✉️', label: 'Email',           value: file.email           },
-        { icon: '🌍', label: 'Nationality',     value: file.nationality     },
-        { icon: '🏠', label: 'Address',         value: file.address         },
-        { icon: '🎯', label: 'Service Type',    value: file.service         },
-        { icon: '📅', label: 'Submitted At',    value: file.submitted_date  },
-        { icon: '🔁', label: 'Last Updated',    value: file.updated_at      },
+        { icon: '👤', label: 'Client Name',    value: file.client_name     },
+        { icon: '🛂', label: 'Passport No.',   value: file.passport_number },
+        { icon: '📞', label: 'Contact Number', value: file.contact_number  },
+        { icon: '✉️', label: 'Email',          value: file.email           },
+        { icon: '🌍', label: 'Nationality',    value: file.nationality     },
+        { icon: '🏠', label: 'Address',        value: file.address         },
+        { icon: '🎯', label: 'Service Type',   value: file.service         },
+        { icon: '📅', label: 'Submitted At',   value: file.submitted_date  },
+        { icon: '🔁', label: 'Last Updated',   value: file.updated_at      },
     ];
-
     return (
-        <div
-            onClick={onClose}
-            style={{
-                position: 'fixed', inset: 0, background: 'rgba(11,31,58,0.65)',
-                backdropFilter: 'blur(4px)', zIndex: 1000,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                padding: 20,
-            }}
-        >
-            <div
-                onClick={(e) => e.stopPropagation()}
-                style={{
-                    background: '#fff', borderRadius: 22, width: '100%', maxWidth: 520,
-                    boxShadow: '0 32px 80px rgba(11,31,58,0.35)',
-                    overflow: 'hidden', animation: 'modalIn 0.22s ease',
-                }}
-            >
-                {/* Modal Header */}
+        <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(11,31,58,0.65)', backdropFilter: 'blur(4px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+            <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 22, width: '100%', maxWidth: 520, boxShadow: '0 32px 80px rgba(11,31,58,0.35)', overflow: 'hidden', animation: 'modalIn 0.22s ease' }}>
                 <div style={{ background: '#0B1F3A', padding: '22px 26px', position: 'relative' }}>
                     <div style={{ position: 'absolute', top: -30, right: -30, width: 130, height: 130, background: 'rgba(234,179,8,0.08)', borderRadius: '50%' }} />
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative', zIndex: 2 }}>
@@ -159,18 +140,11 @@ const FileDetailsModal = ({ file, onClose }) => {
                             <div style={{ color: '#94a3b8', fontSize: 10, marginTop: 3 }}>ID: #{file.id} · {file.service}</div>
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8 }}>
-                            <button
-                                onClick={onClose}
-                                style={{ width: 32, height: 32, borderRadius: 8, border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.08)', color: '#fff', cursor: 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                            >✕</button>
-                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 10px', borderRadius: 10, fontSize: 9, fontWeight: 900, textTransform: 'uppercase', border: `1px solid ${sc.border}`, background: sc.bg, color: sc.color }}>
-                                {st.icon} {st.label}
-                            </span>
+                            <button onClick={onClose} style={{ width: 32, height: 32, borderRadius: 8, border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.08)', color: '#fff', cursor: 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 10px', borderRadius: 10, fontSize: 9, fontWeight: 900, textTransform: 'uppercase', border: `1px solid ${sc.border}`, background: sc.bg, color: sc.color }}>{st.icon} {st.label}</span>
                         </div>
                     </div>
                 </div>
-
-                {/* Modal Body */}
                 <div style={{ padding: '20px 26px 26px' }}>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                         {details.map((d, i) => (
@@ -194,72 +168,33 @@ const FileDetailsModal = ({ file, onClose }) => {
 const StatusChanger = ({ file, onUpdate, updating }) => {
     const [open, setOpen] = useState(false);
     const ref = useRef(null);
-
     useEffect(() => {
-        const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+        const handler = e => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
         document.addEventListener('mousedown', handler);
         return () => document.removeEventListener('mousedown', handler);
     }, []);
-
     const options = ['pending', 'processing', 'confirmed', 'completed', 'rejected'];
-
     return (
         <div ref={ref} style={{ position: 'relative' }}>
-            <button
-                onClick={() => setOpen(!open)}
-                disabled={updating}
-                title="Change Status"
-                style={{
-                    width: 34, height: 34, borderRadius: 9,
-                    border: '1px solid #e2e8f0',
-                    background: open ? '#0B1F3A' : '#f8fafc',
-                    color: open ? '#EAB308' : '#64748b',
-                    cursor: updating ? 'not-allowed' : 'pointer',
-                    fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    transition: 'all 0.15s',
-                    opacity: updating ? 0.5 : 1,
-                }}
-            >
+            <button onClick={() => setOpen(!open)} disabled={updating} title="Change Status"
+                style={{ width: 34, height: 34, borderRadius: 9, border: '1px solid #e2e8f0', background: open ? '#0B1F3A' : '#f8fafc', color: open ? '#EAB308' : '#64748b', cursor: updating ? 'not-allowed' : 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s', opacity: updating ? 0.5 : 1 }}>
                 {updating ? '⏳' : '✏️'}
             </button>
-
             {open && (
-                <div style={{
-                    position: 'absolute', right: 0, top: 40, zIndex: 100,
-                    background: '#fff', borderRadius: 14, boxShadow: '0 12px 40px rgba(11,31,58,0.18)',
-                    border: '1px solid #f1f5f9', overflow: 'hidden', minWidth: 160,
-                    animation: 'modalIn 0.15s ease',
-                }}>
-                    <div style={{ padding: '8px 12px 6px', fontSize: 8, fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1.5, color: '#94a3b8', borderBottom: '1px solid #f1f5f9' }}>
-                        Change Status
-                    </div>
-                    {options.map((opt) => {
-                        const c  = fileStatusColors[opt] || {};
-                        const st = statusConfig[opt]     || {};
+                <div style={{ position: 'absolute', right: 0, top: 40, zIndex: 100, background: '#fff', borderRadius: 14, boxShadow: '0 12px 40px rgba(11,31,58,0.18)', border: '1px solid #f1f5f9', overflow: 'hidden', minWidth: 160, animation: 'modalIn 0.15s ease' }}>
+                    <div style={{ padding: '8px 12px 6px', fontSize: 8, fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1.5, color: '#94a3b8', borderBottom: '1px solid #f1f5f9' }}>Change Status</div>
+                    {options.map(opt => {
+                        const c        = fileStatusColors[opt] || {};
+                        const st       = statusConfig[opt]     || {};
                         const isActive = opt === file.status;
                         return (
-                            <button
-                                key={opt}
-                                onClick={() => { onUpdate(file.id, opt); setOpen(false); }}
-                                disabled={isActive}
-                                style={{
-                                    width: '100%', display: 'flex', alignItems: 'center', gap: 8,
-                                    padding: '9px 12px', border: 'none', cursor: isActive ? 'default' : 'pointer',
-                                    background: isActive ? c.bg : 'transparent',
-                                    fontFamily: '"Times New Roman", serif', textAlign: 'left',
-                                    transition: 'background 0.1s',
-                                    borderBottom: '1px solid #f8fafc',
-                                }}
-                                onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.background = '#f8fafc'; }}
-                                onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.background = 'transparent'; }}
-                            >
+                            <button key={opt} onClick={() => { onUpdate(file.id, opt); setOpen(false); }} disabled={isActive}
+                                style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '9px 12px', border: 'none', cursor: isActive ? 'default' : 'pointer', background: isActive ? c.bg : 'transparent', fontFamily: '"Times New Roman", serif', textAlign: 'left', transition: 'background 0.1s', borderBottom: '1px solid #f8fafc' }}
+                                onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = '#f8fafc'; }}
+                                onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = 'transparent'; }}>
                                 <span style={{ fontSize: 11 }}>{st.icon}</span>
-                                <span style={{ fontSize: 10, fontWeight: 900, textTransform: 'uppercase', letterSpacing: 0.5, color: isActive ? c.color : '#374151' }}>
-                                    {st.label}
-                                </span>
-                                {isActive && (
-                                    <span style={{ marginLeft: 'auto', fontSize: 9, color: c.color }}>✓</span>
-                                )}
+                                <span style={{ fontSize: 10, fontWeight: 900, textTransform: 'uppercase', letterSpacing: 0.5, color: isActive ? c.color : '#374151' }}>{st.label}</span>
+                                {isActive && <span style={{ marginLeft: 'auto', fontSize: 9, color: c.color }}>✓</span>}
                             </button>
                         );
                     })}
@@ -285,64 +220,69 @@ const B2BDashboard = () => {
     const [refreshing,   setRefreshing]   = useState(false);
     const [error,        setError]        = useState(null);
     const [lastUpdated,  setLastUpdated]  = useState('');
-    const [selectedFile, setSelectedFile] = useState(null);   // details modal
-    const [updatingId,   setUpdatingId]   = useState(null);   // status update spinner
+    const [selectedFile, setSelectedFile] = useState(null);
+    const [updatingId,   setUpdatingId]   = useState(null);
+
+    // ── ✅ Payment form state ─────────────────────────────────────────────────
+    const [payAmount, setPayAmount] = useState('');
+    const [payRef,    setPayRef]    = useState('');
+    const [amtError,  setAmtError]  = useState('');
+
+    const [paymentSummary, setPaymentSummary] = useState({
+        total_paid: 0, pending_payment: 0, credit_balance: 0,
+    });
 
     const navigate    = useNavigate();
     const intervalRef = useRef(null);
 
+    // ── ✅ Dynamic payment redirect ───────────────────────────────────────────
     const handlePaymentRedirect = () => {
-        navigate('/payment'); 
+        if (!payAmount || parseFloat(payAmount) <= 0) {
+            setAmtError('Please enter a valid amount greater than 0');
+            return;
+        }
+        setAmtError('');
+        navigate('/payment', {
+            state: {
+                amount:    parseFloat(payAmount),
+                reference: payRef.trim() || 'SNJ-GENERAL',
+                currency:  'usd',
+                label:     'B2B Visa Processing Fee',
+            },
+        });
     };
 
     // ── Fetch all dashboard data ───────────────────────────────────────────────
     const fetchAll = async (isBackground = false) => {
         const token = localStorage.getItem('token');
         if (!token) { navigate('/login', { replace: true }); return; }
-
         if (isBackground) setRefreshing(true);
         else              setLoading(true);
-
-        const headers = {
-            'Content-Type':  'application/json',
-            'Authorization': `Bearer ${token}`,
-        };
-
+        const headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
         try {
-            const [profileRes, pricingRes, filesRes] = await Promise.all([
-                fetch(`${API_BASE}/api/b2b/dashboard/profile`, { headers }).then(r => r.json()),
-                fetch(`${API_BASE}/api/b2b/dashboard/pricing`,  { headers }).then(r => r.json()),
-                fetch(`${API_BASE}/api/b2b/dashboard/files`,    { headers }).then(r => r.json()),
+            const [profileRes, pricingRes, filesRes, paymentRes] = await Promise.all([
+                fetch(`${API_BASE}/api/b2b/dashboard/profile`,         { headers }).then(r => r.json()),
+                fetch(`${API_BASE}/api/b2b/dashboard/pricing`,          { headers }).then(r => r.json()),
+                fetch(`${API_BASE}/api/b2b/dashboard/files`,            { headers }).then(r => r.json()),
+                fetch(`${API_BASE}/api/b2b/dashboard/payment-summary`,  { headers }).then(r => r.json()),
             ]);
-
             if (profileRes.success && profileRes.data) {
-                setPartner(profileRes.data);
-                setError(null);
+                setPartner(profileRes.data); setError(null);
             } else {
                 if (profileRes.message?.toLowerCase().includes('token')) {
                     localStorage.removeItem('token');
-                    navigate('/login', { replace: true });
-                    return;
+                    navigate('/login', { replace: true }); return;
                 }
                 setError(profileRes.message || 'Failed to load profile');
             }
-
-            if (pricingRes.success && Array.isArray(pricingRes.data)) {
-                setPricingData(pricingRes.data.map(mapPricingRow));
-            }
-
-            if (filesRes.success && Array.isArray(filesRes.data)) {
-                setClientFiles(filesRes.data);
-            }
-
-            const now = new Date();
-            setLastUpdated(now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }));
-
+            if (pricingRes.success && Array.isArray(pricingRes.data))  setPricingData(pricingRes.data.map(mapPricingRow));
+            if (filesRes.success   && Array.isArray(filesRes.data))    setClientFiles(filesRes.data);
+            if (paymentRes.success && paymentRes.data)                 setPaymentSummary(paymentRes.data);
+            setLastUpdated(new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }));
         } catch (err) {
             if (!isBackground) setError(err.message || 'Network error');
         } finally {
-            setLoading(false);
-            setRefreshing(false);
+            setLoading(false); setRefreshing(false);
         }
     };
 
@@ -368,19 +308,12 @@ const B2BDashboard = () => {
         try {
             const response = await fetch(`${API_BASE}/api/b2b/dashboard/files/status`, {
                 method: 'PATCH',
-                headers: {
-                    'Content-Type':  'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
-                },
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
                 body: JSON.stringify({ taskId, newStatus }),
             });
             const resData = await response.json();
             if (resData.success) {
-                // Optimistic UI update
-                setClientFiles(prev =>
-                    prev.map(f => f.id === taskId ? { ...f, status: newStatus, stage: newStatus } : f)
-                );
-                // Also refresh in background for trigger side-effects (num_files, total_completed)
+                setClientFiles(prev => prev.map(f => f.id === taskId ? { ...f, status: newStatus, stage: newStatus } : f));
                 fetchAll(true);
             } else {
                 alert(resData.message || 'Status update failed');
@@ -394,30 +327,27 @@ const B2BDashboard = () => {
     };
 
     // ── Pricing filter ────────────────────────────────────────────────────────
-    const regions = ['All', 'Asia', 'Europe', 'Oceania', 'Americas', 'Africa'];
+    const regions        = ['All', 'Asia', 'Europe', 'Oceania', 'Americas', 'Africa'];
     const filteredPricing = pricingData.filter(p =>
         (filterRegion === 'All' || p.region === filterRegion) &&
-        (
-            p.country.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            p.type.toLowerCase().includes(searchTerm.toLowerCase())    ||
-            p.region.toLowerCase().includes(searchTerm.toLowerCase())
-        )
+        (p.country.toLowerCase().includes(searchTerm.toLowerCase()) ||
+         p.type.toLowerCase().includes(searchTerm.toLowerCase())    ||
+         p.region.toLowerCase().includes(searchTerm.toLowerCase()))
     );
 
     // ── Safe partner values ───────────────────────────────────────────────────
-    const partnerName     = partner?.name          || '…';
-    const partnerContact  = partner?.contact       || '…';
-    const partnerEmail    = partner?.email         || '…';
-    const partnerCompany  = partner?.company       || '…';
-    const partnerCountry  = partner?.country       || '…';
-    const partnerTier     = partner?.tier          || '—';
-    const partnerValid    = partner?.validUntil    || '—';
-    const totalFiles      = partner?.totalFiles    ?? 0;
-    const activeFiles     = partner?.activeFiles   ?? 0;
-    const completedFiles  = partner?.completedFiles ?? 0;
-    const successRate     = partner?.successRate   ?? 0;
+    const partnerName    = partner?.name           || '…';
+    const partnerContact = partner?.contact        || '…';
+    const partnerEmail   = partner?.email          || '…';
+    const partnerCompany = partner?.company        || '…';
+    const partnerCountry = partner?.country        || '…';
+    const partnerTier    = partner?.tier           || '—';
+    const partnerValid   = partner?.validUntil     || '—';
+    const totalFiles     = partner?.totalFiles     ?? 0;
+    const activeFiles    = partner?.activeFiles    ?? 0;
+    const completedFiles = partner?.completedFiles ?? 0;
+    const successRate    = partner?.successRate    ?? 0;
 
-    // ── File status counts (from live clientFiles array) ──────────────────────
     const fileStats = Object.keys(statusConfig).reduce((acc, k) => {
         acc[k] = clientFiles.filter(f => f.status === k).length;
         return acc;
@@ -439,7 +369,6 @@ const B2BDashboard = () => {
     return (
         <div style={{ display: 'flex', height: '100vh', background: '#F0F4F8', overflow: 'hidden', ...s }}>
 
-            {/* ── FILE DETAILS MODAL ────────────────────────────────────────── */}
             <FileDetailsModal file={selectedFile} onClose={() => setSelectedFile(null)} />
 
             {/* ── SIDEBAR ──────────────────────────────────────────────────── */}
@@ -451,7 +380,6 @@ const B2BDashboard = () => {
                         <div style={{ color: '#EAB308', fontSize: 9, fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1.5 }}>B2B Partner</div>
                     </div>
                 </div>
-
                 <div style={{ margin: 12, background: 'rgba(255,255,255,0.06)', borderRadius: 10, padding: 12 }}>
                     <div style={{ color: '#fff', fontSize: 11, fontWeight: 700 }}>{partnerName}</div>
                     <div style={{ color: '#94a3b8', fontSize: 9, marginTop: 2 }}>{partnerContact} · {partnerCountry}</div>
@@ -462,29 +390,17 @@ const B2BDashboard = () => {
                         )}
                     </div>
                 </div>
-
                 <nav style={{ flex: 1, padding: 8, overflowY: 'auto' }}>
                     {navItems.map(item => (
                         <button key={item.id} onClick={() => setActiveTab(item.id)}
-                            style={{
-                                width: '100%', display: 'flex', alignItems: 'center', gap: 10,
-                                padding: '10px 12px', borderRadius: 10, border: 'none', cursor: 'pointer',
-                                fontFamily: '"Times New Roman", serif', fontSize: 10, fontWeight: 900,
-                                textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 2, textAlign: 'left',
-                                transition: 'all 0.15s',
-                                background: activeTab === item.id ? '#EAB308' : 'transparent',
-                                color:      activeTab === item.id ? '#0B1F3A' : '#94a3b8',
-                            }}
-                        >
+                            style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, border: 'none', cursor: 'pointer', fontFamily: '"Times New Roman", serif', fontSize: 10, fontWeight: 900, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 2, textAlign: 'left', transition: 'all 0.15s', background: activeTab === item.id ? '#EAB308' : 'transparent', color: activeTab === item.id ? '#0B1F3A' : '#94a3b8' }}>
                             <span style={{ fontSize: 15, width: 18, textAlign: 'center' }}>{item.icon}</span>
                             {item.label}
                         </button>
                     ))}
                 </nav>
-
                 <div style={{ padding: 10, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-                    <button onClick={handleLogout}
-                        style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, border: 'none', background: 'transparent', color: '#f87171', fontFamily: '"Times New Roman", serif', fontSize: 10, fontWeight: 900, textTransform: 'uppercase', cursor: 'pointer' }}>
+                    <button onClick={handleLogout} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, border: 'none', background: 'transparent', color: '#f87171', fontFamily: '"Times New Roman", serif', fontSize: 10, fontWeight: 900, textTransform: 'uppercase', cursor: 'pointer' }}>
                         🚪 Logout
                     </button>
                 </div>
@@ -496,12 +412,8 @@ const B2BDashboard = () => {
                 {/* TOPBAR */}
                 <div style={{ background: '#fff', borderBottom: '1px solid #e2e8f0', padding: '14px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 10 }}>
                     <div>
-                        <div style={{ fontSize: 18, fontWeight: 700, color: '#0B1F3A', textTransform: 'uppercase', letterSpacing: 1 }}>
-                            {navItems.find(n => n.id === activeTab)?.label}
-                        </div>
-                        <div style={{ fontSize: 9, color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1.5, marginTop: 2 }}>
-                            SNJ GlobalRoutes — B2B Partner Portal
-                        </div>
+                        <div style={{ fontSize: 18, fontWeight: 700, color: '#0B1F3A', textTransform: 'uppercase', letterSpacing: 1 }}>{navItems.find(n => n.id === activeTab)?.label}</div>
+                        <div style={{ fontSize: 9, color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1.5, marginTop: 2 }}>SNJ GlobalRoutes — B2B Partner Portal</div>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                         {lastUpdated && <RefreshBadge time={lastUpdated} refreshing={refreshing} />}
@@ -523,7 +435,6 @@ const B2BDashboard = () => {
                     {/* ── OVERVIEW ─────────────────────────────────────────── */}
                     {!loading && !error && activeTab === 'overview' && (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-                            {/* Banner */}
                             <div style={{ background: '#0B1F3A', borderRadius: 18, padding: '28px 32px', position: 'relative', overflow: 'hidden' }}>
                                 <div style={{ position: 'absolute', top: -60, right: -60, width: 200, height: 200, background: 'rgba(234,179,8,0.08)', borderRadius: '50%' }} />
                                 <div style={{ position: 'relative', zIndex: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}>
@@ -546,14 +457,12 @@ const B2BDashboard = () => {
                                     </div>
                                 </div>
                             </div>
-
-                            {/* Stats — dynamic from assigned_tasks */}
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12 }}>
                                 {[
-                                    { label: 'Total Files',  value: totalFiles,          icon: '📦', bg: '#0B1F3A', tc: '#fff',    sc: 'rgba(255,255,255,0.65)' },
-                                    { label: 'Active Files', value: activeFiles,          icon: '⏱',  bg: '#EAB308', tc: '#0B1F3A', sc: 'rgba(11,31,58,0.65)'    },
-                                    { label: 'Completed',    value: completedFiles,       icon: '✅', bg: '#22c55e', tc: '#fff',    sc: 'rgba(255,255,255,0.65)' },
-                                    { label: 'Success Rate', value: `${successRate}%`,    icon: '📈', bg: '#7c3aed', tc: '#fff',    sc: 'rgba(255,255,255,0.65)' },
+                                    { label: 'Total Files',  value: totalFiles,       icon: '📦', bg: '#0B1F3A', tc: '#fff',    sc: 'rgba(255,255,255,0.65)' },
+                                    { label: 'Active Files', value: activeFiles,       icon: '⏱',  bg: '#EAB308', tc: '#0B1F3A', sc: 'rgba(11,31,58,0.65)'    },
+                                    { label: 'Completed',    value: completedFiles,    icon: '✅', bg: '#22c55e', tc: '#fff',    sc: 'rgba(255,255,255,0.65)' },
+                                    { label: 'Success Rate', value: `${successRate}%`, icon: '📈', bg: '#7c3aed', tc: '#fff',    sc: 'rgba(255,255,255,0.65)' },
                                 ].map((st, i) => (
                                     <div key={i} style={{ background: st.bg, borderRadius: 16, padding: 20 }}>
                                         <div style={{ fontSize: 18, opacity: 0.6, marginBottom: 8 }}>{st.icon}</div>
@@ -562,16 +471,14 @@ const B2BDashboard = () => {
                                     </div>
                                 ))}
                             </div>
-
-                            {/* Why trust */}
                             <div>
                                 <div style={{ fontSize: 10, fontWeight: 900, color: '#0B1F3A', textTransform: 'uppercase', letterSpacing: 2, marginBottom: 14 }}>Why Partners Trust SNJ</div>
                                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12 }}>
                                     {[
-                                        { icon: '💰', title: 'Exclusive B2B Rates', sub: 'Up to 30% savings'   },
+                                        { icon: '💰', title: 'Exclusive B2B Rates', sub: 'Up to 30% savings'    },
                                         { icon: '⚡', title: 'Priority Processing',  sub: 'Front of the queue'  },
                                         { icon: '🛡', title: '99% Success Rate',     sub: 'Expert handling'     },
-                                        { icon: '👤', title: 'Dedicated Support',    sub: 'Your account manager'},
+                                        { icon: '👤', title: 'Dedicated Support',    sub: 'Your account manager' },
                                     ].map((item, i) => (
                                         <div key={i} style={{ background: '#fff', border: '1px solid #f1f5f9', borderRadius: 16, padding: 16 }}>
                                             <div style={{ width: 38, height: 38, background: 'rgba(234,179,8,0.1)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, marginBottom: 10 }}>{item.icon}</div>
@@ -581,8 +488,6 @@ const B2BDashboard = () => {
                                     ))}
                                 </div>
                             </div>
-
-                            {/* Recent Files */}
                             <div style={{ background: '#fff', border: '1px solid #f1f5f9', borderRadius: 18, overflow: 'hidden' }}>
                                 <div style={{ padding: '14px 22px', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                     <span style={{ fontSize: 10, fontWeight: 900, color: '#0B1F3A', textTransform: 'uppercase', letterSpacing: 2 }}>Recent Files</span>
@@ -600,7 +505,6 @@ const B2BDashboard = () => {
                                     </div>
                                 ))}
                             </div>
-
                             <Footer />
                         </div>
                     )}
@@ -621,22 +525,20 @@ const B2BDashboard = () => {
                                             <div style={{ color: '#94a3b8', fontSize: 12, marginTop: 2 }}>{partnerContact}</div>
                                             <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
                                                 <span style={{ background: '#EAB308', color: '#0B1F3A', fontSize: 8, fontWeight: 900, textTransform: 'uppercase', padding: '2px 8px', borderRadius: 20 }}>{partnerTier}</span>
-                                                {partner?.is_verified === 1 && (
-                                                    <span style={{ background: 'rgba(34,197,94,0.2)', color: '#4ade80', border: '1px solid rgba(34,197,94,0.3)', fontSize: 8, fontWeight: 900, textTransform: 'uppercase', padding: '2px 8px', borderRadius: 20 }}>✓ Verified</span>
-                                                )}
+                                                {partner?.is_verified === 1 && <span style={{ background: 'rgba(34,197,94,0.2)', color: '#4ade80', border: '1px solid rgba(34,197,94,0.3)', fontSize: 8, fontWeight: 900, textTransform: 'uppercase', padding: '2px 8px', borderRadius: 20 }}>✓ Verified</span>}
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                                 <div style={{ padding: 22, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                                     {[
-                                        { label: 'Company Name',       value: partnerCompany,           icon: '🏢' },
-                                        { label: 'Contact Person',      value: partnerName,              icon: '👤' },
-                                        { label: 'Phone Number',        value: partnerContact,           icon: '📞' },
-                                        { label: 'Email Address',       value: partnerEmail,             icon: '✉️' },
-                                        { label: 'Country',             value: partnerCountry,           icon: '🌐' },
-                                        { label: 'Purpose',             value: partner?.purpose || '—',  icon: '🎯' },
-                                        { label: 'Account Valid Until', value: partnerValid,             icon: '🏅' },
+                                        { label: 'Company Name',       value: partnerCompany,          icon: '🏢' },
+                                        { label: 'Contact Person',      value: partnerName,             icon: '👤' },
+                                        { label: 'Phone Number',        value: partnerContact,          icon: '📞' },
+                                        { label: 'Email Address',       value: partnerEmail,            icon: '✉️' },
+                                        { label: 'Country',             value: partnerCountry,          icon: '🌐' },
+                                        { label: 'Purpose',             value: partner?.purpose || '—', icon: '🎯' },
+                                        { label: 'Account Valid Until', value: partnerValid,            icon: '🏅' },
                                     ].map((item, i) => (
                                         <div key={i} style={{ background: '#f8fafc', border: '1px solid #f1f5f9', borderRadius: 12, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
                                             <span style={{ fontSize: 14, color: '#EAB308', flexShrink: 0 }}>{item.icon}</span>
@@ -648,12 +550,11 @@ const B2BDashboard = () => {
                                     ))}
                                 </div>
                             </div>
-
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 14 }}>
                                 {[
-                                    { label: 'Total Files',  value: totalFiles,          sub: 'All time'               },
-                                    { label: 'Active Files', value: activeFiles,          sub: 'In progress'            },
-                                    { label: 'Completed',    value: completedFiles,       sub: 'Successfully processed' },
+                                    { label: 'Total Files',  value: totalFiles,     sub: 'All time'               },
+                                    { label: 'Active Files', value: activeFiles,    sub: 'In progress'            },
+                                    { label: 'Completed',    value: completedFiles, sub: 'Successfully processed' },
                                 ].map((st, i) => (
                                     <div key={i} style={{ background: '#0B1F3A', borderRadius: 18, padding: 28, textAlign: 'center' }}>
                                         <div style={{ color: '#EAB308', fontSize: 36, fontWeight: 900 }}>{st.value}</div>
@@ -679,15 +580,9 @@ const B2BDashboard = () => {
                                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 14 }}>
                                     {regions.map(r => (
                                         <button key={r} onClick={() => setFilterRegion(r)}
-                                            style={{
-                                                padding: '5px 14px', borderRadius: 20, fontSize: 9, fontWeight: 900,
-                                                textTransform: 'uppercase', letterSpacing: 1, cursor: 'pointer',
-                                                fontFamily: '"Times New Roman", serif', transition: 'all 0.1s',
-                                                background: filterRegion === r ? '#EAB308' : 'transparent',
-                                                color:      filterRegion === r ? '#0B1F3A' : '#fff',
-                                                border:     filterRegion === r ? '1px solid #EAB308' : '1px solid rgba(255,255,255,0.2)',
-                                            }}
-                                        >{r}</button>
+                                            style={{ padding: '5px 14px', borderRadius: 20, fontSize: 9, fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1, cursor: 'pointer', fontFamily: '"Times New Roman", serif', transition: 'all 0.1s', background: filterRegion === r ? '#EAB308' : 'transparent', color: filterRegion === r ? '#0B1F3A' : '#fff', border: filterRegion === r ? '1px solid #EAB308' : '1px solid rgba(255,255,255,0.2)' }}>
+                                            {r}
+                                        </button>
                                     ))}
                                 </div>
                                 <input type="text" placeholder="Search country, visa type or region..."
@@ -695,7 +590,6 @@ const B2BDashboard = () => {
                                     style={{ width: '100%', maxWidth: 320, padding: '9px 14px', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 10, color: '#fff', fontSize: 12, fontFamily: '"Times New Roman", serif', outline: 'none' }}
                                 />
                             </div>
-
                             {loading ? <LoadingSpinner /> : (
                                 <div style={{ background: '#fff', border: '1px solid #f1f5f9', borderRadius: 18, overflow: 'hidden' }}>
                                     <div style={{ overflowX: 'auto' }}>
@@ -714,9 +608,7 @@ const B2BDashboard = () => {
                                                     <tr key={row.id || i} style={{ borderBottom: '1px solid #f8fafc' }}>
                                                         <td style={{ padding: '12px 14px' }}>
                                                             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                                                                <img src={`https://flagcdn.com/w40/${row.flag}.png`} alt={row.country}
-                                                                    style={{ width: 28, height: 18, objectFit: 'cover', borderRadius: 3, boxShadow: '0 1px 3px rgba(0,0,0,0.15)' }}
-                                                                    onError={e => e.target.style.display = 'none'} />
+                                                                <img src={`https://flagcdn.com/w40/${row.flag}.png`} alt={row.country} style={{ width: 28, height: 18, objectFit: 'cover', borderRadius: 3, boxShadow: '0 1px 3px rgba(0,0,0,0.15)' }} onError={e => e.target.style.display = 'none'} />
                                                                 <span style={{ fontWeight: 700, color: '#0B1F3A', fontSize: 12, whiteSpace: 'nowrap' }}>{row.country}</span>
                                                             </div>
                                                         </td>
@@ -725,17 +617,9 @@ const B2BDashboard = () => {
                                                         <td style={{ padding: '12px 14px', fontWeight: 900, color: '#0B1F3A', fontSize: 12, whiteSpace: 'nowrap' }}>{row.b2b}</td>
                                                         <td style={{ padding: '12px 14px', color: '#94a3b8', fontSize: 11, textDecoration: 'line-through', whiteSpace: 'nowrap' }}>{row.b2c}</td>
                                                         <td style={{ padding: '12px 14px', fontSize: 11, color: '#64748b', whiteSpace: 'nowrap' }}>⏱ {row.time}</td>
+                                                        <td style={{ padding: '12px 14px' }}><span style={{ background: '#f1f5f9', color: '#64748b', fontSize: 9, fontWeight: 900, textTransform: 'uppercase', padding: '3px 7px', borderRadius: 20 }}>{row.region}</span></td>
                                                         <td style={{ padding: '12px 14px' }}>
-                                                            <span style={{ background: '#f1f5f9', color: '#64748b', fontSize: 9, fontWeight: 900, textTransform: 'uppercase', padding: '3px 7px', borderRadius: 20 }}>{row.region}</span>
-                                                        </td>
-                                                        <td style={{ padding: '12px 14px' }}>
-                                                            <span style={{
-                                                                display: 'inline-flex', alignItems: 'center', gap: 3,
-                                                                background: row.status === 'active' ? '#f0fdf4' : row.status === 'inactive' ? '#fef2f2' : '#fffbeb',
-                                                                color: row.status === 'active' ? '#15803d' : row.status === 'inactive' ? '#dc2626' : '#b45309',
-                                                                border: `1px solid ${row.status === 'active' ? '#bbf7d0' : row.status === 'inactive' ? '#fecaca' : '#fde68a'}`,
-                                                                fontSize: 9, fontWeight: 900, textTransform: 'uppercase', padding: '4px 8px', borderRadius: 20,
-                                                            }}>
+                                                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, background: row.status === 'active' ? '#f0fdf4' : row.status === 'inactive' ? '#fef2f2' : '#fffbeb', color: row.status === 'active' ? '#15803d' : row.status === 'inactive' ? '#dc2626' : '#b45309', border: `1px solid ${row.status === 'active' ? '#bbf7d0' : row.status === 'inactive' ? '#fecaca' : '#fde68a'}`, fontSize: 9, fontWeight: 900, textTransform: 'uppercase', padding: '4px 8px', borderRadius: 20 }}>
                                                                 {row.status === 'active' ? '✓' : row.status === 'inactive' ? '✗' : '⏳'} {row.status}
                                                             </span>
                                                         </td>
@@ -756,8 +640,6 @@ const B2BDashboard = () => {
                     {/* ── MY FILES ─────────────────────────────────────────── */}
                     {activeTab === 'files' && (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-
-                            {/* Status summary pills */}
                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                                 {Object.entries(statusConfig).map(([k, v]) => {
                                     const c = fileStatusColors[k];
@@ -771,18 +653,13 @@ const B2BDashboard = () => {
                                     📦 Total: {clientFiles.length}
                                 </span>
                             </div>
-
                             <div style={{ background: '#fff', border: '1px solid #f1f5f9', borderRadius: 18, overflow: 'hidden' }}>
-                                {/* Table header */}
                                 <div style={{ padding: '14px 22px', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#f8fafc' }}>
                                     <span style={{ fontSize: 10, fontWeight: 900, color: '#0B1F3A', textTransform: 'uppercase', letterSpacing: 2 }}>All Client Files & Status Tracker</span>
                                     <div style={{ display: 'flex', gap: 6, fontSize: 9, color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1 }}>
-                                        <span>👁 = View Details</span>
-                                        <span style={{ color: '#e2e8f0' }}>|</span>
-                                        <span>✏️ = Change Status</span>
+                                        <span>👁 = View Details</span><span style={{ color: '#e2e8f0' }}>|</span><span>✏️ = Change Status</span>
                                     </div>
                                 </div>
-
                                 {clientFiles.length === 0 ? (
                                     <div style={{ padding: '48px 22px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
                                         <div style={{ width: 56, height: 56, background: '#f8fafc', border: '1px solid #f1f5f9', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>📄</div>
@@ -803,12 +680,8 @@ const B2BDashboard = () => {
                                                 {clientFiles.map((f, i) => (
                                                     <tr key={f.id} style={{ borderBottom: '1px solid #f8fafc', transition: 'background 0.1s' }}
                                                         onMouseEnter={e => e.currentTarget.style.background = '#fafbfc'}
-                                                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                                                    >
-                                                        {/* Row number */}
+                                                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                                                         <td style={{ padding: '14px 16px', fontSize: 10, color: '#94a3b8', fontWeight: 700 }}>{i + 1}</td>
-
-                                                        {/* Client name */}
                                                         <td style={{ padding: '14px 16px' }}>
                                                             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                                                                 <div style={{ width: 32, height: 32, background: 'rgba(234,179,8,0.12)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, flexShrink: 0, color: '#b45309', fontWeight: 900 }}>
@@ -820,45 +693,17 @@ const B2BDashboard = () => {
                                                                 </div>
                                                             </div>
                                                         </td>
-
-                                                        {/* Service */}
                                                         <td style={{ padding: '14px 16px', fontSize: 11, color: '#475569', fontWeight: 600, whiteSpace: 'nowrap' }}>{f.service}</td>
-
-                                                        {/* Passport */}
                                                         <td style={{ padding: '14px 16px', fontSize: 11, color: '#64748b', fontFamily: 'monospace', letterSpacing: 0.5 }}>{f.passport_number}</td>
-
-                                                        {/* Submitted date */}
                                                         <td style={{ padding: '14px 16px', fontSize: 10, color: '#94a3b8', whiteSpace: 'nowrap' }}>{f.submitted_date}</td>
-
-                                                        {/* Status badge */}
-                                                        <td style={{ padding: '14px 16px' }}>
-                                                            <StatusBadge status={f.status} />
-                                                        </td>
-
-                                                        {/* Actions: view + status change */}
+                                                        <td style={{ padding: '14px 16px' }}><StatusBadge status={f.status} /></td>
                                                         <td style={{ padding: '14px 16px' }}>
                                                             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                                                {/* View Details Button */}
-                                                                <button
-                                                                    onClick={() => setSelectedFile(f)}
-                                                                    title="View Details"
-                                                                    style={{
-                                                                        width: 34, height: 34, borderRadius: 9,
-                                                                        border: '1px solid #e2e8f0', background: '#f8fafc',
-                                                                        color: '#64748b', cursor: 'pointer', fontSize: 14,
-                                                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                                        transition: 'all 0.15s',
-                                                                    }}
+                                                                <button onClick={() => setSelectedFile(f)} title="View Details"
+                                                                    style={{ width: 34, height: 34, borderRadius: 9, border: '1px solid #e2e8f0', background: '#f8fafc', color: '#64748b', cursor: 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s' }}
                                                                     onMouseEnter={e => { e.currentTarget.style.background = '#0B1F3A'; e.currentTarget.style.color = '#EAB308'; e.currentTarget.style.borderColor = '#0B1F3A'; }}
-                                                                    onMouseLeave={e => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.color = '#64748b'; e.currentTarget.style.borderColor = '#e2e8f0'; }}
-                                                                >👁</button>
-
-                                                                {/* Status Changer */}
-                                                                <StatusChanger
-                                                                    file={f}
-                                                                    onUpdate={handleStatusChange}
-                                                                    updating={updatingId === f.id}
-                                                                />
+                                                                    onMouseLeave={e => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.color = '#64748b'; e.currentTarget.style.borderColor = '#e2e8f0'; }}>👁</button>
+                                                                <StatusChanger file={f} onUpdate={handleStatusChange} updating={updatingId === f.id} />
                                                             </div>
                                                         </td>
                                                     </tr>
@@ -868,7 +713,6 @@ const B2BDashboard = () => {
                                     </div>
                                 )}
                             </div>
-
                             <Footer />
                         </div>
                     )}
@@ -913,54 +757,87 @@ const B2BDashboard = () => {
                         </div>
                     )}
 
-                    {/* ── PAYMENT ──────────────────────────────────────────── */}
+                    {/* ── ✅ PAYMENT — Dynamic amount & reference ───────────── */}
                     {activeTab === 'payment' && (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+
+                            {/* Summary Cards */}
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12 }}>
                                 {[
-                                    { label: 'Total Paid',      value: '$0', bg: '#f0fdf4', border: '#bbf7d0', color: '#15803d' },
-                                    { label: 'Pending Payment', value: '$0', bg: '#fffbeb', border: '#fde68a', color: '#b45309' },
-                                    { label: 'Credit Balance',  value: '$0', bg: '#eff6ff', border: '#bfdbfe', color: '#1d4ed8' },
+                                    { label: 'Total Paid',      value: `$${paymentSummary.total_paid.toFixed(2)}`,       sub: 'Completed files total', bg: '#f0fdf4', border: '#bbf7d0', color: '#15803d', icon: '✅' },
+                                    { label: 'Pending Payment', value: `$${paymentSummary.pending_payment.toFixed(2)}`,  sub: 'Active files total',    bg: '#fffbeb', border: '#fde68a', color: '#b45309', icon: '⏳' },
+                                    { label: 'Credit Balance',  value: `$${paymentSummary.credit_balance.toFixed(2)}`,   sub: 'Available credit',      bg: '#eff6ff', border: '#bfdbfe', color: '#1d4ed8', icon: '💳' },
                                 ].map((st, i) => (
                                     <div key={i} style={{ background: st.bg, border: `1px solid ${st.border}`, borderRadius: 16, padding: 20 }}>
-                                        <div style={{ fontSize: 9, fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1, color: '#64748b' }}>{st.label}</div>
-                                        <div style={{ fontSize: 26, fontWeight: 900, color: st.color, marginTop: 6 }}>{st.value}</div>
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                                            <div style={{ fontSize: 9, fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1, color: '#64748b' }}>{st.label}</div>
+                                            <span style={{ fontSize: 16 }}>{st.icon}</span>
+                                        </div>
+                                        <div style={{ fontSize: 26, fontWeight: 900, color: st.color }}>{st.value}</div>
+                                        <div style={{ fontSize: 9, color: '#94a3b8', marginTop: 4, fontWeight: 700 }}>{st.sub}</div>
                                     </div>
                                 ))}
                             </div>
+
+                            {/* Payment Form */}
                             <div style={{ background: '#fff', border: '1px solid #f1f5f9', borderRadius: 18, padding: 22 }}>
                                 <div style={{ fontSize: 10, fontWeight: 900, color: '#0B1F3A', textTransform: 'uppercase', letterSpacing: 2, marginBottom: 20 }}>Make a Payment</div>
                                 <div style={{ maxWidth: 520 }}>
-                                    {[{ label: 'Payment Amount (USD)', type: 'number', placeholder: 'Enter amount' }, { label: 'Payment Reference (File ID)', type: 'text', placeholder: 'e.g. SNJ-2024-001' }].map((f, i) => (
-                                        <div key={i} style={{ marginBottom: 14 }}>
-                                            <label style={{ display: 'block', fontSize: 9, fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1.5, color: '#0B1F3A', marginBottom: 6, fontFamily: '"Times New Roman", serif' }}>{f.label}</label>
-                                            <input type={f.type} placeholder={f.placeholder} style={{ width: '100%', padding: '12px 16px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 12, fontSize: 13, fontFamily: '"Times New Roman", serif', outline: 'none', boxSizing: 'border-box' }} />
+
+                                    {/* Amount */}
+                                    <div style={{ marginBottom: 14 }}>
+                                        <label style={{ display: 'block', fontSize: 9, fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1.5, color: '#0B1F3A', marginBottom: 6, fontFamily: '"Times New Roman", serif' }}>
+                                            Payment Amount (USD) *
+                                        </label>
+                                        <input
+                                            type="number"
+                                            placeholder="Enter amount e.g. 150"
+                                            min="1"
+                                            value={payAmount}
+                                            onChange={e => { setPayAmount(e.target.value); setAmtError(''); }}
+                                            style={{ width: '100%', padding: '12px 16px', background: '#f8fafc', border: `1px solid ${amtError ? '#ef4444' : '#e2e8f0'}`, borderRadius: 12, fontSize: 13, fontFamily: '"Times New Roman", serif', outline: 'none', boxSizing: 'border-box' }}
+                                        />
+                                        {amtError && <div style={{ fontSize: 11, color: '#ef4444', marginTop: 4, fontWeight: 600 }}>{amtError}</div>}
+                                    </div>
+
+                                    {/* Reference */}
+                                    <div style={{ marginBottom: 14 }}>
+                                        <label style={{ display: 'block', fontSize: 9, fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1.5, color: '#0B1F3A', marginBottom: 6, fontFamily: '"Times New Roman", serif' }}>
+                                            Payment Reference (File ID)
+                                        </label>
+                                        <input
+                                            type="text"
+                                            placeholder="e.g. SNJ-2024-001"
+                                            value={payRef}
+                                            onChange={e => setPayRef(e.target.value)}
+                                            style={{ width: '100%', padding: '12px 16px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 12, fontSize: 13, fontFamily: '"Times New Roman", serif', outline: 'none', boxSizing: 'border-box' }}
+                                        />
+                                    </div>
+
+                                    {/* Live Preview */}
+                                    {payAmount && parseFloat(payAmount) > 0 && (
+                                        <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 12, padding: '12px 16px', marginBottom: 14, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                            <div>
+                                                <div style={{ fontSize: 9, fontWeight: 900, textTransform: 'uppercase', color: '#64748b', letterSpacing: 1 }}>You will be charged</div>
+                                                <div style={{ fontSize: 20, fontWeight: 900, color: '#15803d', marginTop: 2 }}>${parseFloat(payAmount).toFixed(2)} USD</div>
+                                            </div>
+                                            <div style={{ textAlign: 'right' }}>
+                                                <div style={{ fontSize: 9, fontWeight: 900, textTransform: 'uppercase', color: '#64748b', letterSpacing: 1 }}>Reference</div>
+                                                <div style={{ fontSize: 12, fontWeight: 700, color: '#0B1F3A', marginTop: 2 }}>{payRef.trim() || 'SNJ-GENERAL'}</div>
+                                            </div>
                                         </div>
-                                    ))}
+                                    )}
+
+                                    {/* Stripe Box */}
                                     <div style={{ background: '#0B1F3A', borderRadius: 16, padding: 22, marginTop: 8 }}>
                                         <div style={{ color: '#EAB308', fontSize: 9, fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 8 }}>Payment Gateway — Stripe</div>
-                                        <div style={{ color: '#94a3b8', fontSize: 12, lineHeight: 1.5 }}>Stripe payment gateway will be integrated here. Contact SNJ admin to activate.</div>
-                                        <button 
-                                            onClick={handlePaymentRedirect}
-                                            style={{ 
-                                                width: '100%', 
-                                                background: '#EAB308', 
-                                                color: '#0B1F3A', 
-                                                border: 'none', 
-                                                padding: 13, 
-                                                borderRadius: 12, 
-                                                fontWeight: 900, 
-                                                textTransform: 'uppercase', 
-                                                fontSize: 12, 
-                                                fontFamily: '"Times New Roman", serif', 
-                                                letterSpacing: 1, 
-                                                cursor: 'pointer', 
-                                                marginTop: 14 
-                                            }}
-                                            >
+                                        <div style={{ color: '#94a3b8', fontSize: 12, lineHeight: 1.5 }}>Enter the amount above, then proceed to Stripe checkout.</div>
+                                        <button onClick={handlePaymentRedirect}
+                                            style={{ width: '100%', background: '#EAB308', color: '#0B1F3A', border: 'none', padding: 13, borderRadius: 12, fontWeight: 900, textTransform: 'uppercase', fontSize: 12, fontFamily: '"Times New Roman", serif', letterSpacing: 1, cursor: 'pointer', marginTop: 14 }}>
                                             💳 Proceed to Stripe Payment
                                         </button>
                                     </div>
+
                                 </div>
                             </div>
                             <Footer />
@@ -1002,9 +879,9 @@ const B2BDashboard = () => {
                                 <div style={{ background: '#fff', border: '1px solid #f1f5f9', borderRadius: 18, padding: 22 }}>
                                     <div style={{ fontSize: 10, fontWeight: 900, color: '#0B1F3A', textTransform: 'uppercase', letterSpacing: 2, marginBottom: 18 }}>Direct Contact</div>
                                     {[
-                                        { href: 'https://wa.me/8801348992268', icon: '📱', label: 'WhatsApp — Instant Support', bg: '#f0fdf4', border: '#bbf7d0', color: '#15803d' },
-                                        { href: 'tel:+8801348992268',           icon: '📞', label: '+880 1348-992268',          bg: 'rgba(11,31,58,0.05)', border: 'rgba(11,31,58,0.1)', color: '#0B1F3A' },
-                                        { href: 'mailto:partners@snjglobal.com', icon: '✉️', label: 'partners@snjglobal.com',  bg: '#eff6ff', border: '#bfdbfe', color: '#1d4ed8' },
+                                        { href: 'https://wa.me/8801348992268',    icon: '📱', label: 'WhatsApp — Instant Support', bg: '#f0fdf4', border: '#bbf7d0', color: '#15803d' },
+                                        { href: 'tel:+8801348992268',              icon: '📞', label: '+880 1348-992268',           bg: 'rgba(11,31,58,0.05)', border: 'rgba(11,31,58,0.1)', color: '#0B1F3A' },
+                                        { href: 'mailto:partners@snjglobal.com',   icon: '✉️', label: 'partners@snjglobal.com',   bg: '#eff6ff', border: '#bfdbfe', color: '#1d4ed8' },
                                     ].map((c, i) => (
                                         <a key={i} href={c.href} target={c.href.startsWith('https') ? '_blank' : undefined} rel="noreferrer"
                                             style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 14, borderRadius: 12, fontWeight: 700, fontSize: 13, textDecoration: 'none', marginBottom: 8, background: c.bg, border: `1px solid ${c.border}`, color: c.color, fontFamily: '"Times New Roman", serif' }}>

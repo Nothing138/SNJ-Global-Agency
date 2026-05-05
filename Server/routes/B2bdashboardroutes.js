@@ -9,6 +9,7 @@ const {
     getPricing,
     getFiles,
     updateFileStatus,
+    getPaymentSummary,
 } = require('../controllers/B2bdashboardcontroller'); // adjust path if needed
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -53,6 +54,7 @@ router.get  ('/profile',       authMiddleware, getProfile);
 router.get  ('/pricing',       authMiddleware, getPricing);
 router.get  ('/files',         authMiddleware, getFiles);
 router.patch('/files/status',  authMiddleware, updateFileStatus);
+router.get  ('/payment-summary', authMiddleware, getPaymentSummary);
 
 module.exports = router;
 
