@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { useNavigate }      from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Globe, Search } from 'lucide-react';
-import { toSlug } from '../../constants/countryDataMap'; // ← import helper
+import { toSlug } from '../../constants/Countrydatamap'; // ← import helper
 
 /* ─── Country list ───────────────────────────────────────────── */
 const COUNTRIES = [
