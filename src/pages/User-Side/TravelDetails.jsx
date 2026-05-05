@@ -177,7 +177,7 @@ const TravelDetails = () => {
         </div>
       </div>
 
-      {/* --- WHY CHOOSE US SECTION --- */}
+      {/* --- WHY CHOOSE US SECTION -
       <section className="py-24 max-w-7xl mx-auto px-6">
         <div className="grid lg:grid-cols-2 gap-16 items-center">
           <div>
@@ -222,7 +222,7 @@ const TravelDetails = () => {
             </div>
           </div>
         </div>
-      </section>
+      </section>*/}
 
       {/* --- BOOKING PROCEDURE SECTION --- */}
       <section className="py-24 bg-white border-y border-slate-100">

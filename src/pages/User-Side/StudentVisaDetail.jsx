@@ -1,4 +1,4 @@
-//student visa details
+// StudentVisaDetail.jsx
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import emailjs from '@emailjs/browser';
@@ -10,7 +10,7 @@ import {
   Info, Phone, Mail, Send, X,
   Globe, Wallet, Star, Calendar,
   AlertCircle, Shield, BookOpen, GraduationCap,
-  ChevronDown, HelpCircle
+  ChevronDown, HelpCircle, Building2, DollarSign
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -52,19 +52,25 @@ const InfoRow = ({ label, value }) =>
     </div>
   ) : null;
 
-// New Accordion Component for FAQ
+/* ─── Accordion for FAQ ─── */
 const AccordionItem = ({ question, answer, isOpen, onClick }) => (
   <div className="border-b border-slate-100 last:border-0">
     <button
       onClick={onClick}
       className="w-full py-5 flex items-center justify-between gap-4 text-left group"
     >
-      <span className={`text-sm font-bold uppercase tracking-tight transition-colors ${isOpen ? 'text-[#EAB308]' : 'text-[#0B1F3A] group-hover:text-[#EAB308]'}`}>
+      <span
+        className={`text-sm font-bold uppercase tracking-tight transition-colors ${
+          isOpen ? 'text-[#EAB308]' : 'text-[#0B1F3A] group-hover:text-[#EAB308]'
+        }`}
+      >
         {question}
       </span>
-      <ChevronDown 
-        size={18} 
-        className={`text-[#EAB308] transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} 
+      <ChevronDown
+        size={18}
+        className={`text-[#EAB308] transition-transform duration-300 shrink-0 ${
+          isOpen ? 'rotate-180' : ''
+        }`}
       />
     </button>
     <AnimatePresence>
@@ -92,11 +98,11 @@ const StudentVisaDetail = () => {
   const { countryId } = useParams();
   const navigate = useNavigate();
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isSending, setIsSending] = useState(false);
-  const [imgError, setImgError] = useState(false);
-  const [openFaqIndex, setOpenFaqIndex] = useState(null); // Track FAQ state
-  
+  const [isModalOpen, setIsModalOpen]   = useState(false);
+  const [isSending, setIsSending]       = useState(false);
+  const [imgError, setImgError]         = useState(false);
+  const [openFaqIndex, setOpenFaqIndex] = useState(null);
+
   const [formData, setFormData] = useState({
     name: '',
     contact: '',
@@ -105,22 +111,23 @@ const StudentVisaDetail = () => {
     course: '',
   });
 
-  const faqs = [
-    { question: "What is a student visa?", answer: "A student visa allows you to study in a foreign country at an approved educational institution." },
-    { question: "Which countries do you offer student visa services for?", answer: "We provide student visa services for countries like Europe, UK, Canada, and other popular destinations." },
-    { question: "Do you help with university admission?", answer: "Yes, we assist with selecting universities and completing the admission process." },
-    { question: "What documents are required for a student visa?", answer: "Documents include passport, academic certificates, offer letter, bank statement, and other supporting papers." },
-    { question: "Do I need IELTS or English test?", answer: "Many countries require IELTS or similar tests, but some offer alternatives or exemptions." },
-    { question: "How long does student visa processing take?", answer: "Processing time usually takes 3 to 8 weeks depending on the country." },
-    { question: "Can I work while studying?", answer: "Yes, most countries allow students to work part-time during studies." },
-    { question: "What is proof of funds?", answer: "Proof of funds shows that you can financially support your education and living expenses." },
-    { question: "Can I bring my family on a student visa?", answer: "Some countries allow dependents such as spouse and children." },
-    { question: "Do you provide interview preparation?", answer: "Yes, we provide complete interview guidance and mock sessions." },
-    { question: "Can I stay after completing my studies?", answer: "Yes, many countries offer post-study work opportunities." },
-    { question: "Is health insurance required?", answer: "Yes, most countries require valid health insurance." },
-    { question: "What if my visa gets rejected?", answer: "We analyze the reason and help you reapply with a stronger case." },
-    { question: "Can I change my course or university later?", answer: "Yes, but it depends on immigration rules of the country." },
-    { question: "Why should I apply through your agency?", answer: "We provide expert guidance, admission support, and full visa assistance." }
+  /* General FAQ shown on every page */
+  const generalFaqs = [
+    { question: "What is a student visa?",                    answer: "A student visa allows you to study in a foreign country at an approved educational institution." },
+    { question: "Which countries do you offer student visa services for?", answer: "We provide student visa services for Australia, Hungary, United Kingdom, Malta, and Canada." },
+    { question: "Do you help with university admission?",      answer: "Yes, we assist with selecting universities and completing the entire admission process." },
+    { question: "What documents are required for a student visa?", answer: "Documents include passport, academic certificates, offer letter, bank statement, and other supporting papers depending on the country." },
+    { question: "Do I need IELTS or an English test?",         answer: "Many countries require IELTS or similar tests, but some institutions offer alternatives or exemptions." },
+    { question: "How long does student visa processing take?", answer: "Processing time usually takes 3 to 16 weeks depending on the country and stream." },
+    { question: "Can I work while studying?",                  answer: "Yes, most countries allow students to work part-time during studies." },
+    { question: "What is proof of funds?",                     answer: "Proof of funds shows you can financially support your education and living expenses abroad." },
+    { question: "Can I bring my family on a student visa?",    answer: "Some countries allow dependents such as a spouse and children — eligibility varies by country and programme." },
+    { question: "Do you provide interview preparation?",       answer: "Yes, we provide complete interview guidance and mock sessions." },
+    { question: "Can I stay after completing my studies?",     answer: "Yes, many countries offer post-study work opportunities and PR pathways after graduation." },
+    { question: "Is health insurance required?",               answer: "Yes, most countries require valid health insurance for the duration of your stay." },
+    { question: "What if my visa gets rejected?",              answer: "We analyse the reason and help you reapply with a stronger, more complete application." },
+    { question: "Can I change my course or university later?", answer: "Yes, but it depends on the immigration rules of the specific country." },
+    { question: "Why should I apply through your agency?",     answer: "We provide expert guidance, admission support, high visa success rates, and full end-to-end assistance." }
   ];
 
   const data = studentVisaData.find((v) => v.id === countryId);
@@ -161,7 +168,9 @@ const StudentVisaDetail = () => {
     return (
       <div className="h-screen flex flex-col items-center justify-center bg-white gap-4">
         <p className="text-[#0B1F3A] font-black text-2xl uppercase">Country Not Found</p>
-        <p className="text-slate-500 text-sm">No student visa data found for: <strong>{countryId}</strong></p>
+        <p className="text-slate-500 text-sm">
+          No student visa data found for: <strong>{countryId}</strong>
+        </p>
         <button
           onClick={() => navigate(-1)}
           className="mt-4 px-6 py-3 bg-[#EAB308] text-[#0B1F3A] rounded-full font-black text-xs uppercase tracking-widest"
@@ -173,18 +182,25 @@ const StudentVisaDetail = () => {
   }
 
   const fadeUp = {
-    initial: { opacity: 0, y: 24 },
+    initial:     { opacity: 0, y: 24 },
     whileInView: { opacity: 1, y: 0 },
-    viewport: { once: true },
-    transition: { duration: 0.55 },
+    viewport:    { once: true },
+    transition:  { duration: 0.55 },
   };
 
-  const whyList      = data.whyStudyHere || data.whyChoose || [];
-  const benefitsList = Array.isArray(data.benefits) ? data.benefits : [];
-  const requirements = data.requirements || [];
-  const courses      = data.popularCourses || [];
-  const intakes      = data.intakeMonths || [];
-  const nationalities = Array.isArray(data.eligibleNationalities) ? data.eligibleNationalities : [];
+  const whyList        = data.whyStudyHere || data.whyChoose || [];
+  const benefitsList   = Array.isArray(data.benefits) ? data.benefits : [];
+  const requirements   = data.requirements || [];
+  const courses        = data.popularCourses || [];
+  const intakes        = data.intakeMonths || [];
+  const universities   = data.topUniversities || [];
+  const scholarships   = data.scholarships || [];
+  const visaSteps      = data.visaProcess || [];
+  const countryFaqs    = Array.isArray(data.faq) ? data.faq : [];
+  const costDetails    = data.costDetails || null;
+
+  /* Merge: country-specific FAQs first, then general */
+  const allFaqs = [...countryFaqs, ...generalFaqs];
 
   const heroImageSrc = `/images/student/${countryId}.jpg`;
 
@@ -192,7 +208,7 @@ const StudentVisaDetail = () => {
     <div className="min-h-screen bg-white font-['Inter',_sans-serif] overflow-x-hidden">
       <FloatingButton />
 
-      {/* APPLICATION MODAL */}
+      {/* ── APPLICATION MODAL ── */}
       <AnimatePresence>
         {isModalOpen && (
           <div className="fixed inset-0 z-[999] flex items-center justify-center p-4">
@@ -230,13 +246,14 @@ const StudentVisaDetail = () => {
                 {[
                   { placeholder: 'Full Name',       key: 'name',        type: 'text', required: true  },
                   { placeholder: 'Contact Number',  key: 'contact',     type: 'tel',  required: true  },
-                  { placeholder: 'Passport Number', key: 'passport',     type: 'text', required: true  },
+                  { placeholder: 'Passport Number', key: 'passport',    type: 'text', required: true  },
                   { placeholder: 'Nationality',     key: 'nationality', type: 'text', required: true  },
-                  { placeholder: 'Intended Course', key: 'course',       type: 'text', required: false },
+                  { placeholder: 'Intended Course', key: 'course',      type: 'text', required: false },
                 ].map(({ placeholder, key, type: inputType, required: req }) => (
                   <div key={key}>
                     <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1 block mb-1">
-                      {placeholder}{!req && <span className="text-slate-300 ml-1">(optional)</span>}
+                      {placeholder}
+                      {!req && <span className="text-slate-300 ml-1">(optional)</span>}
                     </label>
                     <input
                       required={req}
@@ -280,7 +297,7 @@ const StudentVisaDetail = () => {
         )}
       </AnimatePresence>
 
-      {/* HERO SECTION */}
+      {/* ── HERO ── */}
       <section className="relative pt-36 pb-16 overflow-hidden min-h-[420px]">
         {!imgError ? (
           <>
@@ -340,18 +357,28 @@ const StudentVisaDetail = () => {
                   </span>
                 </div>
               )}
+              {data.region && (
+                <div className="flex items-center gap-2">
+                  <Globe size={15} className="text-[#EAB308]" />
+                  <span className={`text-xs font-bold uppercase tracking-wide ${!imgError ? 'text-white/80' : 'text-slate-600'}`}>
+                    {data.region}
+                  </span>
+                </div>
+              )}
             </div>
           </motion.div>
         </div>
       </section>
 
-      {/* MAIN CONTENT + SIDEBAR */}
+      {/* ── MAIN CONTENT + SIDEBAR ── */}
       <section className="py-14 px-6 lg:px-8 bg-white">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col lg:flex-row gap-12">
 
             {/* LEFT COLUMN */}
             <div className="lg:w-[65%] space-y-16">
+
+              {/* Why Study Here */}
               {whyList.length > 0 && (
                 <motion.div {...fadeUp}>
                   <SectionHeading label="Why Study in" accent={`${data.country}?`} />
@@ -361,6 +388,7 @@ const StudentVisaDetail = () => {
                 </motion.div>
               )}
 
+              {/* Key Benefits */}
               {benefitsList.length > 0 && (
                 <motion.div {...fadeUp}>
                   <SectionHeading label="Key" accent="Benefits." />
@@ -378,6 +406,28 @@ const StudentVisaDetail = () => {
                 </motion.div>
               )}
 
+              {/* Top Universities */}
+              {universities.length > 0 && (
+                <motion.div {...fadeUp}>
+                  <SectionHeading label="Top" accent="Universities." />
+                  <div className="grid sm:grid-cols-2 gap-3">
+                    {universities.map((u, i) => (
+                      <div
+                        key={i}
+                        className="flex items-start gap-3 p-5 bg-white border border-slate-100 rounded-2xl shadow-sm hover:border-[#EAB308]/40 transition-all"
+                      >
+                        <Building2 size={15} className="text-[#EAB308] shrink-0 mt-0.5" />
+                        <div>
+                          <p className="text-sm font-black text-[#0B1F3A]">{u.name}</p>
+                          {u.note && <p className="text-xs text-slate-500 mt-0.5 font-medium">{u.note}</p>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+
+              {/* Popular Courses */}
               {courses.length > 0 && (
                 <motion.div {...fadeUp}>
                   <SectionHeading label="Popular" accent="Courses." />
@@ -391,6 +441,7 @@ const StudentVisaDetail = () => {
                 </motion.div>
               )}
 
+              {/* Intake Dates */}
               {intakes.length > 0 && (
                 <motion.div {...fadeUp}>
                   <SectionHeading label="Intake" accent="Dates." />
@@ -405,9 +456,10 @@ const StudentVisaDetail = () => {
                 </motion.div>
               )}
 
+              {/* Requirements */}
               {requirements.length > 0 && (
                 <motion.div {...fadeUp}>
-                  <SectionHeading label="Main" accent="Requirements." />
+                  <SectionHeading label="Admission" accent="Requirements." />
                   <div className="grid sm:grid-cols-2 gap-3">
                     {requirements.map((req, i) => (
                       <div key={i} className="flex items-start gap-3 p-5 bg-white border border-slate-100 rounded-2xl shadow-sm hover:border-[#EAB308]/40 transition-all">
@@ -419,7 +471,85 @@ const StudentVisaDetail = () => {
                 </motion.div>
               )}
 
-              {/* STUDENT INTELLIGENCE FAQ SECTION */}
+              {/* Scholarships */}
+              {scholarships.length > 0 && (
+                <motion.div {...fadeUp}>
+                  <SectionHeading label="Scholarships &amp;" accent="Financial Aid." />
+                  <ul className="space-y-3">
+                    {scholarships.map((s, i) => <CheckItem key={i} text={s} />)}
+                  </ul>
+                </motion.div>
+              )}
+
+              {/* Work Opportunities */}
+              {data.workOpportunities && (
+                <motion.div {...fadeUp}>
+                  <SectionHeading label="Work" accent="Opportunities." />
+                  <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100">
+                    <p className="text-sm font-semibold text-slate-600 leading-relaxed">
+                      {data.workOpportunities}
+                    </p>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* Visa Process */}
+              {visaSteps.length > 0 && (
+                <motion.div {...fadeUp}>
+                  <SectionHeading label="Visa" accent="Process." />
+                  <ol className="space-y-4">
+                    {visaSteps.map((step, i) => (
+                      <li key={i} className="flex items-start gap-4">
+                        <span className="w-7 h-7 rounded-full bg-[#EAB308] text-[#0B1F3A] text-xs font-black flex items-center justify-center shrink-0 mt-0.5">
+                          {i + 1}
+                        </span>
+                        <span className="text-sm font-semibold text-slate-700 leading-snug pt-1">{step}</span>
+                      </li>
+                    ))}
+                  </ol>
+                </motion.div>
+              )}
+
+              {/* Cost Details */}
+              {costDetails && (
+                <motion.div {...fadeUp}>
+                  <SectionHeading label="Cost" accent="Details." />
+                  <div className="grid sm:grid-cols-3 gap-4">
+                    {costDetails.tuition && (
+                      <div className="p-5 bg-amber-50 border border-amber-200 rounded-2xl">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-amber-600 mb-2">Tuition</p>
+                        <p className="text-sm font-bold text-[#0B1F3A]">{costDetails.tuition}</p>
+                      </div>
+                    )}
+                    {costDetails.living && (
+                      <div className="p-5 bg-slate-50 border border-slate-200 rounded-2xl">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Living Cost</p>
+                        <p className="text-sm font-bold text-[#0B1F3A]">{costDetails.living}</p>
+                      </div>
+                    )}
+                    {costDetails.applicationFee && (
+                      <div className="p-5 bg-slate-50 border border-slate-200 rounded-2xl">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Application Fee</p>
+                        <p className="text-sm font-bold text-[#0B1F3A]">{costDetails.applicationFee}</p>
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+
+              {/* Student Life */}
+              {data.studentLife && (
+                <motion.div {...fadeUp}>
+                  <SectionHeading label="Student" accent="Life." />
+                  <div className="p-6 bg-[#0B1F3A] rounded-2xl">
+                    <p className="text-sm font-semibold text-white/80 leading-relaxed">
+                      {data.studentLife}
+                    </p>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* FAQ Section */}
               <motion.div {...fadeUp} className="pt-8 border-t border-slate-100">
                 <div className="flex items-center gap-3 mb-8">
                   <div className="p-2 bg-amber-100 rounded-lg">
@@ -429,9 +559,9 @@ const StudentVisaDetail = () => {
                     Student <span className="text-[#EAB308]">Intelligence</span>
                   </h3>
                 </div>
-                
-                <div className="bg-white rounded-3xl border border-slate-100 divide-y divide-slate-100 overflow-hidden shadow-sm">
-                  {faqs.map((faq, index) => (
+
+                <div className="bg-white rounded-3xl border border-slate-100 divide-y divide-slate-100 overflow-hidden shadow-sm px-6">
+                  {allFaqs.map((faq, index) => (
                     <AccordionItem
                       key={index}
                       question={faq.question}
@@ -444,9 +574,11 @@ const StudentVisaDetail = () => {
               </motion.div>
             </div>
 
-            {/* RIGHT SIDEBAR */}
+            {/* ── RIGHT SIDEBAR ── */}
             <aside className="lg:w-[35%]">
               <div className="sticky top-24 space-y-6">
+
+                {/* Quick Overview */}
                 <div className="bg-[#0B1F3A] rounded-[2rem] p-8 text-white shadow-xl">
                   <h3 className="text-base font-black uppercase mb-6 border-b border-white/10 pb-4 flex items-center gap-2">
                     <Info size={16} className="text-[#EAB308]" /> Quick Overview
@@ -457,6 +589,7 @@ const StudentVisaDetail = () => {
                     <InfoRow label="Category"   value={data.category} />
                     <InfoRow label="Processing" value={data.processingTime} />
                     <InfoRow label="Duration"   value={data.duration} />
+                    <InfoRow label="Region"     value={data.region} />
                   </div>
                   <button
                     onClick={() => setIsModalOpen(true)}
@@ -466,10 +599,27 @@ const StudentVisaDetail = () => {
                   </button>
                 </div>
 
+                {/* Important Note */}
+                {data.important && (
+                  <div className="bg-amber-50 border border-amber-200 rounded-[2rem] p-6">
+                    <div className="flex gap-3">
+                      <AlertCircle size={18} className="text-[#EAB308] shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-amber-600 mb-2">Important Note</p>
+                        <p className="text-xs font-semibold text-amber-800 leading-relaxed">{data.important}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Contact */}
                 <div className="bg-slate-50 border border-slate-100 rounded-[2rem] p-6">
                   <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-4">Need Expert Advice?</p>
                   <div className="space-y-4">
-                    <a href="tel:+8801348992268" className="flex items-center gap-3 text-[#0B1F3A] hover:text-[#EAB308] group transition-colors">
+                    <a
+                      href="tel:+8801348992268"
+                      className="flex items-center gap-3 text-[#0B1F3A] hover:text-[#EAB308] group transition-colors"
+                    >
                       <div className="p-2.5 rounded-xl bg-white border border-slate-200 group-hover:border-[#EAB308]">
                         <Phone size={15} />
                       </div>
@@ -483,13 +633,22 @@ const StudentVisaDetail = () => {
                     </div>
                   </div>
                 </div>
+
+                {/* Trust Badge */}
+                <div className="bg-slate-50 border border-slate-100 rounded-[2rem] p-6 text-center">
+                  <Shield size={24} className="mx-auto text-[#EAB308] mb-3" />
+                  <p className="font-black text-sm uppercase text-[#0B1F3A]">100% Legal &amp; Verified</p>
+                  <p className="text-xs font-semibold text-slate-500 mt-1">
+                    Processed through official government channels only.
+                  </p>
+                </div>
               </div>
             </aside>
           </div>
         </div>
       </section>
 
-      {/* BOTTOM CTA */}
+      {/* ── BOTTOM CTA ── */}
       <section className="py-20 px-6 lg:px-8 bg-white">
         <motion.div
           {...fadeUp}
@@ -498,10 +657,12 @@ const StudentVisaDetail = () => {
           <div className="absolute top-0 left-0 w-72 h-72 bg-[#EAB308]/10 rounded-full -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
           <div className="relative z-10 max-w-3xl mx-auto space-y-8">
             <h2 className="text-4xl lg:text-6xl font-black text-white leading-tight uppercase">
-              Ready to Study in <span className="text-[#EAB308]">{data.country}?</span>
+              Ready to Study in{' '}
+              <span className="text-[#EAB308]">{data.country}?</span>
             </h2>
             <p className="text-white/60 font-medium text-sm max-w-md mx-auto leading-relaxed">
-              Our academic advisors guide you through university selection, documentation, and visa approval. Start your journey today.
+              Our academic advisors guide you through university selection, documentation, and visa approval.
+              Start your journey today.
             </p>
             <button
               onClick={() => setIsModalOpen(true)}

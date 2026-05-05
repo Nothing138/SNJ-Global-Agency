@@ -1,0 +1,72 @@
+// src/constants/countryDataMap.js
+// Maps country URL slugs → data IDs in each dataset
+// workVisaId   → workVisaData.js
+// visitVisaId  → visaData.js
+// studentVisaId → studentVisaData.js
+
+export const countryDataMap = {
+  'albania':        { workVisaId: 'albania',         visitVisaId: 'albania-visit',     studentVisaId: null              },
+  'armenia':        { workVisaId: null,               visitVisaId: null,                studentVisaId: null              },
+  'austria':        { workVisaId: null,               visitVisaId: null,                studentVisaId: null              },
+  'australia':      { workVisaId: null,               visitVisaId: 'australia-visit',   studentVisaId: 'australia-student'},
+  'azerbaijan':     { workVisaId: null,               visitVisaId: 'azerbaijan-visit',  studentVisaId: null              },
+  'belarus':        { workVisaId: null,               visitVisaId: null,                studentVisaId: null              },
+  'belgium':        { workVisaId: null,               visitVisaId: null,                studentVisaId: null              },
+  'bulgaria':       { workVisaId: null,               visitVisaId: null,                studentVisaId: null              },
+  'cambodia':       { workVisaId: null,               visitVisaId: 'cambodia-visit',    studentVisaId: null              },
+  'canada':         { workVisaId: null,               visitVisaId: null,                studentVisaId: 'canada-student'  },
+  'china':          { workVisaId: null,               visitVisaId: 'china-visit',       studentVisaId: null              },
+  'croatia':        { workVisaId: null,               visitVisaId: null,                studentVisaId: null              },
+  'cyprus':         { workVisaId: null,               visitVisaId: 'cyprus-visit',      studentVisaId: null              },
+  'czech-republic': { workVisaId: null,               visitVisaId: null,                studentVisaId: null              },
+  'denmark':        { workVisaId: 'denmark',          visitVisaId: null,                studentVisaId: null              },
+  'egypt':          { workVisaId: null,               visitVisaId: null,                studentVisaId: null              },
+  'estonia':        { workVisaId: null,               visitVisaId: null,                studentVisaId: null              },
+  'finland':        { workVisaId: 'finland',          visitVisaId: null,                studentVisaId: null              },
+  'france':         { workVisaId: null,               visitVisaId: 'france-visit',      studentVisaId: null              },
+  'georgia':        { workVisaId: null,               visitVisaId: null,                studentVisaId: null              },
+  'germany':        { workVisaId: 'germany',          visitVisaId: null,                studentVisaId: null              },
+  'greece':         { workVisaId: 'greece',           visitVisaId: null,                studentVisaId: null              },
+  'hungary':        { workVisaId: null,               visitVisaId: null,                studentVisaId: 'hungary-student' },
+  'iceland':        { workVisaId: null,               visitVisaId: 'iceland-visit',     studentVisaId: null              },
+  'india':          { workVisaId: null,               visitVisaId: null,                studentVisaId: null              },
+  'indonesia':      { workVisaId: null,               visitVisaId: null,                studentVisaId: null              },
+  'ireland':        { workVisaId: null,               visitVisaId: null,                studentVisaId: null              },
+  'italy':          { workVisaId: null,               visitVisaId: 'italy-visit',       studentVisaId: null              },
+  'japan':          { workVisaId: null,               visitVisaId: 'japan-visit',       studentVisaId: null              },
+  'laos':           { workVisaId: null,               visitVisaId: 'laos-visit',        studentVisaId: null              },
+  'latvia':         { workVisaId: null,               visitVisaId: null,                studentVisaId: null              },
+  'lithuania':      { workVisaId: null,               visitVisaId: null,                studentVisaId: null              },
+  'luxembourg':     { workVisaId: null,               visitVisaId: null,                studentVisaId: null              },
+  'malaysia':       { workVisaId: null,               visitVisaId: 'malaysia-visit',    studentVisaId: null              },
+  'malta':          { workVisaId: 'malta',            visitVisaId: null,                studentVisaId: 'malta-student'   },
+  'moldova':        { workVisaId: 'moldova',          visitVisaId: null,                studentVisaId: null              },
+  'montenegro':     { workVisaId: null,               visitVisaId: null,                studentVisaId: null              },
+  'nepal':          { workVisaId: null,               visitVisaId: 'nepal-visit',       studentVisaId: null              },
+  'netherlands':    { workVisaId: null,               visitVisaId: null,                studentVisaId: null              },
+  'new-zealand':    { workVisaId: 'new-zealand',      visitVisaId: null,                studentVisaId: null              },
+  'north-macedonia':{ workVisaId: 'north-macedonia',  visitVisaId: null,                studentVisaId: null              },
+  'norway':         { workVisaId: 'norway',           visitVisaId: null,                studentVisaId: null              },
+  'philippines':    { workVisaId: null,               visitVisaId: 'philippines-visit', studentVisaId: null              },
+  'poland':         { workVisaId: 'poland',           visitVisaId: null,                studentVisaId: null              },
+  'portugal':       { workVisaId: null,               visitVisaId: null,                studentVisaId: null              },
+  'romania':        { workVisaId: 'romania',          visitVisaId: null,                studentVisaId: null              },
+  'russia':         { workVisaId: null,               visitVisaId: 'russia-visit',      studentVisaId: null              },
+  'serbia':         { workVisaId: 'serbia',           visitVisaId: null,                studentVisaId: null              },
+  'singapore':      { workVisaId: null,               visitVisaId: 'singapore-visit',   studentVisaId: null              },
+  'slovakia':       { workVisaId: 'slovakia',         visitVisaId: null,                studentVisaId: null              },
+  'slovenia':       { workVisaId: null,               visitVisaId: null,                studentVisaId: null              },
+  'south-korea':    { workVisaId: null,               visitVisaId: 'south-korea-visit', studentVisaId: null              },
+  'spain':          { workVisaId: null,               visitVisaId: 'spain-visit',       studentVisaId: null              },
+  'sri-lanka':      { workVisaId: null,               visitVisaId: 'sri-lanka-visit',   studentVisaId: null              },
+  'sweden':         { workVisaId: 'sweden',           visitVisaId: 'sweden-visit',      studentVisaId: null              },
+  'switzerland':    { workVisaId: null,               visitVisaId: 'switzerland-visit', studentVisaId: null              },
+  'thailand':       { workVisaId: null,               visitVisaId: 'thailand-visit',    studentVisaId: null              },
+  'turkiye':        { workVisaId: null,               visitVisaId: 'turkey-visit',      studentVisaId: null              },
+  'united-kingdom': { workVisaId: null,               visitVisaId: null,                studentVisaId: 'uk-student'      },
+};
+
+// Helper: convert a display name → URL slug
+// "South Korea" → "south-korea"  |  "Turkiye" → "turkiye"
+export const toSlug = (name) =>
+  name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');

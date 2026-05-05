@@ -35,6 +35,7 @@ import B2BPartner from './pages/Admin/B2BPartnerList';
 import B2BPricing from './pages/Admin/B2BPricing.jsx';
 import AssignTask from './pages/Admin/AssignTask.jsx';
 import WorkerRequest from './pages/Admin/WorkerRequest.jsx';
+import ServiceAreaCountry from './pages/ServiceAreaCountry.jsx';
 
 // User-Side
 import BlogDetail from './pages/User-Side/BlogDetail';
@@ -55,6 +56,8 @@ import PolicyDashboard from './pages/User-Side/PolicyDashboard';
 import WorkVisaDetail from './pages/User-Side/WorkVisaDetail';
 import StudentVisaDetail from './pages/User-Side/StudentVisaDetail';
 import VisitVisaDetail from './pages/User-Side/VisitVisaDetail';
+import EmployerPage from './pages/Employer'; 
+
 
 // ✅ NEW: Registration & Dashboard Pages
 import RegisterSelect from './pages/RegisterSelect';
@@ -131,6 +134,11 @@ function App() {
           <Route path="/profile" element={<UserProfile />} />
           <Route path="/apply-visa/:visaId" element={<ApplyVisa />} />
           <Route path="/apply-tours/:pkgId" element={<ApplyTours />} />
+          <Route path="/employer" element={<EmployerPage />} />
+          <Route path="/employer" element={<EmployerPage />} /> 
+
+          <Route path="/destinations/:countryId" element={<ServiceAreaCountry />} />
+
         </Route>
 
         {/* ── REGISTRATION PAGES (with Navbar + Footer) ────────────────────── */}

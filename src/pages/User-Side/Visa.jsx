@@ -19,49 +19,49 @@ const Visa = () => {
   // Work visa IDs must match workVisaData.js id fields
   const workPermitCountries = [
     { name: "Albania",        code: "AL", id: "albania" },
-    { name: "Armenia",        code: "AM", id: "armenia" },
-    { name: "Azerbaijan",     code: "AZ", id: "azerbaijan-work" },
-    { name: "Belarus",        code: "BY", id: "belarus" },
-    { name: "Belgium",        code: "BE", id: "belgium" },
-    { name: "Bulgaria",       code: "BG", id: "bulgaria" },
-    { name: "Cambodia",       code: "KH", id: "cambodia-work" },
-    { name: "Croatia",        code: "HR", id: "croatia" },
-    { name: "Cyprus",         code: "CY", id: "cyprus" },
-    { name: "Czech Republic", code: "CZ", id: "czech-republic" },
+    //{ name: "Armenia",        code: "AM", id: "armenia" },//
+    //{ name: "Azerbaijan",     code: "AZ", id: "azerbaijan-work" },//
+    //{ name: "Belarus",        code: "BY", id: "belarus" },//
+   // { name: "Belgium",        code: "BE", id: "belgium" },//
+   // { name: "Bulgaria",       code: "BG", id: "bulgaria" },//
+   // { name: "Cambodia",       code: "KH", id: "cambodia-work" },//
+   // { name: "Croatia",        code: "HR", id: "croatia" },//
+    //{ name: "Cyprus",         code: "CY", id: "cyprus" },//
+   // { name: "Czech Republic", code: "CZ", id: "czech-republic" },//
     { name: "Denmark",        code: "DK", id: "denmark" },
-    { name: "Estonia",        code: "EE", id: "estonia" },
-    { name: "Fiji",           code: "FJ", id: "fiji" },
+    //{ name: "Estonia",        code: "EE", id: "estonia" },
+   // { name: "Fiji",           code: "FJ", id: "fiji" },
     { name: "Finland",        code: "FI", id: "finland" },
-    { name: "France",         code: "FR", id: "france" },
+   // { name: "France",         code: "FR", id: "france" },
     { name: "Germany",        code: "DE", id: "germany" },
     { name: "Greece",         code: "GR", id: "greece" },
-    { name: "Hungary",        code: "HU", id: "hungary" },
-    { name: "Ireland",        code: "IE", id: "ireland" },
-    { name: "Italy",          code: "IT", id: "italy" },
-    { name: "Laos",           code: "LA", id: "laos-work" },
-    { name: "Latvia",         code: "LV", id: "latvia" },
-    { name: "Lithuania",      code: "LT", id: "lithuania" },
-    { name: "Luxembourg",     code: "LU", id: "luxembourg" },
-    { name: "Malaysia",       code: "MY", id: "malaysia-work" },
+    //{ name: "Hungary",        code: "HU", id: "hungary" },
+    //{ name: "Ireland",        code: "IE", id: "ireland" },
+    //{ name: "Italy",          code: "IT", id: "italy" },
+    //{ name: "Laos",           code: "LA", id: "laos-work" },
+    //{ name: "Latvia",         code: "LV", id: "latvia" },
+   // { name: "Lithuania",      code: "LT", id: "lithuania" },
+   // { name: "Luxembourg",     code: "LU", id: "luxembourg" },
+   // { name: "Malaysia",       code: "MY", id: "malaysia-work" },
     { name: "Malta",          code: "MT", id: "malta" },
     { name: "Moldova",        code: "MD", id: "moldova" },
-    { name: "Montenegro",     code: "ME", id: "montenegro" },
-    { name: "Netherlands",    code: "NL", id: "netherlands" },
+    //{ name: "Montenegro",     code: "ME", id: "montenegro" },
+   // { name: "Netherlands",    code: "NL", id: "netherlands" },
     { name: "New Zealand",    code: "NZ", id: "new-zealand" },
     { name: "North Macedonia",code: "MK", id: "north-macedonia" },
     { name: "Norway",         code: "NO", id: "norway" },
     { name: "Poland",         code: "PL", id: "poland" },
-    { name: "Portugal",       code: "PT", id: "portugal" },
+    //{ name: "Portugal",       code: "PT", id: "portugal" },
     { name: "Romania",        code: "RO", id: "romania" },
-    { name: "Russia",         code: "RU", id: "russia" },
+    //{ name: "Russia",         code: "RU", id: "russia" },
     { name: "Serbia",         code: "RS", id: "serbia" },
     { name: "Slovakia",       code: "SK", id: "slovakia" },
-    { name: "Slovenia",       code: "SI", id: "slovenia" },
-    { name: "Spain",          code: "ES", id: "spain" },
+    //{ name: "Slovenia",       code: "SI", id: "slovenia" },
+    //{ name: "Spain",          code: "ES", id: "spain" },
     { name: "Sweden",         code: "SE", id: "sweden" },
-    { name: "Thailand",       code: "TH", id: "thailand-work" },
-    { name: "Türkiye",        code: "TR", id: "turkiye" },
-    { name: "United Kingdom", code: "GB", id: "united-kingdom" },
+    //{ name: "Thailand",       code: "TH", id: "thailand-work" },
+    //{ name: "Türkiye",        code: "TR", id: "turkiye" },
+   // { name: "United Kingdom", code: "GB", id: "united-kingdom" },
   ].sort((a, b) => a.name.localeCompare(b.name));
 
   // ✅ Visit visa IDs must match visaData.js id fields
@@ -94,16 +94,18 @@ const Visa = () => {
   // ✅ Student visa IDs must match studentVisaData.js id fields
   const studentVisaCountries = [
     { name: "Australia",      code: "AU", id: "australia-student",      type: "Higher Ed" },
-    { name: "Austria",        code: "AT", id: "austria-student",        type: "University" },
-    { name: "Belgium",        code: "BE", id: "belgium-student",        type: "University" },
-    { name: "Czech Republic", code: "CZ", id: "czech-republic-student", type: "Higher Ed" },
-    { name: "Denmark",        code: "DK", id: "denmark-student",        type: "University" },
-    { name: "Finland",        code: "FI", id: "finland-student",        type: "Higher Ed" },
-    { name: "France",         code: "FR", id: "france-student",         type: "University" },
-    { name: "Germany",        code: "DE", id: "germany-student",        type: "Higher Ed" },
-    { name: "Hungary",        code: "HU", id: "hungary-student",        type: "University" },
-    { name: "Italy",          code: "IT", id: "italy-student",          type: "Higher Ed" },
     { name: "United Kingdom", code: "GB", id: "uk-student",             type: "University" },
+    { name: "Malta",          code: "MT", id: "malta-student",          type: "University"},
+    { name: "Canada",         code: "CA", id: "canada-student",         type: "University" },
+    { name: "Hungary",        code: "HU", id: "hungary-student",        type: "University" },
+   // { name: "Austria",        code: "AT", id: "austria-student",        type: "University" },//
+    //{ name: "Belgium",        code: "BE", id: "belgium-student",        type: "University" },//
+    //{ name: "Czech Republic", code: "CZ", id: "czech-republic-student", type: "Higher Ed" },//
+   // { name: "Denmark",        code: "DK", id: "denmark-student",        type: "University" },//
+    //{ name: "Finland",        code: "FI", id: "finland-student",        type: "Higher Ed" },//
+   // { name: "France",         code: "FR", id: "france-student",         type: "University" },//
+   // { name: "Germany",        code: "DE", id: "germany-student",        type: "Higher Ed" },//
+   // { name: "Italy",          code: "IT", id: "italy-student",          type: "Higher Ed" },
   ].sort((a, b) => a.name.localeCompare(b.name));
 
   const getActiveList = () => {

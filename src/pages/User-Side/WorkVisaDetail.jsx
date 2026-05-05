@@ -1,3 +1,4 @@
+//workvisadetails.jsx
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import emailjs from '@emailjs/browser';
@@ -13,11 +14,29 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 
 /* ─────────────────────────────────────────
+   Allowed country IDs (15 countries only)
+───────────────────────────────────────── */
+const ALLOWED_COUNTRY_IDS = [
+  'moldova',
+  'malta',
+  'serbia',
+  'norway',
+  'denmark',
+  'new-zealand',
+  'germany',
+  'poland',
+  'romania',
+  'north-macedonia',
+  'sweden',
+  'albania',
+  'slovakia',
+  'finland',
+  'greece',
+];
+
+/* ─────────────────────────────────────────
    Reusable Sub-components
 ───────────────────────────────────────── */
-
-//const [imgError, setImgError] = useState(false);
-//const heroImageSrc = `/images/work/${countryId}.jpg`;
 
 const Badge = ({ children, gold }) => (
   <span
@@ -70,8 +89,10 @@ const WorkVisaDetail = () => {
     nationality: '',
   });
 
-  // ✅ FIX: Find data directly from workVisaData using countryId param
-  const data = workVisaData.find((v) => v.id === countryId);
+  // Find data only from the 15 allowed countries
+  const data = workVisaData.find(
+    (v) => v.id === countryId && ALLOWED_COUNTRY_IDS.includes(v.id)
+  );
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -105,7 +126,7 @@ const WorkVisaDetail = () => {
     }
   };
 
-  // ✅ FIX: If data not found, show proper not-found message (not infinite spinner)
+  // If data not found or country not in allowed list, show not-found message
   if (!data) {
     return (
       <div className="h-screen flex flex-col items-center justify-center bg-white gap-4">
@@ -286,86 +307,6 @@ const WorkVisaDetail = () => {
           </motion.div>
         </div>
       </section>
-      {/*<section className="relative pt-36 pb-16 overflow-hidden min-h-[420px]">
-              {!imgError ? (
-                <>
-                  <img
-                    src={heroImageSrc}
-                    alt={`Work ${data.country}`}
-                    onError={() => setImgError(true)}
-                    className="absolute inset-0 w-full h-full object-cover object-center"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-r from-[#0B1F3A]/90 via-[#0B1F3A]/70 to-[#0B1F3A]/30" />
-                </>
-              ) : (
-                <>
-                  <div className="absolute inset-0 bg-gradient-to-br from-slate-50 to-white" />
-                  <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#EAB308]/5 rounded-full translate-x-1/2 -translate-y-1/4 pointer-events-none" />
-                </>
-              )}
-      
-              <div className="max-w-7xl mx-auto px-6 lg:px-8 relative z-10">
-                <motion.div {...fadeUp}>
-                  <button
-                    onClick={() => navigate(-1)}
-                    className="inline-flex items-center gap-2 text-[#EAB308] font-bold text-[11px] uppercase tracking-[0.3em] mb-10 hover:gap-3 transition-all"
-                  >
-                    <ArrowLeft size={15} /> Back
-                  </button>
-      
-                  <div className="flex flex-wrap gap-3 mb-6">
-                    <Badge gold>Visit Visa Program</Badge>
-                    {data.visaType && <Badge>{data.visaType}</Badge>}
-                    {data.region   && <Badge>{data.region}</Badge>}
-                  </div>
-      
-                  <h1 className={`text-5xl lg:text-8xl font-black leading-[0.9] tracking-tighter uppercase ${
-                    !imgError ? 'text-white' : 'text-[#0B1F3A]'
-                  }`}>
-                    {data.flag} {data.country}
-                    <span className="text-[#EAB308] italic font-light lowercase text-3xl lg:text-5xl block mt-3">
-                      Discover &amp; Explore
-                    </span>
-                  </h1>
-      
-                  <div className="flex flex-wrap gap-6 mt-10">
-                    {data.processingTime && (
-                      <div className="flex items-center gap-2">
-                        <Clock size={15} className="text-[#EAB308]" />
-                        <span className={`text-xs font-bold uppercase tracking-wide ${!imgError ? 'text-white/80' : 'text-slate-600'}`}>
-                          {data.processingTime}
-                        </span>
-                      </div>
-                    )}
-                    {data.cost && (
-                      <div className="flex items-center gap-2">
-                        <Wallet size={15} className="text-[#EAB308]" />
-                        <span className={`text-xs font-bold uppercase tracking-wide ${!imgError ? 'text-white/80' : 'text-slate-600'}`}>
-                          {data.cost}
-                        </span>
-                      </div>
-                    )}
-                    {data.duration && (
-                      <div className="flex items-center gap-2">
-                        <Calendar size={15} className="text-[#EAB308]" />
-                        <span className={`text-xs font-bold uppercase tracking-wide ${!imgError ? 'text-white/80' : 'text-slate-600'}`}>
-                          {data.duration}
-                        </span>
-                      </div>
-                    )}
-                    {data.visaName && (
-                      <div className="flex items-center gap-2">
-                        <Globe size={15} className="text-[#EAB308]" />
-                        <span className={`text-xs font-bold uppercase tracking-wide ${!imgError ? 'text-white/80' : 'text-slate-600'}`}>
-                          {data.visaName}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </motion.div>
-              </div>
-            </section>*/}
-      
 
       {/* ══════════════════════════════════════
           MAIN CONTENT + SIDEBAR
@@ -445,9 +386,9 @@ const WorkVisaDetail = () => {
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="bg-[#0B1F3A] text-white">
-                          <th className="text-left p-4 text-[10px] font-black uppercase tracking-widest">Hours</th>
+                          <th className="text-left p-4 text-[10px] font-black uppercase tracking-widest">Role</th>
                           <th className="text-left p-4 text-[10px] font-black uppercase tracking-widest">Monthly</th>
-                          <th className="text-left p-4 text-[10px] font-black uppercase tracking-widest">Annual</th>
+                          <th className="text-left p-4 text-[10px] font-black uppercase tracking-widest">Hourly / Notes</th>
                         </tr>
                       </thead>
                       <tbody>

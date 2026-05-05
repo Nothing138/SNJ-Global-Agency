@@ -1,51 +1,135 @@
-//userpeofile
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import { User, Briefcase, Plane, Map, Send, ShieldCheck, Lock, Eye, Ticket, Phone, UserCircle, PlusCircle } from 'lucide-react';
+import {
+    User, Briefcase, Plane, Map, Send, ShieldCheck, Lock, Eye, Ticket,
+    Phone, UserCircle, PlusCircle, Bell, FileText, Upload, CheckCircle,
+    XCircle, Clock, AlertCircle, ChevronRight, Download, Globe,
+    CreditCard, RefreshCw, MessageSquare, Star, Shield, Activity,
+    MoreHorizontal, EyeOff, Loader, ArrowRight, Info, Calendar
+} from 'lucide-react';
 import Navbar from '../../components/Navbar';
 import io from 'socket.io-client';
 import { toast, Toaster } from 'react-hot-toast';
 
-const socket = io.connect("https://snj-global-agency-backend.onrender.com");
+const BASE_URL = "https://snj-global-agency-backend.onrender.com";
+const socket = io.connect(BASE_URL);
 
+// ─── Status Config ─────────────────────────────────────────────────────────────
+const STATUS_CONFIG = {
+    submitted:         { color: 'text-amber-600',  bg: 'bg-amber-50',   border: 'border-amber-200',  dot: 'bg-amber-400',  label: 'Submitted' },
+    under_review:      { color: 'text-blue-600',   bg: 'bg-blue-50',    border: 'border-blue-200',   dot: 'bg-blue-400',   label: 'Under Review' },
+    processing:        { color: 'text-indigo-600', bg: 'bg-indigo-50',  border: 'border-indigo-200', dot: 'bg-indigo-400', label: 'Processing' },
+    embassy_review:    { color: 'text-purple-600', bg: 'bg-purple-50',  border: 'border-purple-200', dot: 'bg-purple-400', label: 'Embassy Review' },
+    approved:          { color: 'text-green-600',  bg: 'bg-green-50',   border: 'border-green-200',  dot: 'bg-green-500',  label: 'Approved' },
+    accept:            { color: 'text-green-600',  bg: 'bg-green-50',   border: 'border-green-200',  dot: 'bg-green-500',  label: 'Accepted' },
+    rejected:          { color: 'text-red-600',    bg: 'bg-red-50',     border: 'border-red-200',    dot: 'bg-red-500',    label: 'Rejected' },
+    reject:            { color: 'text-red-600',    bg: 'bg-red-50',     border: 'border-red-200',    dot: 'bg-red-500',    label: 'Rejected' },
+    on_hold:           { color: 'text-orange-600', bg: 'bg-orange-50',  border: 'border-orange-200', dot: 'bg-orange-400', label: 'On Hold' },
+    hold:              { color: 'text-orange-600', bg: 'bg-orange-50',  border: 'border-orange-200', dot: 'bg-orange-400', label: 'On Hold' },
+    requested:         { color: 'text-amber-600',  bg: 'bg-amber-50',   border: 'border-amber-200',  dot: 'bg-amber-400',  label: 'Requested' },
+    documents_verified:{ color: 'text-cyan-600',   bg: 'bg-cyan-50',    border: 'border-cyan-200',   dot: 'bg-cyan-400',   label: 'Docs Verified' },
+    decision:          { color: 'text-slate-600',  bg: 'bg-slate-50',   border: 'border-slate-200',  dot: 'bg-slate-400',  label: 'Decision' },
+};
+
+const getStatus = (s) => STATUS_CONFIG[s?.toLowerCase()?.replace(/ /g, '_')] || STATUS_CONFIG['requested'];
+
+// ─── Timeline Steps ─────────────────────────────────────────────────────────────
+const TIMELINE_STEPS = [
+    { key: 'submitted',          label: 'Submitted',          icon: FileText },
+    { key: 'under_review',       label: 'Docs Verified',      icon: CheckCircle },
+    { key: 'processing',         label: 'Processing',         icon: Activity },
+    { key: 'embassy_review',     label: 'Embassy / Co. Review', icon: Globe },
+    { key: 'approved',           label: 'Decision',           icon: Star },
+];
+
+const getStepIndex = (status) => {
+    const s = status?.toLowerCase()?.replace(/ /g, '_');
+    if (s === 'rejected' || s === 'reject') return 4;
+    if (s === 'approved' || s === 'accept') return 4;
+    if (s === 'embassy_review') return 3;
+    if (s === 'processing') return 2;
+    if (s === 'under_review' || s === 'documents_verified') return 1;
+    return 0;
+};
+
+// ─── Main Component ─────────────────────────────────────────────────────────────
 const UserProfile = () => {
-    const [data, setData] = useState(null);
+    const [data, setData]           = useState(null);
+    const [loading, setLoading]     = useState(true);
     const [activeTab, setActiveTab] = useState('overview');
-    const [newContact, setNewContact] = useState("");
+    const [newContact, setNewContact]           = useState("");
     const [isSubmittingContact, setIsSubmittingContact] = useState(false);
-    
+    const [notifications, setNotifications]     = useState([]);
+    const [showNotifs, setShowNotifs]           = useState(false);
+    const [selectedApp, setSelectedApp]         = useState(null);
+    const [unreadCount, setUnreadCount]         = useState(0);
+
     const user = JSON.parse(localStorage.getItem('user'));
 
     useEffect(() => {
         if (user) {
             fetchProfile();
             socket.emit("join_chat", user.id);
+
+            // Listen for real-time status updates
+            socket.on("status_update", (update) => {
+                addNotification({
+                    id: Date.now(),
+                    type: 'status',
+                    message: `Your ${update.type} application status updated to "${update.status}"`,
+                    time: new Date(),
+                    read: false,
+                });
+                fetchProfile();
+                toast.success(`Status Updated: ${update.status}`);
+            });
+
+            socket.on("document_update", (update) => {
+                addNotification({
+                    id: Date.now(),
+                    type: 'document',
+                    message: `Document "${update.name}" was ${update.status}`,
+                    time: new Date(),
+                    read: false,
+                });
+                fetchProfile();
+            });
         }
+        return () => {
+            socket.off("status_update");
+            socket.off("document_update");
+        };
     }, []);
 
     const fetchProfile = async () => {
         try {
-            const res = await axios.get(`https://snj-global-agency-backend.onrender.com/api/users/profile/${user.id}`);
+            const res = await axios.get(`${BASE_URL}/api/users/profile/${user.id}`);
             setData(res.data);
         } catch (err) {
             console.error("Error fetching data", err);
+        } finally {
+            setLoading(false);
         }
+    };
+
+    const addNotification = (notif) => {
+        setNotifications(prev => [notif, ...prev].slice(0, 20));
+        setUnreadCount(prev => prev + 1);
     };
 
     const handleUpdateContact = async (e) => {
         e.preventDefault();
         if (!newContact) return toast.error("Please enter a number");
-        
         setIsSubmittingContact(true);
         try {
-            await axios.put(`https://snj-global-agency-backend.onrender.com/api/users/profile/update`, {
+            await axios.put(`${BASE_URL}/api/users/profile/update`, {
                 userId: user.id,
                 contact_number: newContact,
-                full_name: data?.profile?.full_name 
+                full_name: data?.profile?.full_name
             });
             toast.success("Contact number updated!");
             setNewContact("");
-            fetchProfile(); 
+            fetchProfile();
         } catch (err) {
             toast.error("Failed to update contact");
         } finally {
@@ -53,53 +137,220 @@ const UserProfile = () => {
         }
     };
 
+    // Calculate profile completion
+    const calcCompletion = () => {
+        if (!data?.profile) return 0;
+        const fields = ['full_name', 'email', 'phone_number', 'passport_number', 'nid_number', 'nationality', 'address'];
+        const filled = fields.filter(f => data.profile[f]).length;
+        return Math.round((filled / fields.length) * 100);
+    };
+
+    const TABS = [
+        { id: 'overview',     label: 'Command Center', icon: ShieldCheck },
+        { id: 'applications', label: 'My Journey',     icon: Activity },
+        { id: 'documents',    label: 'Documents',      icon: FileText },
+        { id: 'chat',         label: 'Direct Support', icon: MessageSquare },
+        { id: 'security',     label: 'Security',       icon: Lock },
+    ];
+
     return (
-        <div className="flex flex-col min-h-screen bg-[#F8FAFC] text-[#0F172A] font-['Times_New_Roman',_serif]">
-            <Toaster position="top-right" reverseOrder={false} />
+        <div className="flex flex-col min-h-screen bg-[#F0F4F8] text-[#0F172A] font-['Georgia',_serif]">
+            <style>{`
+                @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap');
+                .font-display { font-family: 'Cormorant Garamond', Georgia, serif; }
+                .font-body    { font-family: 'Inter', system-ui, sans-serif; }
+                .glass { background: rgba(255,255,255,0.85); backdrop-filter: blur(20px); }
+                .gold-line::before { content:''; position:absolute; left:0; top:0; bottom:0; width:3px; background: linear-gradient(180deg,#EAB308,#F59E0B); border-radius:999px; }
+                .step-connector { background: linear-gradient(90deg, #EAB308 0%, #EAB308 var(--fill), #E2E8F0 var(--fill), #E2E8F0 100%); }
+                .shimmer { background: linear-gradient(90deg,#f0f4f8 25%,#e2e8f0 50%,#f0f4f8 75%); background-size:200% 100%; animation: shimmer 1.5s infinite; }
+                @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+                .notif-dot { animation: pulse 2s infinite; }
+                @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+                .card-hover { transition: all 0.3s cubic-bezier(.4,0,.2,1); }
+                .card-hover:hover { transform: translateY(-2px); box-shadow: 0 20px 40px rgba(11,31,58,0.1); }
+                .tab-active-line { position:relative; }
+                .tab-active-line::after { content:''; position:absolute; bottom:0; left:50%; transform:translateX(-50%); width:20px; height:2px; background:#EAB308; border-radius:999px; }
+                .progress-bar { transition: width 1s cubic-bezier(.4,0,.2,1); }
+                .fade-up { animation: fadeUp 0.5s ease both; }
+                @keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+                .skeleton { border-radius:8px; }
+            `}</style>
+            <Toaster position="top-right" reverseOrder={false} toastOptions={{
+                style: { fontFamily:'Inter,sans-serif', fontSize:'13px', background:'#0B1F3A', color:'#EAB308' }
+            }} />
             <Navbar />
-            
-            <main className="flex-grow pt-40 px-6 pb-12">
-                <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-8">
-                    
-                    {/* --- Sidebar --- */}
-                    <div className="lg:col-span-1 space-y-6">
-                        <div className="bg-white border border-[#E5E7EB] p-8 rounded-[2.5rem] text-center shadow-sm sticky top-28">
-                            <div className="relative w-28 h-28 mx-auto mb-6">
-                                <div className="w-full h-full bg-[#0B1F3A] rounded-3xl flex items-center justify-center shadow-xl shadow-[#0B1F3A]/10">
-                                    <User size={48} className="text-[#EAB308]" />
-                                </div>
-                                <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-green-500 border-4 border-white rounded-full"></div>
+
+            <main className="flex-grow pt-36 px-4 md:px-6 pb-12">
+                <div className="max-w-7xl mx-auto">
+
+                    {/* ── Top Bar ─────────────────────────────────────── */}
+                    <div className="flex items-center justify-between mb-8 font-body">
+                        <div>
+                            <p className="text-[10px] font-semibold text-[#64748B] uppercase tracking-[0.25em]">SNJ GlobalRoutes</p>
+                            <h1 className="font-display text-3xl font-bold text-[#0B1F3A]">
+                                Welcome back, {loading ? '...' : (data?.profile?.full_name?.split(' ')[0] || 'Traveler')}
+                            </h1>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            {/* Notification Bell */}
+                            <div className="relative">
+                                <button
+                                    onClick={() => { setShowNotifs(!showNotifs); setUnreadCount(0); }}
+                                    className="relative w-11 h-11 bg-white border border-[#E5E7EB] rounded-2xl flex items-center justify-center hover:border-[#0B1F3A] transition-colors shadow-sm"
+                                >
+                                    <Bell size={18} className="text-[#0B1F3A]" />
+                                    {unreadCount > 0 && (
+                                        <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center notif-dot">
+                                            {unreadCount}
+                                        </span>
+                                    )}
+                                </button>
+                                {showNotifs && (
+                                    <div className="absolute right-0 top-14 w-80 bg-white rounded-3xl border border-[#E5E7EB] shadow-2xl z-50 overflow-hidden">
+                                        <div className="p-5 border-b border-[#F0F4F8] flex items-center justify-between">
+                                            <p className="text-xs font-bold uppercase tracking-widest text-[#0B1F3A]">Notifications</p>
+                                            <span className="text-[10px] text-[#64748B]">{notifications.length} total</span>
+                                        </div>
+                                        <div className="max-h-72 overflow-y-auto">
+                                            {notifications.length === 0 ? (
+                                                <div className="p-8 text-center text-[#64748B] text-xs font-body">All clear — no new updates</div>
+                                            ) : notifications.map(n => (
+                                                <div key={n.id} className="p-4 border-b border-[#F8FAFC] hover:bg-[#F8FAFC] font-body">
+                                                    <p className="text-xs text-[#0F172A] font-semibold">{n.message}</p>
+                                                    <p className="text-[10px] text-[#64748B] mt-1">{new Date(n.time).toLocaleTimeString()}</p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
-                            <h2 className="text-xl font-bold uppercase text-[#0B1F3A] tracking-tight">
-                                {data?.profile?.full_name || "Loading..."}
-                            </h2>
-                            <p className="text-[#64748B] text-[10px] font-bold tracking-[0.2em] uppercase mb-6">
-                                {data?.profile?.role || "Global Traveler"}
-                            </p>
-                            
-                            <div className="space-y-2">
-                                <TabBtn active={activeTab === 'overview'} onClick={() => setActiveTab('overview')} label="Command Center" />
-                                <TabBtn active={activeTab === 'applications'} onClick={() => setActiveTab('applications')} label="My Journey" />
-                                <TabBtn active={activeTab === 'chat'} onClick={() => setActiveTab('chat')} label="Direct Support" />
-                                <TabBtn active={activeTab === 'security'} onClick={() => setActiveTab('security')} label="Security" />
+                            <div className="w-11 h-11 bg-[#0B1F3A] rounded-2xl flex items-center justify-center">
+                                <User size={18} className="text-[#EAB308]" />
                             </div>
                         </div>
                     </div>
 
-                    {/* --- Main Content --- */}
-                    <div className="lg:col-span-3 space-y-8">
-                        {activeTab === 'overview' && (
-                            <Overview 
-                                data={data} 
-                                onContactSubmit={handleUpdateContact}
-                                contactVal={newContact}
-                                setContactVal={setNewContact}
-                                isSubmitting={isSubmittingContact}
-                            />
-                        )}
-                        {activeTab === 'applications' && <Applications data={data} />}
-                        {activeTab === 'chat' && <SupportChat user={user} />}
-                        {activeTab === 'security' && <SecuritySettings user={user} />}
+                    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+
+                        {/* ── Sidebar ────────────────────────────────── */}
+                        <div className="lg:col-span-1 space-y-4">
+                            {/* Profile Card */}
+                            <div className="glass border border-white/60 p-6 rounded-[2rem] text-center shadow-sm sticky top-24">
+                                <div className="relative w-24 h-24 mx-auto mb-4">
+                                    <div className="w-full h-full bg-gradient-to-br from-[#0B1F3A] to-[#1a3a6b] rounded-[1.5rem] flex items-center justify-center shadow-xl">
+                                        <User size={40} className="text-[#EAB308]" />
+                                    </div>
+                                    <div className="absolute -bottom-1 -right-1 w-7 h-7 bg-green-500 border-3 border-white rounded-full flex items-center justify-center">
+                                        <div className="w-2 h-2 bg-white rounded-full" />
+                                    </div>
+                                </div>
+
+                                {loading ? (
+                                    <div className="space-y-2 mb-4">
+                                        <div className="h-5 shimmer skeleton mx-auto w-32" />
+                                        <div className="h-3 shimmer skeleton mx-auto w-20" />
+                                    </div>
+                                ) : (
+                                    <>
+                                        <h2 className="font-display text-xl font-bold text-[#0B1F3A] leading-tight">
+                                            {data?.profile?.full_name || "Your Name"}
+                                        </h2>
+                                        <p className="text-[9px] font-body font-semibold text-[#64748B] tracking-[0.2em] uppercase mb-1">
+                                            {data?.profile?.nationality || "Global Traveler"}
+                                        </p>
+                                        <p className="text-[9px] font-body text-[#EAB308] font-bold tracking-widest uppercase mb-4">
+                                            {data?.profile?.role || "Client"}
+                                        </p>
+                                    </>
+                                )}
+
+                                {/* Profile Strength */}
+                                <div className="mb-5 text-left">
+                                    <div className="flex items-center justify-between mb-1.5">
+                                        <span className="text-[9px] font-body font-bold text-[#64748B] uppercase tracking-widest">Profile Strength</span>
+                                        <span className="text-[10px] font-body font-bold text-[#0B1F3A]">{calcCompletion()}%</span>
+                                    </div>
+                                    <div className="w-full h-1.5 bg-[#E5E7EB] rounded-full overflow-hidden">
+                                        <div
+                                            className="h-full bg-gradient-to-r from-[#EAB308] to-[#F59E0B] rounded-full progress-bar"
+                                            style={{ width: `${calcCompletion()}%` }}
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Nav Tabs */}
+                                <nav className="space-y-1.5">
+                                    {TABS.map(tab => {
+                                        const Icon = tab.icon;
+                                        return (
+                                            <button
+                                                key={tab.id}
+                                                onClick={() => setActiveTab(tab.id)}
+                                                className={`w-full py-3 px-4 rounded-xl text-[10px] font-body font-semibold uppercase tracking-widest transition-all flex items-center gap-3 ${
+                                                    activeTab === tab.id
+                                                        ? 'bg-[#0B1F3A] text-[#EAB308] shadow-lg'
+                                                        : 'text-[#64748B] hover:bg-[#F0F4F8] hover:text-[#0B1F3A]'
+                                                }`}
+                                            >
+                                                <Icon size={13} />
+                                                {tab.label}
+                                            </button>
+                                        );
+                                    })}
+                                </nav>
+                            </div>
+
+                            {/* Quick Stats */}
+                            <div className="glass border border-white/60 p-4 rounded-[1.5rem] shadow-sm font-body">
+                                <p className="text-[9px] font-bold uppercase tracking-widest text-[#64748B] mb-3">Applications</p>
+                                <div className="space-y-2">
+                                    {[
+                                        { icon: Plane,    label: 'Visas',    count: data?.stats?.visas?.length || 0,    color: 'text-blue-500' },
+                                        { icon: Briefcase,label: 'Jobs',     count: data?.stats?.jobs?.length || 0,     color: 'text-purple-500' },
+                                        { icon: Map,      label: 'Tours',    count: data?.stats?.tours?.length || 0,    color: 'text-green-500' },
+                                        { icon: Ticket,   label: 'Flights',  count: data?.stats?.flights?.length || 0,  color: 'text-amber-500' },
+                                    ].map(s => (
+                                        <div key={s.label} className="flex items-center justify-between">
+                                            <div className="flex items-center gap-2">
+                                                <s.icon size={12} className={s.color} />
+                                                <span className="text-[10px] text-[#64748B]">{s.label}</span>
+                                            </div>
+                                            <span className="text-xs font-bold text-[#0B1F3A]">{s.count}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* ── Main Content ────────────────────────────── */}
+                        <div className="lg:col-span-3">
+                            {loading ? <SkeletonLoader /> : (
+                                <>
+                                    {activeTab === 'overview' && (
+                                        <Overview
+                                            data={data}
+                                            onContactSubmit={handleUpdateContact}
+                                            contactVal={newContact}
+                                            setContactVal={setNewContact}
+                                            isSubmitting={isSubmittingContact}
+                                            completion={calcCompletion()}
+                                        />
+                                    )}
+                                    {activeTab === 'applications' && (
+                                        <Applications
+                                            data={data}
+                                            selectedApp={selectedApp}
+                                            setSelectedApp={setSelectedApp}
+                                        />
+                                    )}
+                                    {activeTab === 'documents' && (
+                                        <DocumentManager user={user} data={data} />
+                                    )}
+                                    {activeTab === 'chat' && <SupportChat user={user} addNotification={addNotification} />}
+                                    {activeTab === 'security' && <SecuritySettings user={user} />}
+                                </>
+                            )}
+                        </div>
                     </div>
                 </div>
             </main>
@@ -107,234 +358,604 @@ const UserProfile = () => {
     );
 };
 
-// --- Command Center Component ---
-const Overview = ({ data, onContactSubmit, contactVal, setContactVal, isSubmitting }) => (
-    <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <StatCard icon={<Plane size={20} />} title="Visas" count={data?.stats?.visas?.length || 0} />
-            <StatCard icon={<Briefcase size={20} />} title="Job Phases" count={data?.stats?.jobs?.length || 0} />
-            <StatCard icon={<Ticket size={20} />} title="Flight Requests" count={data?.stats?.flights?.length || 0} />
+// ─── Skeleton Loader ────────────────────────────────────────────────────────────
+const SkeletonLoader = () => (
+    <div className="space-y-6 fade-up">
+        <div className="grid grid-cols-3 gap-4">
+            {[1,2,3].map(i => <div key={i} className="h-28 shimmer skeleton rounded-[1.5rem]" />)}
         </div>
-        
-        <div className="bg-white border border-[#E5E7EB] p-10 rounded-[3.5rem] shadow-sm">
-            <div className="mb-10">
-                <h3 className="text-2xl font-bold uppercase flex items-center gap-4 text-[#0B1F3A]">
-                    <ShieldCheck className="text-[#EAB308]" size={28} /> Personnel Identity
-                </h3>
+        <div className="h-64 shimmer skeleton rounded-[2rem]" />
+        <div className="h-48 shimmer skeleton rounded-[2rem]" />
+    </div>
+);
+
+// ─── Overview / Command Center ──────────────────────────────────────────────────
+const Overview = ({ data, onContactSubmit, contactVal, setContactVal, isSubmitting, completion }) => {
+    const maskPassport = (num) => {
+        if (!num) return 'N/A';
+        return num.slice(0, 3) + '•'.repeat(num.length - 5) + num.slice(-2);
+    };
+
+    const allApps = [
+        ...(data?.stats?.visas || []).map(v => ({ ...v, appType: 'Visa', icon: Plane, title: v.destination_country, sub: v.visa_type })),
+        ...(data?.stats?.jobs || []).map(j => ({ ...j, appType: 'Job', icon: Briefcase, title: j.job_title, sub: j.company_name })),
+    ].slice(0, 3);
+
+    return (
+        <div className="space-y-6 fade-up font-body">
+            {/* Stat Cards */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {[
+                    { icon: Plane,     label: 'Visa Apps',  count: data?.stats?.visas?.length || 0,    color: 'from-blue-500 to-blue-600' },
+                    { icon: Briefcase, label: 'Job Phases', count: data?.stats?.jobs?.length || 0,     color: 'from-purple-500 to-purple-600' },
+                    { icon: Map,       label: 'Tour Books', count: data?.stats?.tours?.length || 0,    color: 'from-emerald-500 to-emerald-600' },
+                    { icon: Ticket,    label: 'Flights',    count: data?.stats?.flights?.length || 0,  color: 'from-amber-500 to-amber-600' },
+                ].map(s => (
+                    <div key={s.label} className="glass border border-white/60 p-5 rounded-[1.5rem] shadow-sm card-hover">
+                        <div className={`w-10 h-10 bg-gradient-to-br ${s.color} rounded-xl flex items-center justify-center mb-3`}>
+                            <s.icon size={16} className="text-white" />
+                        </div>
+                        <p className="text-2xl font-bold text-[#0B1F3A]">{s.count}</p>
+                        <p className="text-[9px] font-semibold text-[#64748B] uppercase tracking-widest mt-0.5">{s.label}</p>
+                    </div>
+                ))}
             </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                <InfoItem icon={<UserCircle size={16} />} label="Legal Full Name" value={data?.profile?.full_name} />
-                
-                <div>
-                    <p className="text-[10px] font-bold text-[#EAB308] uppercase tracking-widest mb-1 flex items-center gap-2">
-                        <Phone size={14} /> Primary Contact
-                    </p>
-                    {data?.profile?.phone_number ? (
-                        <p className="text-lg font-bold text-[#0F172A]">{data.profile.phone_number}</p>
-                    ) : (
-                        <form onSubmit={onContactSubmit} className="mt-2 flex gap-2">
-                            <input 
-                                type="text" 
-                                placeholder="Add Contact Number" 
-                                value={contactVal}
-                                onChange={(e) => setContactVal(e.target.value)}
-                                className="bg-[#F8FAFC] border border-[#E5E7EB] rounded-xl px-4 py-2 text-xs outline-none focus:border-[#0B1F3A] w-full text-[#0F172A]"
-                            />
-                            <button 
-                                type="submit" 
-                                disabled={isSubmitting}
-                                className="bg-[#0B1F3A] text-[#EAB308] p-2 rounded-xl hover:opacity-90 transition-opacity"
-                            >
-                                <PlusCircle size={18} />
-                            </button>
-                        </form>
+
+            {/* Recent Applications */}
+            {allApps.length > 0 && (
+                <div className="glass border border-white/60 rounded-[2rem] overflow-hidden shadow-sm">
+                    <div className="px-6 py-5 border-b border-[#F0F4F8] flex items-center justify-between">
+                        <h3 className="font-display text-xl font-bold text-[#0B1F3A]">Recent Applications</h3>
+                        <span className="text-[9px] font-semibold text-[#EAB308] uppercase tracking-widest">Live Status</span>
+                    </div>
+                    {allApps.map((app, i) => {
+                        const st = getStatus(app.application_status || app.status);
+                        const Icon = app.icon;
+                        return (
+                            <div key={i} className="px-6 py-4 border-b border-[#F8FAFC] last:border-0 hover:bg-[#F8FAFC] transition-colors">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-9 h-9 bg-[#0B1F3A]/5 rounded-xl flex items-center justify-center">
+                                            <Icon size={14} className="text-[#0B1F3A]" />
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-bold text-[#0B1F3A]">{app.title}</p>
+                                            <p className="text-[10px] text-[#64748B]">{app.appType} · {app.sub}</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <span className={`w-2 h-2 rounded-full ${st.dot}`} />
+                                        <span className={`text-[10px] font-bold ${st.color}`}>{st.label}</span>
+                                    </div>
+                                </div>
+                                {/* Mini progress */}
+                                <div className="mt-3 flex items-center gap-1">
+                                    {TIMELINE_STEPS.map((step, idx) => {
+                                        const current = getStepIndex(app.application_status || app.status);
+                                        const done = idx <= current;
+                                        return (
+                                            <div key={idx} className="flex items-center gap-1 flex-1">
+                                                <div className={`w-2 h-2 rounded-full flex-shrink-0 ${done ? 'bg-[#EAB308]' : 'bg-[#E2E8F0]'}`} />
+                                                {idx < TIMELINE_STEPS.length - 1 && (
+                                                    <div className={`h-0.5 flex-1 ${done ? 'bg-[#EAB308]' : 'bg-[#E2E8F0]'}`} />
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            )}
+
+            {/* Personnel Identity */}
+            <div className="glass border border-white/60 p-8 rounded-[2rem] shadow-sm">
+                <div className="flex items-center justify-between mb-6">
+                    <h3 className="font-display text-2xl font-bold text-[#0B1F3A] flex items-center gap-3">
+                        <ShieldCheck className="text-[#EAB308]" size={24} /> Personnel Identity
+                    </h3>
+                    <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-green-400 rounded-full" />
+                        <span className="text-[10px] font-semibold text-green-600 uppercase tracking-widest">Verified</span>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <InfoItem icon={<UserCircle size={13} />} label="Legal Full Name"   value={data?.profile?.full_name} />
+                    <InfoItem icon={<Globe size={13} />}       label="Nationality"        value={data?.profile?.nationality} />
+                    <InfoItem icon={<CreditCard size={13} />}  label="Passport Number"   value={maskPassport(data?.profile?.passport_number)} secure />
+                    <InfoItem icon={<Shield size={13} />}      label="National ID"        value={data?.profile?.nid_number ? '••••' + data.profile.nid_number.slice(-4) : 'N/A'} secure />
+
+                    {/* Phone / Add Contact */}
+                    <div>
+                        <p className="text-[9px] font-bold text-[#EAB308] uppercase tracking-widest mb-2 flex items-center gap-2">
+                            <Phone size={11} /> Primary Contact
+                        </p>
+                        {data?.profile?.phone_number ? (
+                            <p className="text-base font-bold text-[#0F172A]">{data.profile.phone_number}</p>
+                        ) : (
+                            <form onSubmit={onContactSubmit} className="flex gap-2 mt-1">
+                                <input
+                                    type="text"
+                                    placeholder="Add contact number"
+                                    value={contactVal}
+                                    onChange={(e) => setContactVal(e.target.value)}
+                                    className="flex-1 bg-[#F8FAFC] border border-[#E5E7EB] rounded-xl px-3 py-2 text-xs outline-none focus:border-[#0B1F3A] text-[#0F172A]"
+                                />
+                                <button
+                                    type="submit"
+                                    disabled={isSubmitting}
+                                    className="bg-[#0B1F3A] text-[#EAB308] p-2 rounded-xl hover:opacity-90 transition-opacity"
+                                >
+                                    {isSubmitting ? <Loader size={15} className="animate-spin" /> : <PlusCircle size={15} />}
+                                </button>
+                            </form>
+                        )}
+                    </div>
+
+                    <InfoItem icon={<User size={13} />} label="Email Identity" value={data?.profile?.email} />
+                    {data?.profile?.address && (
+                        <div className="md:col-span-2">
+                            <InfoItem icon={<Globe size={13} />} label="Address" value={data?.profile?.address} />
+                        </div>
                     )}
                 </div>
 
-                <InfoItem label="Email Identity" value={data?.profile?.email} />
-                <InfoItem label="Passport Number" value={data?.profile?.passport_number || 'N/A'} />
+                {completion < 100 && (
+                    <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-2xl flex items-start gap-3">
+                        <Info size={16} className="text-amber-600 flex-shrink-0 mt-0.5" />
+                        <div>
+                            <p className="text-xs font-bold text-amber-700">Complete Your Profile</p>
+                            <p className="text-[11px] text-amber-600 mt-0.5">A complete profile speeds up application processing. {100 - completion}% remaining.</p>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
-    </div>
-);
+    );
+};
 
-// --- My Journey Component ---
-const Applications = ({ data }) => {
+// ─── Applications / My Journey ──────────────────────────────────────────────────
+const Applications = ({ data, selectedApp, setSelectedApp }) => {
     const [subTab, setSubTab] = useState('visa');
 
-    const renderContent = () => {
+    const tabs = [
+        { id: 'visa',   label: 'Visa',    icon: Plane,     items: data?.stats?.visas || [] },
+        { id: 'job',    label: 'Job',     icon: Briefcase, items: data?.stats?.jobs || [] },
+        { id: 'tour',   label: 'Tour',    icon: Map,       items: data?.stats?.tours || [] },
+        { id: 'flight', label: 'Flight',  icon: Ticket,    items: data?.stats?.flights || [] },
+    ];
+
+    const getItems = () => {
+        const tab = tabs.find(t => t.id === subTab);
+        return tab?.items || [];
+    };
+
+    const mapItem = (item) => {
         switch (subTab) {
-            case 'visa':
-                return (
-                    <div className="space-y-2">
-                        {data?.stats?.visas?.length > 0 ? data.stats.visas.map(v => (
-                            <JourneyCard key={v.id} icon={<Plane className="text-[#0B1F3A]" />} title={v.destination_country} sub={v.visa_type} status={v.application_status} />
-                        )) : <EmptyState message="No Visa Records Found" />}
-                    </div>
-                );
-            case 'job':
-                return (
-                    <div className="space-y-2">
-                        {data?.stats?.jobs?.length > 0 ? data.stats.jobs.map(j => (
-                            <JourneyCard key={j.id} icon={<Briefcase className="text-[#0B1F3A]" />} title={j.job_title} sub={j.company_name} status={j.status} />
-                        )) : <EmptyState message="No Job Applications Found" />}
-                    </div>
-                );
-            case 'tour':
-                return (
-                    <div className="space-y-2">
-                        {data?.stats?.tours?.length > 0 ? data.stats.tours.map(t => (
-                            <JourneyCard key={t.id} icon={<Map className="text-[#0B1F3A]" />} title={t.tour_name} sub={t.destination} status={t.status} />
-                        )) : <EmptyState message="No Tour Bookings Found" />}
-                    </div>
-                );
-            case 'flight':
-                return (
-                    <div className="space-y-2">
-                        {data?.stats?.flights?.length > 0 ? data.stats.flights.map(f => (
-                            <JourneyCard 
-                                key={f.id} 
-                                icon={<Ticket className="text-[#0B1F3A]" />} 
-                                title={`${f.departure_city} to ${f.destination_city}`} 
-                                sub={`Date: ${new Date(f.travel_date).toLocaleDateString()} | Bill: $${f.total_cost || '0.00'}`} 
-                                status={f.status} 
-                            />
-                        )) : <EmptyState message="No Flight Requests Found" />}
-                    </div>
-                );
-            default: return null;
+            case 'visa':   return { title: item.destination_country, sub: item.visa_type, status: item.application_status, date: item.submitted_at, note: item.admin_note, icon: Plane, country: item.destination_country, type: 'Visa' };
+            case 'job':    return { title: item.job_title, sub: item.company_name, status: item.status, date: item.applied_at, note: item.admin_note, icon: Briefcase, country: item.country, type: 'Job' };
+            case 'tour':   return { title: item.tour_name, sub: item.destination, status: item.status, date: item.booked_at, note: item.admin_note, icon: Map, country: item.destination, type: 'Tour' };
+            case 'flight': return { title: `${item.departure_city} → ${item.destination_city}`, sub: `$${item.total_cost || '0'}`, status: item.status, date: item.travel_date, note: item.admin_note, icon: Ticket, country: item.destination_city, type: 'Flight' };
+            default:       return {};
         }
     };
 
+    if (selectedApp) {
+        return <ApplicationDetail app={selectedApp} onBack={() => setSelectedApp(null)} />;
+    }
+
     return (
-        <div className="space-y-6 animate-in fade-in duration-500">
-            <div className="flex flex-wrap gap-3 bg-white p-2 rounded-[2rem] border border-[#E5E7EB] shadow-sm">
-                {['visa', 'job', 'tour', 'flight'].map((tab) => (
-                    <button
-                        key={tab}
-                        onClick={() => setSubTab(tab)}
-                        className={`flex-1 py-3 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all ${subTab === tab ? 'bg-[#0B1F3A] text-[#EAB308] shadow-md' : 'text-[#64748B] hover:bg-[#F8FAFC]'}`}
-                    >
-                        {tab} Status
-                    </button>
-                ))}
+        <div className="space-y-5 fade-up font-body">
+            {/* Sub tabs */}
+            <div className="glass border border-white/60 p-1.5 rounded-[1.5rem] shadow-sm flex gap-1.5">
+                {tabs.map(tab => {
+                    const Icon = tab.icon;
+                    return (
+                        <button
+                            key={tab.id}
+                            onClick={() => setSubTab(tab.id)}
+                            className={`flex-1 py-3 rounded-xl text-[10px] font-semibold uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${
+                                subTab === tab.id ? 'bg-[#0B1F3A] text-[#EAB308] shadow-md' : 'text-[#64748B] hover:bg-[#F0F4F8]'
+                            }`}
+                        >
+                            <Icon size={12} /> {tab.label}
+                        </button>
+                    );
+                })}
             </div>
-            <div className="bg-white border border-[#E5E7EB] rounded-[2.5rem] overflow-hidden min-h-[300px] shadow-sm">
-                <div className="p-2">{renderContent()}</div>
+
+            {/* Application cards */}
+            <div className="space-y-3">
+                {getItems().length === 0 ? (
+                    <div className="glass border border-white/60 rounded-[2rem] p-16 text-center shadow-sm">
+                        <div className="w-16 h-16 bg-[#F0F4F8] rounded-2xl flex items-center justify-center mx-auto mb-4">
+                            <FileText size={24} className="text-[#94A3B8]" />
+                        </div>
+                        <p className="text-sm font-bold text-[#64748B] uppercase tracking-widest">No {subTab} applications found</p>
+                        <p className="text-xs text-[#94A3B8] mt-2">Your applications will appear here once submitted.</p>
+                    </div>
+                ) : getItems().map((item, i) => {
+                    const mapped = mapItem(item);
+                    const st = getStatus(mapped.status);
+                    const stepIdx = getStepIndex(mapped.status);
+                    const Icon = mapped.icon;
+                    return (
+                        <div
+                            key={i}
+                            className="glass border border-white/60 rounded-[1.5rem] shadow-sm card-hover overflow-hidden cursor-pointer"
+                            onClick={() => setSelectedApp({ ...mapped, raw: item })}
+                        >
+                            <div className="p-5">
+                                <div className="flex items-start justify-between mb-4">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 bg-[#0B1F3A] rounded-xl flex items-center justify-center flex-shrink-0">
+                                            <Icon size={16} className="text-[#EAB308]" />
+                                        </div>
+                                        <div>
+                                            <p className="font-bold text-sm text-[#0B1F3A]">{mapped.title}</p>
+                                            <p className="text-[10px] text-[#64748B] font-medium">{mapped.sub}</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        <StatusBadge status={mapped.status} />
+                                        <ChevronRight size={14} className="text-[#94A3B8]" />
+                                    </div>
+                                </div>
+
+                                {/* Timeline Progress */}
+                                <div className="relative">
+                                    <div className="flex items-center justify-between relative z-10">
+                                        {TIMELINE_STEPS.map((step, idx) => {
+                                            const StepIcon = step.icon;
+                                            const done    = idx <= stepIdx;
+                                            const current = idx === stepIdx;
+                                            return (
+                                                <div key={idx} className="flex flex-col items-center gap-1 flex-1">
+                                                    <div className={`w-7 h-7 rounded-full flex items-center justify-center border-2 transition-all ${
+                                                        done
+                                                            ? current
+                                                                ? 'bg-[#EAB308] border-[#EAB308] shadow-lg shadow-[#EAB308]/30'
+                                                                : 'bg-[#0B1F3A] border-[#0B1F3A]'
+                                                            : 'bg-white border-[#E2E8F0]'
+                                                    }`}>
+                                                        <StepIcon size={10} className={done ? 'text-white' : 'text-[#CBD5E1]'} />
+                                                    </div>
+                                                    <span className={`text-[8px] font-semibold text-center leading-tight ${done ? 'text-[#0B1F3A]' : 'text-[#CBD5E1]'}`}>
+                                                        {step.label}
+                                                    </span>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                    {/* Connector line */}
+                                    <div className="absolute top-3.5 left-3.5 right-3.5 h-0.5 bg-[#E2E8F0] -z-0">
+                                        <div
+                                            className="h-full bg-gradient-to-r from-[#0B1F3A] to-[#EAB308] transition-all duration-700"
+                                            style={{ width: `${(stepIdx / (TIMELINE_STEPS.length - 1)) * 100}%` }}
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Footer meta */}
+                                <div className="flex items-center justify-between mt-4 pt-3 border-t border-[#F0F4F8]">
+                                    <div className="flex items-center gap-1.5 text-[10px] text-[#64748B]">
+                                        <Calendar size={10} />
+                                        {mapped.date ? new Date(mapped.date).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' }) : 'Date not set'}
+                                    </div>
+                                    {mapped.note && (
+                                        <div className="flex items-center gap-1.5 text-[10px] text-[#0B1F3A] font-semibold">
+                                            <MessageSquare size={10} className="text-[#EAB308]" /> Admin Note
+                                        </div>
+                                    )}
+                                    <div className="flex items-center gap-1 text-[10px] text-[#64748B]">
+                                        <RefreshCw size={9} /> Live
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    );
+                })}
             </div>
         </div>
     );
 };
 
-// --- Reusable UI Helpers ---
-const JourneyCard = ({ icon, title, sub, status }) => (
-    <div className="p-6 flex items-center justify-between border-b border-[#E5E7EB] last:border-0 hover:bg-[#F8FAFC] transition-colors">
-        <div className="flex items-center gap-4">
-            <div className="p-3 bg-[#F8FAFC] rounded-2xl border border-[#E5E7EB]">{icon}</div>
-            <div>
-                <p className="font-bold text-sm uppercase text-[#0B1F3A] tracking-tight">{title}</p>
-                <p className="text-[10px] text-[#64748B] font-bold uppercase">{sub}</p>
-            </div>
-        </div>
-        <StatusBadge status={status} />
-    </div>
-);
-
-const TabBtn = ({ active, onClick, label }) => (
-    <button onClick={onClick} className={`w-full py-4 rounded-2xl text-[10px] font-bold uppercase tracking-widest transition-all ${active ? 'bg-[#0B1F3A] text-[#EAB308] shadow-lg shadow-[#0B1F3A]/10' : 'text-[#64748B] hover:bg-[#F8FAFC]'}`}>
-        {label}
-    </button>
-);
-
-const StatCard = ({ icon, title, count }) => (
-    <div className="p-8 bg-white border border-[#E5E7EB] rounded-[2.5rem] flex items-center gap-6 shadow-sm">
-        <div className="w-14 h-14 bg-[#0B1F3A] rounded-2xl flex items-center justify-center text-[#EAB308]">{icon}</div>
-        <div>
-            <p className="text-[10px] font-bold text-[#64748B] uppercase tracking-widest">{title}</p>
-            <p className="text-3xl font-bold text-[#0B1F3A]">{count}</p>
-        </div>
-    </div>
-);
-
-const InfoItem = ({ label, value, icon }) => (
-    <div>
-        <p className="text-[10px] font-bold text-[#EAB308] uppercase tracking-widest mb-1 flex items-center gap-2">
-            {icon} {label}
-        </p>
-        <p className="text-lg font-bold text-[#0F172A]">{value || 'Not Specified'}</p>
-    </div>
-);
-
-const StatusBadge = ({ status }) => {
-    const s = status?.toLowerCase();
-    const colors = { 
-        approved: 'text-green-600 border-green-200 bg-green-50', 
-        accept: 'text-green-600 border-green-200 bg-green-50', 
-        hold: 'text-blue-600 border-blue-200 bg-blue-50',
-        requested: 'text-amber-600 border-amber-200 bg-amber-50',
-        reject: 'text-red-600 border-red-200 bg-red-50'
-    };
-    return <span className={`px-4 py-1 rounded-full text-[9px] font-bold uppercase border ${colors[s] || 'text-[#64748B] border-[#E5E7EB] bg-[#F8FAFC]'}`}>{status || 'Requested'}</span>;
-};
-
-const EmptyState = ({ message }) => <div className="p-20 text-center text-[#64748B] font-bold uppercase text-[10px] tracking-widest">{message}</div>;
-
-const SecuritySettings = ({ user }) => {
-    const [passwords, setPasswords] = useState({ old: "", new: "", confirm: "" });
-    const [loading, setLoading] = useState(false);
-    const [showPass, setShowPass] = useState(false);
-
-    const handleUpdate = async (e) => {
-        e.preventDefault();
-        if (passwords.new !== passwords.confirm) return toast.error("Passwords mismatch!");
-        setLoading(true);
-        try {
-            await axios.put(`https://snj-global-agency-backend.onrender.com/api/users/change-password`, {
-                userId: user.id, oldPassword: passwords.old, newPassword: passwords.new
-            });
-            toast.success("Security updated!");
-            setPasswords({ old: "", new: "", confirm: "" });
-        } catch (err) {
-            toast.error(err.response?.data?.message || "Update failed");
-        } finally { setLoading(false); }
-    };
+// ─── Application Detail ─────────────────────────────────────────────────────────
+const ApplicationDetail = ({ app, onBack }) => {
+    const st = getStatus(app.status);
+    const stepIdx = getStepIndex(app.status);
 
     return (
-        <div className="bg-white border border-[#E5E7EB] p-10 rounded-[3.5rem] shadow-sm animate-in fade-in">
-             <div className="mb-10">
-                <h3 className="text-2xl font-bold uppercase flex items-center gap-4 text-[#0B1F3A]"><Lock className="text-[#EAB308]" size={28} /> Security Guard</h3>
-            </div>
-            <form onSubmit={handleUpdate} className="max-w-md space-y-4">
-                <PasswordField label="Current Password" value={passwords.old} show={showPass} onChange={(val) => setPasswords({...passwords, old: val})} />
-                <PasswordField label="New Password" value={passwords.new} show={showPass} onChange={(val) => setPasswords({...passwords, new: val})} />
-                <PasswordField label="Confirm Password" value={passwords.confirm} show={showPass} onChange={(val) => setPasswords({...passwords, confirm: val})} />
-                <div className="flex gap-4 pt-4">
-                    <button type="button" onClick={() => setShowPass(!showPass)} className="p-4 bg-[#F8FAFC] border border-[#E5E7EB] rounded-2xl text-[#0B1F3A]"><Eye size={20} /></button>
-                    <button className="flex-1 bg-[#0B1F3A] text-[#EAB308] py-4 rounded-2xl font-bold uppercase text-xs tracking-widest hover:opacity-95">{loading ? "Updating..." : "Update Credentials"}</button>
+        <div className="fade-up space-y-5 font-body">
+            <button onClick={onBack} className="flex items-center gap-2 text-[11px] font-semibold text-[#64748B] hover:text-[#0B1F3A] transition-colors uppercase tracking-wider">
+                <ChevronRight size={14} className="rotate-180" /> Back to Applications
+            </button>
+
+            {/* Header */}
+            <div className="glass border border-white/60 p-7 rounded-[2rem] shadow-sm">
+                <div className="flex items-start justify-between mb-6">
+                    <div>
+                        <p className="text-[9px] font-bold text-[#EAB308] uppercase tracking-widest mb-1">{app.type} Application</p>
+                        <h2 className="font-display text-3xl font-bold text-[#0B1F3A]">{app.title}</h2>
+                        <p className="text-sm text-[#64748B] mt-1">{app.sub}</p>
+                    </div>
+                    <StatusBadge status={app.status} large />
                 </div>
-            </form>
+
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
+                    <DetailMeta label="Type"       value={app.type} />
+                    <DetailMeta label="Country"    value={app.country || 'N/A'} />
+                    <DetailMeta label="Submitted"  value={app.date ? new Date(app.date).toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric' }) : 'N/A'} />
+                    <DetailMeta label="Handled by" value="SNJ Admin Team" highlight />
+                    <DetailMeta label="Last Updated" value={new Date().toLocaleDateString()} />
+                    <DetailMeta label="Next Step" value={TIMELINE_STEPS[Math.min(stepIdx + 1, TIMELINE_STEPS.length - 1)]?.label || 'Awaiting Decision'} />
+                </div>
+
+                {/* Full Timeline */}
+                <div>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-[#64748B] mb-5">Application Timeline</p>
+                    <div className="space-y-0">
+                        {TIMELINE_STEPS.map((step, idx) => {
+                            const StepIcon = step.icon;
+                            const done    = idx <= stepIdx;
+                            const current = idx === stepIdx;
+                            const isLast  = idx === TIMELINE_STEPS.length - 1;
+                            return (
+                                <div key={idx} className="flex gap-4">
+                                    <div className="flex flex-col items-center">
+                                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 border-2 ${
+                                            current ? 'bg-[#EAB308] border-[#EAB308] shadow-lg shadow-[#EAB308]/40'
+                                            : done   ? 'bg-[#0B1F3A] border-[#0B1F3A]'
+                                            :          'bg-white border-[#E2E8F0]'
+                                        }`}>
+                                            <StepIcon size={14} className={done ? 'text-white' : 'text-[#CBD5E1]'} />
+                                        </div>
+                                        {!isLast && <div className={`w-0.5 h-8 mt-1 ${done ? 'bg-[#0B1F3A]' : 'bg-[#E2E8F0]'}`} />}
+                                    </div>
+                                    <div className={`pb-6 ${isLast ? '' : ''}`}>
+                                        <p className={`text-sm font-bold ${done ? 'text-[#0B1F3A]' : 'text-[#CBD5E1]'}`}>{step.label}</p>
+                                        {current && (
+                                            <p className="text-[10px] text-[#EAB308] font-semibold mt-0.5 flex items-center gap-1">
+                                                <span className="w-1.5 h-1.5 bg-[#EAB308] rounded-full animate-pulse" /> Current Stage
+                                            </p>
+                                        )}
+                                        {done && !current && (
+                                            <p className="text-[10px] text-green-600 font-semibold mt-0.5">Completed</p>
+                                        )}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+
+                {/* Admin Note */}
+                {app.note && (
+                    <div className="mt-4 p-5 bg-[#0B1F3A]/5 border border-[#0B1F3A]/10 rounded-2xl relative gold-line pl-6">
+                        <p className="text-[9px] font-bold text-[#EAB308] uppercase tracking-widest mb-1">Admin Note</p>
+                        <p className="text-sm text-[#0F172A] font-medium">{app.note}</p>
+                    </div>
+                )}
+
+                {/* Next Step Guidance */}
+                <div className="mt-5 p-4 bg-blue-50 border border-blue-100 rounded-2xl flex items-center gap-3">
+                    <ArrowRight size={16} className="text-blue-500 flex-shrink-0" />
+                    <div>
+                        <p className="text-xs font-bold text-blue-700">Next Step</p>
+                        <p className="text-[11px] text-blue-600 mt-0.5">
+                            {stepIdx < TIMELINE_STEPS.length - 1
+                                ? `Awaiting: ${TIMELINE_STEPS[stepIdx + 1]?.label}. You will be notified when your status updates.`
+                                : 'Your application has reached its final stage. Please contact support for further assistance.'}
+                        </p>
+                    </div>
+                </div>
+            </div>
         </div>
     );
 };
 
-const PasswordField = ({ label, value, onChange, show }) => (
-    <div>
-        <label className="text-[10px] font-bold text-[#EAB308] uppercase tracking-widest mb-2 block">{label}</label>
-        <input type={show ? "text" : "password"} value={value} onChange={(e) => onChange(e.target.value)} required className="w-full bg-[#F8FAFC] border border-[#E5E7EB] rounded-2xl px-5 py-4 text-sm focus:border-[#0B1F3A] outline-none text-[#0F172A]" />
-    </div>
-);
+// ─── Document Manager ───────────────────────────────────────────────────────────
+const DocumentManager = ({ user, data }) => {
+    const [uploads, setUploads] = useState({});
+    const [uploading, setUploading] = useState({});
+    const [docs, setDocs] = useState([]);
 
-const SupportChat = ({ user }) => {
-    const [msg, setMsg] = useState("");
+    useEffect(() => {
+        fetchDocuments();
+    }, []);
+
+    const fetchDocuments = async () => {
+        try {
+            const res = await axios.get(`${BASE_URL}/api/users/documents/${user.id}`);
+            setDocs(res.data || []);
+        } catch (err) {
+            // Documents endpoint may not exist yet
+        }
+    };
+
+    const handleUpload = async (docType, file) => {
+        if (!file) return;
+        const allowed = ['image/jpeg','image/png','application/pdf'];
+        if (!allowed.includes(file.type)) return toast.error("Only JPG, PNG or PDF allowed");
+        if (file.size > 5 * 1024 * 1024) return toast.error("Max file size: 5MB");
+
+        setUploading(prev => ({ ...prev, [docType]: true }));
+        const formData = new FormData();
+        formData.append('document', file);
+        formData.append('doc_type', docType);
+        formData.append('user_id', user.id);
+        try {
+            await axios.post(`${BASE_URL}/api/users/documents/upload`, formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+            toast.success(`${docType} uploaded successfully!`);
+            fetchDocuments();
+        } catch (err) {
+            toast.error("Upload failed. Please try again.");
+        } finally {
+            setUploading(prev => ({ ...prev, [docType]: false }));
+        }
+    };
+
+    const DOC_CATEGORIES = [
+        {
+            title: 'Passport',
+            icon: Globe,
+            items: [
+                { key: 'passport_main', label: 'Passport Scan (Main Page)', accept: '.jpg,.jpeg,.png,.pdf' },
+                { key: 'passport_bio',  label: 'Bio Data Page',             accept: '.jpg,.jpeg,.png,.pdf' },
+            ],
+            meta: [
+                { label: 'Passport Number', value: data?.profile?.passport_number ? '••' + data.profile.passport_number.slice(-4) : 'N/A' },
+                { label: 'Expiry Date',     value: data?.profile?.passport_expiry || 'N/A' },
+                { label: 'Country',         value: data?.profile?.nationality || 'N/A' },
+            ]
+        },
+        {
+            title: 'National ID (NID)',
+            icon: CreditCard,
+            items: [
+                { key: 'nid_front', label: 'NID Front Side', accept: '.jpg,.jpeg,.png' },
+                { key: 'nid_back',  label: 'NID Back Side',  accept: '.jpg,.jpeg,.png' },
+            ],
+            meta: [
+                { label: 'ID Number', value: data?.profile?.nid_number ? '••••' + data.profile.nid_number.slice(-4) : 'N/A' },
+            ]
+        },
+        {
+            title: 'Supporting Documents',
+            icon: FileText,
+            items: [
+                { key: 'cv',               label: 'CV / Resume',          accept: '.pdf,.doc,.docx' },
+                { key: 'bank_statement',   label: 'Bank Statement',       accept: '.pdf' },
+                { key: 'certificate',      label: 'Certificates / Degrees', accept: '.pdf,.jpg,.png' },
+                { key: 'photo',            label: 'Passport Size Photo',  accept: '.jpg,.jpeg,.png' },
+            ],
+            meta: []
+        }
+    ];
+
+    const getDocStatus = (key) => {
+        const doc = docs.find(d => d.doc_type === key);
+        if (!doc) return null;
+        return doc.status; // 'uploaded' | 'verified' | 'rejected'
+    };
+
+    const DocStatusBadge = ({ status }) => {
+        const cfg = {
+            verified: { color: 'text-green-600', bg: 'bg-green-50', border: 'border-green-200', icon: CheckCircle,  label: 'Verified' },
+            rejected: { color: 'text-red-600',   bg: 'bg-red-50',   border: 'border-red-200',   icon: XCircle,      label: 'Rejected' },
+            uploaded: { color: 'text-blue-600',  bg: 'bg-blue-50',  border: 'border-blue-200',  icon: Clock,        label: 'Pending Review' },
+        }[status] || null;
+        if (!cfg) return null;
+        const Icon = cfg.icon;
+        return (
+            <span className={`flex items-center gap-1 text-[9px] font-bold uppercase border px-2 py-1 rounded-full ${cfg.color} ${cfg.bg} ${cfg.border}`}>
+                <Icon size={9} /> {cfg.label}
+            </span>
+        );
+    };
+
+    return (
+        <div className="space-y-5 fade-up font-body">
+            <div className="flex items-center justify-between">
+                <h2 className="font-display text-2xl font-bold text-[#0B1F3A]">Identity & Documents</h2>
+                <div className="flex items-center gap-1.5 text-[10px] text-[#64748B]">
+                    <Shield size={11} /> Secure Storage
+                </div>
+            </div>
+
+            {DOC_CATEGORIES.map((cat, ci) => {
+                const CatIcon = cat.icon;
+                return (
+                    <div key={ci} className="glass border border-white/60 rounded-[2rem] overflow-hidden shadow-sm">
+                        <div className="px-6 py-5 border-b border-[#F0F4F8] flex items-center gap-3">
+                            <div className="w-9 h-9 bg-[#0B1F3A] rounded-xl flex items-center justify-center">
+                                <CatIcon size={14} className="text-[#EAB308]" />
+                            </div>
+                            <h3 className="font-bold text-sm text-[#0B1F3A] uppercase tracking-wide">{cat.title}</h3>
+                        </div>
+
+                        <div className="p-6 space-y-4">
+                            {/* Metadata */}
+                            {cat.meta.length > 0 && (
+                                <div className="flex flex-wrap gap-4 pb-4 border-b border-[#F0F4F8]">
+                                    {cat.meta.map((m, mi) => (
+                                        <div key={mi}>
+                                            <p className="text-[9px] font-bold text-[#EAB308] uppercase tracking-widest">{m.label}</p>
+                                            <p className="text-sm font-bold text-[#0B1F3A]">{m.value}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
+                            {/* Upload Items */}
+                            {cat.items.map((item, ii) => {
+                                const docStatus = getDocStatus(item.key);
+                                return (
+                                    <div key={ii} className="flex items-center justify-between p-4 bg-[#F8FAFC] border border-[#E5E7EB] rounded-2xl">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 bg-[#E5E7EB] rounded-xl flex items-center justify-center">
+                                                <FileText size={12} className="text-[#64748B]" />
+                                            </div>
+                                            <div>
+                                                <p className="text-xs font-semibold text-[#0B1F3A]">{item.label}</p>
+                                                <p className="text-[9px] text-[#94A3B8]">Max 5MB · PDF, JPG, PNG</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            {docStatus && <DocStatusBadge status={docStatus} />}
+                                            <label className={`flex items-center gap-1.5 text-[10px] font-bold uppercase px-3 py-2 rounded-xl cursor-pointer transition-all ${
+                                                uploading[item.key]
+                                                    ? 'bg-[#E5E7EB] text-[#94A3B8]'
+                                                    : 'bg-[#0B1F3A] text-[#EAB308] hover:opacity-90'
+                                            }`}>
+                                                {uploading[item.key]
+                                                    ? <><Loader size={11} className="animate-spin" /> Uploading</>
+                                                    : <><Upload size={11} /> {docStatus ? 'Replace' : 'Upload'}</>
+                                                }
+                                                <input
+                                                    type="file"
+                                                    accept={item.accept}
+                                                    className="hidden"
+                                                    onChange={(e) => handleUpload(item.key, e.target.files[0])}
+                                                    disabled={uploading[item.key]}
+                                                />
+                                            </label>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                );
+            })}
+
+            <div className="p-4 bg-[#0B1F3A]/5 border border-[#0B1F3A]/10 rounded-2xl flex items-center gap-3">
+                <AlertCircle size={14} className="text-[#0B1F3A] flex-shrink-0" />
+                <p className="text-[11px] text-[#0B1F3A] font-medium">
+                    Documents are reviewed by admin. Rejected documents will show a note explaining the issue.
+                    Verified documents are securely stored and used for your applications.
+                </p>
+            </div>
+        </div>
+    );
+};
+
+// ─── Support Chat ───────────────────────────────────────────────────────────────
+const SupportChat = ({ user, addNotification }) => {
+    const [msg, setMsg]         = useState("");
     const [history, setHistory] = useState([]);
+    const [isTyping, setIsTyping] = useState(false);
     const scrollRef = useRef();
 
     useEffect(() => {
         const fetchMessages = async () => {
             try {
-                const res = await axios.get(`https://snj-global-agency-backend.onrender.com/api/users/messages/${user.id}`);
-                setHistory(res.data);
+                const res = await axios.get(`${BASE_URL}/api/users/messages/${user.id}`);
+                setHistory(res.data || []);
             } catch (err) {}
         };
         fetchMessages();
@@ -343,43 +964,278 @@ const SupportChat = ({ user }) => {
     useEffect(() => {
         socket.on("receive_message", (incomingData) => {
             setHistory(prev => [...prev, incomingData]);
+            setIsTyping(false);
+            addNotification?.({
+                id: Date.now(),
+                type: 'message',
+                message: 'New message from Admin Support',
+                time: new Date(),
+                read: false,
+            });
         });
-        return () => socket.off("receive_message");
+        socket.on("admin_typing", () => setIsTyping(true));
+        return () => {
+            socket.off("receive_message");
+            socket.off("admin_typing");
+        };
     }, []);
+
+    useEffect(() => {
+        scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, [history]);
 
     const handleSend = async () => {
         if (!msg.trim()) return;
         const chatData = { sender_id: user.id, receiver_id: 1, message: msg };
         try {
-            await axios.post('https://snj-global-agency-backend.onrender.com/api/users/messages/send', chatData);
+            await axios.post(`${BASE_URL}/api/users/messages/send`, chatData);
             socket.emit("send_message", chatData);
             setHistory(prev => [...prev, { ...chatData, created_at: new Date() }]);
             setMsg("");
-        } catch (err) {}
+        } catch (err) {
+            toast.error("Message failed to send");
+        }
+    };
+
+    const handleKeyDown = (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
     };
 
     return (
-        <div className="bg-white border border-[#E5E7EB] rounded-[3rem] h-[600px] flex flex-col overflow-hidden relative shadow-sm">
-            <div className="p-6 bg-[#0B1F3A] border-b border-[#0B1F3A] flex items-center gap-4">
-                <div className="w-10 h-10 bg-[#EAB308] text-[#0B1F3A] rounded-full flex items-center justify-center font-bold text-xs">AD</div>
-                <p className="text-sm font-bold uppercase text-white">Admin Support</p>
-            </div>
-            <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-[#F8FAFC]">
-                {history.map((m, i) => (
-                    <div key={i} className={`flex ${m.sender_id === user.id ? 'justify-end' : 'justify-start'}`}>
-                        <div className={`max-w-[80%] p-4 rounded-3xl text-xs font-bold ${m.sender_id === user.id ? 'bg-[#0B1F3A] text-[#EAB308] rounded-tr-none' : 'bg-white text-[#64748B] rounded-tl-none border border-[#E5E7EB]'}`}>
-                            {m.message}
-                        </div>
+        <div className="fade-up font-body">
+            <div className="glass border border-white/60 rounded-[2rem] h-[620px] flex flex-col overflow-hidden shadow-sm">
+                {/* Header */}
+                <div className="px-6 py-4 bg-[#0B1F3A] flex items-center gap-3">
+                    <div className="relative">
+                        <div className="w-10 h-10 bg-[#EAB308] text-[#0B1F3A] rounded-full flex items-center justify-center font-bold text-xs">AD</div>
+                        <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-400 border-2 border-[#0B1F3A] rounded-full" />
                     </div>
-                ))}
-                <div ref={scrollRef} />
-            </div>
-            <div className="p-6 border-t border-[#E5E7EB] flex gap-3 bg-white">
-                <input value={msg} onChange={e => setMsg(e.target.value)} className="flex-1 bg-[#F8FAFC] border border-[#E5E7EB] rounded-full px-6 outline-none text-xs text-[#0F172A]" placeholder="Message..." />
-                <button onClick={handleSend} className="bg-[#0B1F3A] text-[#EAB308] p-4 rounded-full hover:opacity-90"><Send size={18} /></button>
+                    <div>
+                        <p className="text-sm font-bold text-white">Admin Support</p>
+                        <p className="text-[10px] text-[#EAB308]">SNJ GlobalRoutes</p>
+                    </div>
+                    <div className="ml-auto flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />
+                        <span className="text-[10px] text-green-300 font-semibold">Online</span>
+                    </div>
+                </div>
+
+                {/* Messages */}
+                <div className="flex-1 overflow-y-auto p-5 space-y-3 bg-[#F8FAFC]">
+                    {history.length === 0 && (
+                        <div className="flex flex-col items-center justify-center h-full text-center">
+                            <div className="w-14 h-14 bg-[#0B1F3A]/10 rounded-2xl flex items-center justify-center mb-3">
+                                <MessageSquare size={22} className="text-[#0B1F3A]" />
+                            </div>
+                            <p className="text-sm font-bold text-[#64748B]">Start a conversation</p>
+                            <p className="text-xs text-[#94A3B8] mt-1">Our support team typically replies within minutes</p>
+                        </div>
+                    )}
+                    {history.map((m, i) => {
+                        const isUser = m.sender_id === user.id;
+                        return (
+                            <div key={i} className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
+                                <div className={`max-w-[75%] px-5 py-3 rounded-2xl text-xs leading-relaxed ${
+                                    isUser
+                                        ? 'bg-[#0B1F3A] text-[#EAB308] rounded-tr-none font-semibold'
+                                        : 'bg-white text-[#0F172A] rounded-tl-none border border-[#E5E7EB] shadow-sm'
+                                }`}>
+                                    {m.message}
+                                    <div className={`text-[9px] mt-1 ${isUser ? 'text-[#EAB308]/60 text-right' : 'text-[#94A3B8]'}`}>
+                                        {new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })}
+                    {isTyping && (
+                        <div className="flex justify-start">
+                            <div className="bg-white border border-[#E5E7EB] px-5 py-3 rounded-2xl rounded-tl-none shadow-sm">
+                                <div className="flex gap-1 items-center">
+                                    {[0,1,2].map(i => (
+                                        <span key={i} className="w-1.5 h-1.5 bg-[#94A3B8] rounded-full animate-bounce" style={{ animationDelay: `${i*0.15}s` }} />
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                    <div ref={scrollRef} />
+                </div>
+
+                {/* Input */}
+                <div className="p-4 border-t border-[#E5E7EB] flex gap-3 bg-white">
+                    <input
+                        value={msg}
+                        onChange={e => setMsg(e.target.value)}
+                        onKeyDown={handleKeyDown}
+                        className="flex-1 bg-[#F8FAFC] border border-[#E5E7EB] rounded-full px-5 py-3 text-xs text-[#0F172A] outline-none focus:border-[#0B1F3A] transition-colors"
+                        placeholder="Type a message... (Enter to send)"
+                    />
+                    <button
+                        onClick={handleSend}
+                        disabled={!msg.trim()}
+                        className="bg-[#0B1F3A] text-[#EAB308] p-3.5 rounded-full hover:opacity-90 disabled:opacity-40 transition-all"
+                    >
+                        <Send size={16} />
+                    </button>
+                </div>
             </div>
         </div>
     );
 };
+
+// ─── Security Settings ──────────────────────────────────────────────────────────
+const SecuritySettings = ({ user }) => {
+    const [passwords, setPasswords] = useState({ old: "", new: "", confirm: "" });
+    const [loading, setLoading]     = useState(false);
+    const [showPass, setShowPass]   = useState(false);
+    const [strength, setStrength]   = useState(0);
+
+    const calcStrength = (pw) => {
+        let score = 0;
+        if (pw.length >= 8) score++;
+        if (/[A-Z]/.test(pw)) score++;
+        if (/[0-9]/.test(pw)) score++;
+        if (/[^A-Za-z0-9]/.test(pw)) score++;
+        setStrength(score);
+    };
+
+    const handleUpdate = async (e) => {
+        e.preventDefault();
+        if (passwords.new !== passwords.confirm) return toast.error("Passwords do not match!");
+        if (passwords.new.length < 6) return toast.error("Password must be at least 6 characters");
+        setLoading(true);
+        try {
+            await axios.put(`${BASE_URL}/api/users/change-password`, {
+                userId: user.id, oldPassword: passwords.old, newPassword: passwords.new
+            });
+            toast.success("Security credentials updated!");
+            setPasswords({ old: "", new: "", confirm: "" });
+            setStrength(0);
+        } catch (err) {
+            toast.error(err.response?.data?.message || "Update failed");
+        } finally { setLoading(false); }
+    };
+
+    const strengthConfig = [
+        { label: 'Weak',    color: 'bg-red-400' },
+        { label: 'Fair',    color: 'bg-orange-400' },
+        { label: 'Good',    color: 'bg-amber-400' },
+        { label: 'Strong',  color: 'bg-green-400' },
+    ];
+
+    return (
+        <div className="fade-up font-body space-y-5">
+            <div className="glass border border-white/60 p-8 rounded-[2rem] shadow-sm">
+                <div className="flex items-center gap-3 mb-7">
+                    <div className="w-10 h-10 bg-[#0B1F3A] rounded-xl flex items-center justify-center">
+                        <Lock size={16} className="text-[#EAB308]" />
+                    </div>
+                    <div>
+                        <h3 className="font-display text-2xl font-bold text-[#0B1F3A]">Security Guard</h3>
+                        <p className="text-[11px] text-[#64748B]">Manage your account credentials</p>
+                    </div>
+                </div>
+
+                <form onSubmit={handleUpdate} className="max-w-md space-y-4">
+                    <PasswordField label="Current Password"  value={passwords.old}     show={showPass} onChange={(val) => setPasswords({...passwords, old: val})} />
+                    <PasswordField label="New Password"      value={passwords.new}     show={showPass}
+                        onChange={(val) => { setPasswords({...passwords, new: val}); calcStrength(val); }} />
+
+                    {/* Strength bar */}
+                    {passwords.new && (
+                        <div>
+                            <div className="flex gap-1 mb-1">
+                                {[1,2,3,4].map(i => (
+                                    <div key={i} className={`h-1 flex-1 rounded-full transition-all ${i <= strength ? strengthConfig[strength - 1]?.color : 'bg-[#E5E7EB]'}`} />
+                                ))}
+                            </div>
+                            <p className={`text-[10px] font-semibold ${strengthConfig[strength - 1]?.color.replace('bg-','text-') || 'text-[#94A3B8]'}`}>
+                                {strength > 0 ? `Password strength: ${strengthConfig[strength - 1]?.label}` : ''}
+                            </p>
+                        </div>
+                    )}
+
+                    <PasswordField label="Confirm Password"  value={passwords.confirm}  show={showPass} onChange={(val) => setPasswords({...passwords, confirm: val})} />
+
+                    <div className="flex gap-3 pt-2">
+                        <button type="button" onClick={() => setShowPass(!showPass)}
+                            className="p-4 bg-[#F8FAFC] border border-[#E5E7EB] rounded-2xl text-[#0B1F3A] hover:border-[#0B1F3A] transition-colors">
+                            {showPass ? <EyeOff size={18} /> : <Eye size={18} />}
+                        </button>
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className="flex-1 bg-[#0B1F3A] text-[#EAB308] py-4 rounded-2xl font-bold uppercase text-[10px] tracking-widest hover:opacity-95 disabled:opacity-60 flex items-center justify-center gap-2"
+                        >
+                            {loading ? <><Loader size={14} className="animate-spin" /> Updating...</> : 'Update Credentials'}
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            {/* Security Tips */}
+            <div className="glass border border-white/60 p-6 rounded-[2rem] shadow-sm">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-[#64748B] mb-4">Security Tips</p>
+                <div className="space-y-3">
+                    {[
+                        'Use a strong password with uppercase, numbers & symbols',
+                        'Never share your account credentials with anyone',
+                        'Contact support if you notice any suspicious activity',
+                    ].map((tip, i) => (
+                        <div key={i} className="flex items-start gap-3">
+                            <div className="w-5 h-5 bg-green-50 border border-green-200 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <CheckCircle size={11} className="text-green-500" />
+                            </div>
+                            <p className="text-xs text-[#64748B]">{tip}</p>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </div>
+    );
+};
+
+// ─── Reusable UI Components ─────────────────────────────────────────────────────
+const InfoItem = ({ label, value, icon, secure }) => (
+    <div>
+        <p className="text-[9px] font-bold text-[#EAB308] uppercase tracking-widest mb-1.5 flex items-center gap-1.5 font-body">
+            {icon} {label}
+        </p>
+        <p className={`text-sm font-bold text-[#0F172A] font-body ${secure ? 'font-mono tracking-wider' : ''}`}>
+            {value || 'Not specified'}
+        </p>
+    </div>
+);
+
+const StatusBadge = ({ status, large }) => {
+    const st = getStatus(status);
+    return (
+        <span className={`inline-flex items-center gap-1.5 font-body font-bold uppercase border rounded-full ${large ? 'px-4 py-2 text-[11px]' : 'px-3 py-1 text-[9px]'} ${st.color} ${st.bg} ${st.border}`}>
+            <span className={`w-1.5 h-1.5 rounded-full ${st.dot}`} />
+            {st.label}
+        </span>
+    );
+};
+
+const DetailMeta = ({ label, value, highlight }) => (
+    <div className="p-3 bg-[#F8FAFC] rounded-xl font-body">
+        <p className="text-[9px] font-bold text-[#EAB308] uppercase tracking-widest">{label}</p>
+        <p className={`text-xs font-bold mt-0.5 ${highlight ? 'text-[#EAB308]' : 'text-[#0B1F3A]'}`}>{value}</p>
+    </div>
+);
+
+const PasswordField = ({ label, value, onChange, show }) => (
+    <div className="font-body">
+        <label className="text-[9px] font-bold text-[#EAB308] uppercase tracking-widest mb-2 block">{label}</label>
+        <input
+            type={show ? "text" : "password"}
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            required
+            className="w-full bg-[#F8FAFC] border border-[#E5E7EB] rounded-2xl px-5 py-4 text-sm focus:border-[#0B1F3A] outline-none text-[#0F172A] transition-colors"
+        />
+    </div>
+);
 
 export default UserProfile;

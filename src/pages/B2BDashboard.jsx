@@ -291,6 +291,10 @@ const B2BDashboard = () => {
     const navigate    = useNavigate();
     const intervalRef = useRef(null);
 
+    const handlePaymentRedirect = () => {
+        navigate('/payment'); 
+    };
+
     // ── Fetch all dashboard data ───────────────────────────────────────────────
     const fetchAll = async (isBackground = false) => {
         const token = localStorage.getItem('token');
@@ -936,7 +940,24 @@ const B2BDashboard = () => {
                                     <div style={{ background: '#0B1F3A', borderRadius: 16, padding: 22, marginTop: 8 }}>
                                         <div style={{ color: '#EAB308', fontSize: 9, fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 8 }}>Payment Gateway — Stripe</div>
                                         <div style={{ color: '#94a3b8', fontSize: 12, lineHeight: 1.5 }}>Stripe payment gateway will be integrated here. Contact SNJ admin to activate.</div>
-                                        <button style={{ width: '100%', background: '#EAB308', color: '#0B1F3A', border: 'none', padding: 13, borderRadius: 12, fontWeight: 900, textTransform: 'uppercase', fontSize: 12, fontFamily: '"Times New Roman", serif', letterSpacing: 1, cursor: 'pointer', marginTop: 14 }}>
+                                        <button 
+                                            onClick={handlePaymentRedirect}
+                                            style={{ 
+                                                width: '100%', 
+                                                background: '#EAB308', 
+                                                color: '#0B1F3A', 
+                                                border: 'none', 
+                                                padding: 13, 
+                                                borderRadius: 12, 
+                                                fontWeight: 900, 
+                                                textTransform: 'uppercase', 
+                                                fontSize: 12, 
+                                                fontFamily: '"Times New Roman", serif', 
+                                                letterSpacing: 1, 
+                                                cursor: 'pointer', 
+                                                marginTop: 14 
+                                            }}
+                                            >
                                             💳 Proceed to Stripe Payment
                                         </button>
                                     </div>

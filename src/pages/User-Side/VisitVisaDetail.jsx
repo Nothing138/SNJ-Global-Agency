@@ -1,4 +1,4 @@
-//visa details
+//visit visa details
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import emailjs from '@emailjs/browser';

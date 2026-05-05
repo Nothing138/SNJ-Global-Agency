@@ -281,7 +281,7 @@ const Footer = () => {
 
           {/* Social icons */}
           <div style={{ display: 'flex', gap: 10 }}>
-            {[Facebook, Instagram, Twitter, Youtube, Linkedin].map((Icon, idx) => (
+            {[Facebook, Instagram, Youtube, Linkedin].map((Icon, idx) => (
               <a
                 key={idx}
                 href="#"

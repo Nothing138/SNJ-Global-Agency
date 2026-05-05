@@ -31,6 +31,7 @@ const UserIcon    = () => <Ic d={['M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2','M12
 const BellIcon    = () => <Ic d={['M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9','M13.73 21a2 2 0 01-3.46 0']} />;
 const FileIcon    = () => <Ic d={['M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z','M14 2v6h6']} />;
 const ChartIcon   = () => <Ic d={['M18 20V10','M12 20V4','M6 20v-6']} />;
+const Dollar   = () => <Ic d={['M18 20V10','M12 20V4','M6 20v-6']} />;
 const GlobeIcon   = ({ size = 18 }) => <Ic size={size} d={['M12 2a10 10 0 100 20A10 10 0 0012 2z','M2 12h20','M12 2a15.3 15.3 0 010 20']} />;
 const PhoneIcon   = ({ size = 18 }) => <Ic size={size} d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 010 1.11 2 2 0 012 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92z" />;
 const MailIcon    = ({ size = 18 }) => <Ic size={size} d={['M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z','M22 6l-10 7L2 6']} />;
@@ -52,6 +53,8 @@ const PlusIcon    = () => <Ic d={['M12 5v14','M5 12h14']} />;
 const XIcon       = () => <Ic d={['M18 6L6 18','M6 6l12 12']} size={16} />;
 const ChevronIcon = () => <Ic size={12} d="M9 18l6-6-6-6" />;
 const ArrowIcon   = ({ size = 12 }) => <Ic size={size} d="M5 12h14M12 5l7 7-7 7" />;
+
+
 
 // ─── Static Data ───────────────────────────────────────────────────────────────
 const OFFICES = [
@@ -296,6 +299,7 @@ function useAutoRefresh(fetchFn, interval = REFRESH_INTERVAL) {
 
   return { data, loading, error, lastUpdated, refreshing, refresh: () => load(false) };
 }
+
 
 // ─── Shared UI ─────────────────────────────────────────────────────────────────
 const Footer = () => (
@@ -877,6 +881,63 @@ const ProgressPage = ({ employerId }) => {
   );
 };
 
+const Payment = () => {
+  const navigate = useNavigate();
+  const handlePaymentRedirect = () => navigate('/payment');
+  return (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12 }}>
+                                {[
+                                    { label: 'Total Paid',      value: '$0', bg: '#f0fdf4', border: '#bbf7d0', color: '#15803d' },
+                                    { label: 'Pending Payment', value: '$0', bg: '#fffbeb', border: '#fde68a', color: '#b45309' },
+                                    { label: 'Credit Balance',  value: '$0', bg: '#eff6ff', border: '#bfdbfe', color: '#1d4ed8' },
+                                ].map((st, i) => (
+                                    <div key={i} style={{ background: st.bg, border: `1px solid ${st.border}`, borderRadius: 16, padding: 20 }}>
+                                        <div style={{ fontSize: 9, fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1, color: '#64748b' }}>{st.label}</div>
+                                        <div style={{ fontSize: 26, fontWeight: 900, color: st.color, marginTop: 6 }}>{st.value}</div>
+                                    </div>
+                                ))}
+                            </div>
+                            <div style={{ background: '#fff', border: '1px solid #f1f5f9', borderRadius: 18, padding: 22 }}>
+                                <div style={{ fontSize: 10, fontWeight: 900, color: '#0B1F3A', textTransform: 'uppercase', letterSpacing: 2, marginBottom: 20 }}>Make a Payment</div>
+                                <div style={{ maxWidth: 520 }}>
+                                    {[{ label: 'Payment Amount (USD)', type: 'number', placeholder: 'Enter amount' }, { label: 'Payment Reference (File ID)', type: 'text', placeholder: 'e.g. SNJ-2024-001' }].map((f, i) => (
+                                        <div key={i} style={{ marginBottom: 14 }}>
+                                            <label style={{ display: 'block', fontSize: 9, fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1.5, color: '#0B1F3A', marginBottom: 6, fontFamily: '"Times New Roman", serif' }}>{f.label}</label>
+                                            <input type={f.type} placeholder={f.placeholder} style={{ width: '100%', padding: '12px 16px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 12, fontSize: 13, fontFamily: '"Times New Roman", serif', outline: 'none', boxSizing: 'border-box' }} />
+                                        </div>
+                                    ))}
+                                    <div style={{ background: '#0B1F3A', borderRadius: 16, padding: 22, marginTop: 8 }}>
+                                        <div style={{ color: '#EAB308', fontSize: 9, fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 8 }}>Payment Gateway — Stripe</div>
+                                        <div style={{ color: '#94a3b8', fontSize: 12, lineHeight: 1.5 }}>Stripe payment gateway will be integrated here. Contact SNJ admin to activate.</div>
+                                        <button 
+                                            onClick={handlePaymentRedirect}
+                                            style={{ 
+                                                width: '100%', 
+                                                background: '#EAB308', 
+                                                color: '#0B1F3A', 
+                                                border: 'none', 
+                                                padding: 13, 
+                                                borderRadius: 12, 
+                                                fontWeight: 900, 
+                                                textTransform: 'uppercase', 
+                                                fontSize: 12, 
+                                                fontFamily: '"Times New Roman", serif', 
+                                                letterSpacing: 1, 
+                                                cursor: 'pointer', 
+                                                marginTop: 14 
+                                            }}
+                                            >
+                                            💳 Proceed to Stripe Payment
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <Footer />
+                        </div>
+  );
+};
+
 const WhyChoosePage = () => (
   <div>
     <HBox tag="Our Commitment" title="Why Choose SNJ GlobalRoutes" sub="The trusted partner for transparent, legal, and effective global worker placement." />
@@ -1000,6 +1061,7 @@ const NAV = [
   { id: 'notifications', icon: <BellIcon />,  label: 'Notifications' },
   { id: 'requests',      icon: <FileIcon />,  label: 'Worker Requests' },
   { id: 'progress',      icon: <ChartIcon />, label: 'Progress Dashboard' },
+  { id: 'payment',       icon: <Dollar />,    label: 'Payment' },
   { id: 'whychoose',     icon: <StarIcon />,  label: 'Why Choose Us' },
   { id: 'about',         icon: <GlobeIcon />, label: 'About SNJ Global' },
   { id: 'network',       icon: <UsersIcon />, label: 'Global Network' },
@@ -1064,6 +1126,7 @@ export default function EmployerDashboard() {
       case 'notifications': return <NotificationsPage {...p} />;
       case 'requests':      return <RequestsPage  {...p} showSubmit={() => setForm(true)} />;
       case 'progress':      return <ProgressPage  {...p} />;
+      case 'payment':     return <Payment {...p} />;
       case 'whychoose':     return <WhyChoosePage />;
       case 'about':         return <AboutPage />;
       case 'network':       return <NetworkPage />;
