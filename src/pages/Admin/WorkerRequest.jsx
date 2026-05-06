@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 const API_BASE = "http://localhost:5000/api";
-const AUTO_REFRESH_INTERVAL = 10000; // 10 seconds
+const AUTO_REFRESH_INTERVAL = 10000;
 
 // ─── Status Config ────────────────────────────────────────────────────────────
 const STATUS_CONFIG = {
@@ -18,6 +18,10 @@ const ALL_STATUSES = Object.entries(STATUS_CONFIG).map(([key, val]) => ({ value:
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const fmt = (n) => (n ?? 0).toLocaleString();
+const fmtMoney = (n) => {
+  const num = parseFloat(n) || 0;
+  return num.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+};
 const progressColor = (pct) => {
   if (pct >= 100) return "#22c55e";
   if (pct >= 50)  return "#3b82f6";
@@ -56,14 +60,158 @@ const MiniBar = ({ value, total, label, color }) => {
   );
 };
 
+// ─── Amount Set Cell Component ────────────────────────────────────────────────
+// Table row এ inline amount input
+const AmountCell = ({ row, onAmountSaved }) => {
+  const [editing, setEditing]   = useState(false);
+  const [val, setVal]           = useState("");
+  const [dueVal, setDueVal]     = useState("");
+  const [saving, setSaving]     = useState(false);
+  const [msg, setMsg]           = useState(null);
+  const inputRef                = useRef(null);
+
+  const openEdit = () => {
+    setVal(parseFloat(row.total_paid || 0).toFixed(2));
+    setDueVal(parseFloat(row.due_payment || 0).toFixed(2));
+    setMsg(null);
+    setEditing(true);
+    setTimeout(() => inputRef.current?.focus(), 50);
+  };
+
+  const handleSave = async () => {
+    const paid = parseFloat(val);
+    const due  = parseFloat(dueVal);
+    if (isNaN(paid) || paid < 0) { setMsg({ ok: false, text: "Invalid amount" }); return; }
+    if (isNaN(due)  || due  < 0) { setMsg({ ok: false, text: "Invalid due amount" }); return; }
+
+    setSaving(true);
+    try {
+      const res  = await fetch(`${API_BASE}/worker-requests/${row.id}/set-amount`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ total_paid: paid, due_payment: due }),
+      });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.message || "Failed");
+      onAmountSaved(row.id, paid, due);
+      setEditing(false);
+    } catch (e) {
+      setMsg({ ok: false, text: e.message });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (!editing) {
+    const hasPaid = parseFloat(row.total_paid || 0) > 0;
+    return (
+      <button
+        onClick={openEdit}
+        title="Click to set amount"
+        style={{
+          display: "flex", flexDirection: "column", alignItems: "flex-end",
+          background: "none", border: "none", cursor: "pointer", padding: "2px 4px",
+          borderRadius: 6, transition: "background 0.12s",
+          gap: 2,
+        }}
+        onMouseEnter={e => e.currentTarget.style.background = "#f0f4ff"}
+        onMouseLeave={e => e.currentTarget.style.background = "none"}
+      >
+        {hasPaid ? (
+          <>
+            <span style={{ fontSize: 12, fontWeight: 800, color: "#059669" }}>
+             $ {fmtMoney(row.total_paid)}
+            </span>
+            {parseFloat(row.due_payment || 0) > 0 && (
+              <span style={{ fontSize: 10, color: "#ef4444", fontWeight: 600 }}>
+                Due:$ {fmtMoney(row.due_payment)}
+              </span>
+            )}
+          </>
+        ) : (
+          <span style={{
+            fontSize: 11, color: "#9ca3af", fontWeight: 600,
+            border: "1px dashed #d1d5db", borderRadius: 5, padding: "3px 8px",
+          }}>
+            + Set Amount
+          </span>
+        )}
+      </button>
+    );
+  }
+
+  return (
+    <div style={{ minWidth: 160 }}>
+      <div style={{ marginBottom: 4 }}>
+        <div style={{ fontSize: 9, color: "#6b7280", fontWeight: 700, marginBottom: 2, textTransform: "uppercase" }}>Total Paid ($)</div>
+        <input
+          ref={inputRef}
+          type="number" min="0" step="0.01"
+          value={val}
+          onChange={e => setVal(e.target.value)}
+          style={{
+            width: "100%", padding: "5px 8px", borderRadius: 6,
+            border: "1.5px solid #EAB308", fontSize: 12, fontWeight: 700,
+            outline: "none", boxSizing: "border-box",
+            background: "#fffbeb",
+          }}
+          onKeyDown={e => { if (e.key === "Enter") handleSave(); if (e.key === "Escape") setEditing(false); }}
+        />
+      </div>
+      <div style={{ marginBottom: 6 }}>
+        <div style={{ fontSize: 9, color: "#6b7280", fontWeight: 700, marginBottom: 2, textTransform: "uppercase" }}>Due Payment ($)</div>
+        <input
+          type="number" min="0" step="0.01"
+          value={dueVal}
+          onChange={e => setDueVal(e.target.value)}
+          style={{
+            width: "100%", padding: "5px 8px", borderRadius: 6,
+            border: "1.5px solid #fca5a5", fontSize: 12, fontWeight: 700,
+            outline: "none", boxSizing: "border-box",
+            background: "#fff5f5",
+          }}
+          onKeyDown={e => { if (e.key === "Enter") handleSave(); if (e.key === "Escape") setEditing(false); }}
+        />
+      </div>
+      {msg && (
+        <div style={{ fontSize: 10, color: msg.ok ? "#059669" : "#b91c1c", marginBottom: 4, fontWeight: 600 }}>
+          {msg.text}
+        </div>
+      )}
+      <div style={{ display: "flex", gap: 4 }}>
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          style={{
+            flex: 1, padding: "5px 0", borderRadius: 5, border: "none",
+            background: saving ? "#94a3b8" : "#0B1F3A", color: "#EAB308",
+            fontSize: 11, fontWeight: 700, cursor: saving ? "not-allowed" : "pointer",
+          }}
+        >
+          {saving ? "…" : "✓ Save"}
+        </button>
+        <button
+          onClick={() => setEditing(false)}
+          style={{
+            padding: "5px 8px", borderRadius: 5, border: "1px solid #d1d5db",
+            background: "#fff", fontSize: 11, cursor: "pointer", color: "#6b7280",
+          }}
+        >
+          ✕
+        </button>
+      </div>
+    </div>
+  );
+};
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function AdminWorkerRequests() {
-  const [requests, setRequests]     = useState([]);
-  const [loading, setLoading]       = useState(true);
-  const [silentLoad, setSilentLoad] = useState(false);
-  const [error, setError]           = useState(null);
+  const [requests, setRequests]       = useState([]);
+  const [loading, setLoading]         = useState(true);
+  const [silentLoad, setSilentLoad]   = useState(false);
+  const [error, setError]             = useState(null);
   const [lastRefresh, setLastRefresh] = useState(null);
-  const [countdown, setCountdown]   = useState(10);
+  const [countdown, setCountdown]     = useState(10);
 
   const [search, setSearch]               = useState("");
   const [filterStatus, setFilterStatus]   = useState("all");
@@ -88,7 +236,7 @@ export default function AdminWorkerRequests() {
     else { setLoading(true); setError(null); }
 
     try {
-      const res = await fetch(`http://localhost:5000/api/worker-requests`, {
+      const res = await fetch(`${API_BASE}/worker-requests`, {
         headers: { "Content-Type": "application/json" },
       });
 
@@ -110,26 +258,24 @@ export default function AdminWorkerRequests() {
       setLoading(false);
       setSilentLoad(false);
     }
-}, []);
+  }, []);
 
   // ─── Auto-refresh ─────────────────────────────────────────────────────────
   useEffect(() => {
     fetchRequests(false);
-
-    timerRef.current = setInterval(() => fetchRequests(true), AUTO_REFRESH_INTERVAL);
-
-    countdownRef.current = setInterval(() => {
-      setCountdown(prev => (prev <= 1 ? 10 : prev - 1));
-    }, 1000);
-
-    return () => {
-      clearInterval(timerRef.current);
-      clearInterval(countdownRef.current);
-    };
+    timerRef.current     = setInterval(() => fetchRequests(true), AUTO_REFRESH_INTERVAL);
+    countdownRef.current = setInterval(() => setCountdown(prev => (prev <= 1 ? 10 : prev - 1)), 1000);
+    return () => { clearInterval(timerRef.current); clearInterval(countdownRef.current); };
   }, [fetchRequests]);
 
-  // Reset page on filter change
   useEffect(() => { setPage(1); }, [search, filterStatus, filterCountry]);
+
+  // ─── Amount saved callback ────────────────────────────────────────────────
+  const handleAmountSaved = (id, total_paid, due_payment) => {
+    setRequests(prev => prev.map(r => r.id === id ? { ...r, total_paid, due_payment } : r));
+    // modal এও আপডেট হবে
+    setSelected(prev => prev && prev.id === id ? { ...prev, total_paid, due_payment } : prev);
+  };
 
   // ─── Derived ──────────────────────────────────────────────────────────────
   const countries = [...new Set(requests.map(r => r.destination_country).filter(Boolean))].sort();
@@ -166,6 +312,8 @@ export default function AdminWorkerRequests() {
     total:       requests.length,
     totalReq:    requests.reduce((a, r) => a + (r.workers_requested || 0), 0),
     totalDel:    requests.reduce((a, r) => a + (r.workers_delivered || 0), 0),
+    totalPaid:   requests.reduce((a, r) => a + parseFloat(r.total_paid || 0), 0),
+    totalDue:    requests.reduce((a, r) => a + parseFloat(r.due_payment || 0), 0),
     pending:     requests.filter(r => r.status === "pending_review" || r.status === "pending").length,
     in_progress: requests.filter(r => r.status === "in_progress").length,
     delivering:  requests.filter(r => r.status === "delivering").length,
@@ -196,6 +344,8 @@ export default function AdminWorkerRequests() {
       workers_verified:   row.workers_verified   ?? 0,
       workers_selected:   row.workers_selected   ?? 0,
       notes:              row.notes              || "",
+      total_paid:         parseFloat(row.total_paid  || 0).toFixed(2),
+      due_payment:        parseFloat(row.due_payment || 0).toFixed(2),
     });
     setUpdateMsg(null);
     setModalOpen(true);
@@ -207,19 +357,23 @@ export default function AdminWorkerRequests() {
     setUpdating(true);
     setUpdateMsg(null);
     try {
-      const res  = await fetch(`http://localhost:5000/api/worker-requests/${selected.id}`, {
+      const payload = {
+        ...updateForm,
+        total_paid:  parseFloat(updateForm.total_paid)  || 0,
+        due_payment: parseFloat(updateForm.due_payment) || 0,
+      };
+
+      const res  = await fetch(`${API_BASE}/worker-requests/${selected.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updateForm),
+        body: JSON.stringify(payload),
       });
       const json = await res.json();
       if (!json.success) throw new Error(json.message || "Update failed");
 
       setUpdateMsg({ ok: true, text: "✓ Request updated successfully!" });
-      setRequests(prev => prev.map(r => r.id === selected.id ? { ...r, ...updateForm } : r));
-      setSelected(prev => ({ ...prev, ...updateForm }));
-
-      // Auto-close after success
+      setRequests(prev => prev.map(r => r.id === selected.id ? { ...r, ...payload } : r));
+      setSelected(prev => ({ ...prev, ...payload }));
       setTimeout(() => setModalOpen(false), 1500);
     } catch (e) {
       setUpdateMsg({ ok: false, text: "✕ " + (e.message || "Update failed.") });
@@ -302,21 +456,22 @@ export default function AdminWorkerRequests() {
       {/* ── Stat Cards ── */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: 10, marginBottom: 18 }}>
         {[
-          { label: "Total Requests", value: stats.total,       accent: "#0B1F3A" },
-          { label: "Workers Req.",   value: fmt(stats.totalReq), accent: "#4f46e5" },
-          { label: "Delivered",      value: fmt(stats.totalDel), accent: "#059669" },
-          { label: "Pending",        value: stats.pending,      accent: "#d97706" },
-          { label: "In Progress",    value: stats.in_progress,  accent: "#3b82f6" },
-          { label: "Delivering",     value: stats.delivering,   accent: "#10b981" },
-          { label: "Completed",      value: stats.completed,    accent: "#22c55e" },
-          { label: "Cancelled",      value: stats.cancelled,    accent: "#ef4444" },
+          { label: "Total Requests", value: stats.total,                         accent: "#0B1F3A" },
+          { label: "Workers Req.",   value: fmt(stats.totalReq),                 accent: "#4f46e5" },
+          { label: "Delivered",      value: fmt(stats.totalDel),                 accent: "#059669" },
+          { label: "Total Paid",     value: `$ ${fmtMoney(stats.totalPaid)}`,   accent: "#059669" },
+          { label: "Total Due",      value: `$ ${fmtMoney(stats.totalDue)}`,    accent: "#ef4444" },
+          { label: "Pending",        value: stats.pending,                        accent: "#d97706" },
+          { label: "In Progress",    value: stats.in_progress,                   accent: "#3b82f6" },
+          { label: "Completed",      value: stats.completed,                      accent: "#22c55e" },
+          { label: "Cancelled",      value: stats.cancelled,                      accent: "#ef4444" },
         ].map(s => (
           <div key={s.label} style={{
             background: "#fff", border: "1px solid #e2e8f0", borderRadius: 10,
             padding: "12px 14px", borderTop: `3px solid ${s.accent}`,
           }}>
             <div style={{ fontSize: 10, color: "#9ca3af", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 5 }}>{s.label}</div>
-            <div style={{ fontSize: 22, fontWeight: 800, color: s.accent, lineHeight: 1 }}>{s.value}</div>
+            <div style={{ fontSize: s.label.includes("$") || s.label === "Total Paid" || s.label === "Total Due" ? 14 : 22, fontWeight: 800, color: s.accent, lineHeight: 1 }}>{s.value}</div>
           </div>
         ))}
       </div>
@@ -377,14 +532,6 @@ export default function AdminWorkerRequests() {
             <div style={{ fontSize: 36, marginBottom: 12 }}>⚠️</div>
             <div style={{ fontSize: 15, fontWeight: 700, color: "#b91c1c", marginBottom: 6 }}>Failed to load data</div>
             <div style={{ fontSize: 13, color: "#6b7280", marginBottom: 8, maxWidth: 400, margin: "0 auto 16px" }}>{error}</div>
-            <div style={{ fontSize: 12, color: "#9ca3af", background: "#f1f5f9", borderRadius: 8, padding: "8px 14px", display: "inline-block", marginBottom: 16, textAlign: "left" }}>
-              <strong>Debug checklist:</strong><br/>
-              • Backend running on port 5000?<br/>
-              • Route <code>/api/worker-requests/all</code> registered?<br/>
-              • <code>app.use(express.json())</code> in app.js?<br/>
-              • CORS enabled?
-            </div>
-            <br/>
             <button onClick={() => fetchRequests(false)} style={{ padding: "9px 22px", borderRadius: 8, border: "none", background: "#0B1F3A", color: "#EAB308", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
               Try Again
             </button>
@@ -403,19 +550,25 @@ export default function AdminWorkerRequests() {
               <thead>
                 <tr>
                   {[
-                    { key: "id",                  label: "#ID"       },
-                    { key: "company_name",         label: "Company"   },
-                    { key: "job_title",            label: "Job"       },
-                    { key: "destination_country",  label: "Country"   },
-                    { key: "workers_requested",    label: "Workers"   },
-                    { key: null,                   label: "Progress"  },
-                    { key: "status",               label: "Status"    },
-                    { key: "created_at",           label: "Date"      },
-                    { key: null,                   label: "Action"    },
+                    { key: "id",                 label: "#ID"      },
+                    { key: "company_name",        label: "Company"  },
+                    { key: "job_title",           label: "Job"      },
+                    { key: "destination_country", label: "Country"  },
+                    { key: "workers_requested",   label: "Workers"  },
+                    { key: null,                  label: "Progress" },
+                    { key: "total_paid",          label: "Amount"   },   // ← নতুন column
+                    { key: "status",              label: "Status"   },
+                    { key: "created_at",          label: "Date"     },
+                    { key: null,                  label: "Action"   },
                   ].map((col, i) => (
                     <th
                       key={i}
-                      style={{ ...S.th, ...(i === 8 ? { textAlign: "center" } : {}), ...(i === 4 ? { textAlign: "center" } : {}) }}
+                      style={{
+                        ...S.th,
+                        ...(i === 9 ? { textAlign: "center" } : {}),
+                        ...(i === 4 ? { textAlign: "center" } : {}),
+                        ...(i === 6 ? { textAlign: "right"  } : {}),
+                      }}
                       onClick={() => col.key && toggleSort(col.key)}
                     >
                       {col.label}{col.key && <SortIcon col={col.key} />}
@@ -489,6 +642,11 @@ export default function AdminWorkerRequests() {
                         </div>
                       </td>
 
+                      {/* Amount ← নতুন */}
+                      <td style={{ ...S.td, textAlign: "right", minWidth: 150 }}>
+                        <AmountCell row={r} onAmountSaved={handleAmountSaved} />
+                      </td>
+
                       {/* Status */}
                       <td style={S.td}><StatusBadge status={r.status} /></td>
 
@@ -532,7 +690,7 @@ export default function AdminWorkerRequests() {
               Showing {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, filtered.length)} of {filtered.length}
             </span>
             <div style={{ display: "flex", gap: 4 }}>
-              <PagBtn label="«" onClick={() => setPage(1)}          disabled={page === 1} />
+              <PagBtn label="«" onClick={() => setPage(1)}           disabled={page === 1} />
               <PagBtn label="‹" onClick={() => setPage(p => p - 1)} disabled={page === 1} />
               {Array.from({ length: totalPages }, (_, i) => i + 1)
                 .filter(p => p === 1 || p === totalPages || Math.abs(p - page) <= 2)
@@ -599,6 +757,18 @@ export default function AdminWorkerRequests() {
                 ))}
               </div>
 
+              {/* Payment Summary Cards */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20 }}>
+                <div style={{ background: "#f0fdf4", borderRadius: 10, padding: "14px 16px", border: "1.5px solid #86efac" }}>
+                  <div style={{ fontSize: 10, color: "#166534", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 6 }}>💰 Total Paid</div>
+                  <div style={{ fontSize: 22, fontWeight: 900, color: "#059669" }}>$ {fmtMoney(selected.total_paid)}</div>
+                </div>
+                <div style={{ background: "#fef2f2", borderRadius: 10, padding: "14px 16px", border: "1.5px solid #fca5a5" }}>
+                  <div style={{ fontSize: 10, color: "#7f1d1d", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 6 }}>⚠️ Due Payment</div>
+                  <div style={{ fontSize: 22, fontWeight: 900, color: "#ef4444" }}>$ {fmtMoney(selected.due_payment)}</div>
+                </div>
+              </div>
+
               {/* Progress Bars */}
               <div style={{ background: "#f0f4ff", borderRadius: 10, padding: "14px 16px", marginBottom: 20, border: "1px solid #c7d2fe" }}>
                 <div style={{ fontSize: 11, fontWeight: 700, color: "#3730a3", marginBottom: 12, textTransform: "uppercase", letterSpacing: "0.07em" }}>Live Progress</div>
@@ -658,11 +828,42 @@ export default function AdminWorkerRequests() {
                         onFocus={e => e.target.style.borderColor = "#EAB308"}
                         onBlur={e => e.target.style.borderColor = "#d1d5db"}
                       />
-                      <div style={{ fontSize: 10, color: "#9ca3af", marginTop: 2 }}>
-                        Max: {fmt(selected.workers_requested)}
-                      </div>
+                      <div style={{ fontSize: 10, color: "#9ca3af", marginTop: 2 }}>Max: {fmt(selected.workers_requested)}</div>
                     </div>
                   ))}
+                </div>
+
+                {/* ── Amount Section (Modal) ── */}
+                <div style={{ background: "#f8fafc", border: "1.5px solid #e2e8f0", borderRadius: 10, padding: "16px", marginBottom: 16 }}>
+                  <div style={{ fontSize: 11, fontWeight: 800, color: "#0B1F3A", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 12 }}>
+                    💳 Payment Details
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                    <div>
+                      <label style={{ ...S.label, color: "#059669" }}>Total Paid ($)</label>
+                      <input
+                        type="number" min="0" step="0.01"
+                        value={updateForm.total_paid}
+                        onChange={e => setUpdateForm(f => ({ ...f, total_paid: e.target.value }))}
+                        style={{ ...S.input, borderColor: "#86efac", background: "#f0fdf4" }}
+                        onFocus={e => e.target.style.borderColor = "#22c55e"}
+                        onBlur={e => e.target.style.borderColor = "#86efac"}
+                        placeholder="0.00"
+                      />
+                    </div>
+                    <div>
+                      <label style={{ ...S.label, color: "#ef4444" }}>Due Payment ($)</label>
+                      <input
+                        type="number" min="0" step="0.01"
+                        value={updateForm.due_payment}
+                        onChange={e => setUpdateForm(f => ({ ...f, due_payment: e.target.value }))}
+                        style={{ ...S.input, borderColor: "#fca5a5", background: "#fef2f2" }}
+                        onFocus={e => e.target.style.borderColor = "#ef4444"}
+                        onBlur={e => e.target.style.borderColor = "#fca5a5"}
+                        placeholder="0.00"
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 {/* Notes */}
@@ -722,7 +923,7 @@ export default function AdminWorkerRequests() {
       <style>{`
         @keyframes slideUp {
           from { opacity: 0; transform: translateY(16px) scale(0.98); }
-          to   { opacity: 1; transform: translateY(0)  scale(1); }
+          to   { opacity: 1; transform: translateY(0) scale(1); }
         }
       `}</style>
     </div>

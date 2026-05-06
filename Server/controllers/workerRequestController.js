@@ -2,17 +2,13 @@
 const db = require('../config/db');
 
 // ─── Helper: safe promise-based query ────────────────────────────────────────
-// Handles both: mysql2 pool (db.promise()) and already-promisified connections
 const query = (sql, params = []) => {
-    // mysql2 pool with .promise()
     if (typeof db.promise === 'function') {
         return db.promise().query(sql, params).then(([result]) => result);
     }
-    // Already promisified (mysql2/promise)
     if (typeof db.execute === 'function') {
         return db.execute(sql, params).then(([result]) => result);
     }
-    // Callback-based (mysql / mysql2 without promise)
     return new Promise((resolve, reject) => {
         db.query(sql, params, (err, result) => {
             if (err) return reject(err);
@@ -33,44 +29,11 @@ const createNotification = async (employer_id, type, title, message, is_urgent =
     }
 };
 
-// ─── 1. GET all worker requests for an employer ───────────────────────────────
-// GET /api/worker-requests?employer_id=1&status=pending&limit=100
-/*exports.getByEmployer = async (req, res) => {
-    try {
-        const { employer_id, status, limit = 100 } = req.query;
-        if (!employer_id) {
-            return res.status(400).json({ success: false, message: 'employer_id is required' });
-        }
-
-        const conditions = ['wr.employer_id = ?'];
-        const params = [parseInt(employer_id)];
-
-        if (status && status !== 'all') {
-            conditions.push('wr.status = ?');
-            params.push(status);
-        }
-
-        const rows = await query(
-            `SELECT wr.*, e.company_name AS employer_company
-             FROM worker_requests wr
-             LEFT JOIN employers e ON e.id = wr.employer_id
-             WHERE ${conditions.join(' AND ')}
-             ORDER BY wr.created_at DESC
-             LIMIT ?`,
-            [...params, parseInt(limit)]
-        );
-
-        return res.json({ success: true, data: rows });
-    } catch (err) {
-        console.error('getByEmployer error:', err);
-        return res.status(500).json({ success: false, message: err.message });
-    }
-};*/
+// ─── 1. GET all worker requests ───────────────────────────────────────────────
 exports.getByEmployer = async (req, res) => {
     try {
         const { employer_id, status, limit = 100 } = req.query;
 
-        // ── Admin: no employer_id = return ALL ──────────────────────────
         if (!employer_id) {
             const rows = await query(
                 `SELECT wr.*, 
@@ -84,7 +47,6 @@ exports.getByEmployer = async (req, res) => {
             return res.json({ success: true, data: rows });
         }
 
-        // ── Employer: filter by employer_id ─────────────────────────────
         const conditions = ['wr.employer_id = ?'];
         const params = [parseInt(employer_id)];
 
@@ -110,18 +72,14 @@ exports.getByEmployer = async (req, res) => {
     }
 };
 
-// ─── 2. Employer submits a new worker request ─────────────────────────────────
-// POST /api/worker-requests
+// ─── 2. Create worker request ─────────────────────────────────────────────────
 exports.create = async (req, res) => {
     try {
-        console.log('POST /worker-requests body:', req.body); // debug log
-
         const {
             employer_id, company_name, job_title,
             workers_requested, destination_country, country_flag, notes
         } = req.body;
 
-        // Validate required fields
         if (!employer_id || !company_name || !job_title || !workers_requested || !destination_country) {
             return res.status(400).json({
                 success: false,
@@ -150,9 +108,7 @@ exports.create = async (req, res) => {
         );
 
         const newId = result.insertId;
-        console.log('Inserted worker request ID:', newId); // debug log
 
-        // Auto-notify employer
         await createNotification(
             parseInt(employer_id),
             'deal',
@@ -172,7 +128,7 @@ exports.create = async (req, res) => {
     }
 };
 
-// ─── 3. Admin updates request status / progress ───────────────────────────────
+// ─── 3. Admin updates request ─────────────────────────────────────────────────
 // PUT /api/worker-requests/:id
 exports.update = async (req, res) => {
     try {
@@ -180,7 +136,8 @@ exports.update = async (req, res) => {
         const {
             workers_delivered, workers_submitted,
             workers_verified, workers_selected,
-            status, notes
+            status, notes,
+            total_paid, due_payment   // ← নতুন যোগ হয়েছে
         } = req.body;
 
         const existing = await query('SELECT * FROM worker_requests WHERE id = ?', [parseInt(id)]);
@@ -198,6 +155,25 @@ exports.update = async (req, res) => {
         if (workers_selected  !== undefined) { fields.push('workers_selected = ?');  params.push(parseInt(workers_selected));  }
         if (status            !== undefined) { fields.push('status = ?');            params.push(status);                      }
         if (notes             !== undefined) { fields.push('notes = ?');             params.push(notes.trim());                }
+
+        // ── Amount fields ──────────────────────────────────────────────────────
+        if (total_paid !== undefined) {
+            const paid = parseFloat(total_paid);
+            if (isNaN(paid) || paid < 0) {
+                return res.status(400).json({ success: false, message: 'total_paid must be a non-negative number' });
+            }
+            fields.push('total_paid = ?');
+            params.push(paid);
+        }
+        if (due_payment !== undefined) {
+            const due = parseFloat(due_payment);
+            if (isNaN(due) || due < 0) {
+                return res.status(400).json({ success: false, message: 'due_payment must be a non-negative number' });
+            }
+            fields.push('due_payment = ?');
+            params.push(due);
+        }
+        // ──────────────────────────────────────────────────────────────────────
 
         if (!fields.length) {
             return res.status(400).json({ success: false, message: 'Nothing to update' });
@@ -245,8 +221,53 @@ exports.update = async (req, res) => {
     }
 };
 
-// ─── 4. Get single worker request ─────────────────────────────────────────────
-// GET /api/worker-requests/:id
+// ─── 4. NEW: Set Amount only (quick action from table row) ────────────────────
+// PUT /api/worker-requests/:id/set-amount
+exports.setAmount = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { total_paid, due_payment } = req.body;
+
+        if (total_paid === undefined && due_payment === undefined) {
+            return res.status(400).json({ success: false, message: 'Provide total_paid or due_payment' });
+        }
+
+        const existing = await query('SELECT id FROM worker_requests WHERE id = ?', [parseInt(id)]);
+        if (!existing.length) {
+            return res.status(404).json({ success: false, message: 'Worker request not found' });
+        }
+
+        const fields = [];
+        const params = [];
+
+        if (total_paid !== undefined) {
+            const paid = parseFloat(total_paid);
+            if (isNaN(paid) || paid < 0) {
+                return res.status(400).json({ success: false, message: 'total_paid must be a non-negative number' });
+            }
+            fields.push('total_paid = ?');
+            params.push(paid);
+        }
+        if (due_payment !== undefined) {
+            const due = parseFloat(due_payment);
+            if (isNaN(due) || due < 0) {
+                return res.status(400).json({ success: false, message: 'due_payment must be a non-negative number' });
+            }
+            fields.push('due_payment = ?');
+            params.push(due);
+        }
+
+        params.push(parseInt(id));
+        await query(`UPDATE worker_requests SET ${fields.join(', ')} WHERE id = ?`, params);
+
+        return res.json({ success: true, message: 'Amount updated successfully' });
+    } catch (err) {
+        console.error('setAmount error:', err);
+        return res.status(500).json({ success: false, message: err.message });
+    }
+};
+
+// ─── 5. Get single worker request ─────────────────────────────────────────────
 exports.getById = async (req, res) => {
     try {
         const rows = await query(
@@ -265,8 +286,7 @@ exports.getById = async (req, res) => {
     }
 };
 
-// ─── 5. Delete worker request ─────────────────────────────────────────────────
-// DELETE /api/worker-requests/:id
+// ─── 6. Delete worker request ─────────────────────────────────────────────────
 exports.remove = async (req, res) => {
     try {
         const result = await query('DELETE FROM worker_requests WHERE id = ?', [parseInt(req.params.id)]);
@@ -279,8 +299,7 @@ exports.remove = async (req, res) => {
     }
 };
 
-// ─── 6. Get all notifications for employer ────────────────────────────────────
-// GET /api/notifications?employer_id=1&unread=true
+// ─── 7. Get all notifications for employer ────────────────────────────────────
 exports.getNotifications = async (req, res) => {
     try {
         const { employer_id, unread } = req.query;
@@ -307,8 +326,7 @@ exports.getNotifications = async (req, res) => {
     }
 };
 
-// ─── 7. Mark single notification as read ──────────────────────────────────────
-// PUT /api/notifications/:id/read
+// ─── 8. Mark single notification as read ──────────────────────────────────────
 exports.markRead = async (req, res) => {
     try {
         const result = await query(
@@ -324,8 +342,7 @@ exports.markRead = async (req, res) => {
     }
 };
 
-// ─── 8. Mark all notifications as read ───────────────────────────────────────
-// PUT /api/notifications/read-all?employer_id=1
+// ─── 9. Mark all notifications as read ───────────────────────────────────────
 exports.markAllRead = async (req, res) => {
     try {
         const { employer_id } = req.query;
@@ -342,6 +359,7 @@ exports.markAllRead = async (req, res) => {
     }
 };
 
+// ─── 10. Get all requests (admin) ─────────────────────────────────────────────
 exports.getAllRequests = async (req, res) => {
     try {
         const rows = await query(
