@@ -165,7 +165,7 @@ router.post('/login', async (req, res) => {
                 role: user.role,
                 source: 'users',
                 redirectTo,
-                user: { id: user.id, name: user.name, email: user.email, role: user.role }
+                user: { id: user.id, name: user.full_name, email: user.email, role: user.role }
             });
         }
 

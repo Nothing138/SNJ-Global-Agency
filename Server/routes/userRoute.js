@@ -1,150 +1,262 @@
-const express = require('express');
-const router = express.Router();
-const db = require('../config/db');
-const bcrypt = require('bcryptjs');
+const express  = require('express');
+const router   = express.Router();
+const db       = require('../config/db');
+const bcrypt   = require('bcryptjs');
+const multer   = require('multer');
+const path     = require('path');
+const fs       = require('fs');
 
-// --- 1. Get Complete User Profile & Stats (FIXED) ---
+// ─── Multer Setup for Document Uploads ─────────────────────────────────────────
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        const dir = path.join(__dirname, '../public/uploads/documents');
+        if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+        cb(null, dir);
+    },
+    filename: (req, file, cb) => {
+        const unique = Date.now() + '-' + Math.round(Math.random() * 1e9);
+        cb(null, unique + path.extname(file.originalname));
+    }
+});
+
+const upload = multer({
+    storage,
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+    fileFilter: (req, file, cb) => {
+        const allowed = /jpeg|jpg|png|pdf|doc|docx/;
+        const ext     = allowed.test(path.extname(file.originalname).toLowerCase());
+        const mime    = /jpeg|jpg|png|pdf|msword|vnd.openxmlformats/.test(file.mimetype);
+        if (ext && mime) return cb(null, true);
+        cb(new Error('Only image and document files are allowed'));
+    }
+});
+
+// ─── 1. Get Complete User Profile & Stats ──────────────────────────────────────
 router.get('/profile/:id', async (req, res) => {
     try {
         const userId = req.params.id;
 
-        // User and User Details join query
         const [user] = await db.query(`
-            SELECT u.full_name, u.email, u.role, u.status as account_status, 
-            ud.* FROM users u 
-            LEFT JOIN user_details ud ON u.id = ud.user_id 
-            WHERE u.id = ?`, [userId]);
+            SELECT u.full_name, u.email, u.role, u.status AS account_status,
+                   ud.*
+            FROM users u
+            LEFT JOIN user_details ud ON u.id = ud.user_id
+            WHERE u.id = ?
+        `, [userId]);
 
-        // Visa Applications
-        const [visas] = await db.query(`SELECT * FROM visa_applications WHERE user_id = ?`, [userId]);
+        const [visas] = await db.query(
+            `SELECT * FROM visa_applications WHERE user_id = ? ORDER BY id DESC`,
+            [userId]
+        );
 
-        // Job Applications
         const [jobs] = await db.query(`
-            SELECT ja.*, j.job_title, j.company_name 
-            FROM job_applications ja 
-            JOIN jobs j ON ja.job_id = j.id 
-            WHERE ja.candidate_id = ?`, [userId]);
+            SELECT ja.*, j.job_title, j.company_name
+            FROM job_applications ja
+            JOIN jobs j ON ja.job_id = j.id
+            WHERE ja.candidate_id = ?
+            ORDER BY ja.id DESC
+        `, [userId]);
 
-        // Tour Bookings
         const [tours] = await db.query(`
-            SELECT tb.*, tp.title, tp.destination 
-            FROM tour_bookings tb 
-            JOIN tour_packages tp ON tb.package_id = tp.id 
-            WHERE tb.user_id = ?`, [userId]);
+            SELECT tb.*, tp.title AS tour_name, tp.destination
+            FROM tour_bookings tb
+            JOIN tour_packages tp ON tb.package_id = tp.id
+            WHERE tb.user_id = ?
+            ORDER BY tb.id DESC
+        `, [userId]);
 
-        // --- যোগ করা হয়েছে: Flight Bookings ---
         const [flights] = await db.query(`
-            SELECT * FROM travel_bookings 
+            SELECT * FROM travel_bookings
             WHERE user_id = ? AND booking_type = 'flight'
-            ORDER BY id DESC`, [userId]);
+            ORDER BY id DESC
+        `, [userId]);
 
         res.json({
-            profile: user[0],
-            stats: {
-                visas: visas,
-                jobs: jobs,
-                tours: tours,
-                flights: flights // এই ডাটাটি এখন ফ্রন্টএন্ডে যাবে
-            }
+            profile: user[0] || null,
+            stats:   { visas, jobs, tours, flights }
         });
     } catch (err) {
+        console.error('GET /profile/:id error:', err);
         res.status(500).json({ error: err.message });
     }
 });
 
-// --- 2. Update Profile ---
+// ─── 2. Update Profile ─────────────────────────────────────────────────────────
 router.put('/profile/update', async (req, res) => {
-    const { userId, full_name, contact_number, passport_number, current_location } = req.body;
-    
+    const {
+        userId,
+        full_name,
+        contact_number,
+        phone_number,
+        passport_number,
+        nid_number,
+        nationality,
+        address,
+        current_location,
+        profession
+    } = req.body;
+
+    if (!userId) return res.status(400).json({ message: 'userId is required' });
+
     try {
         if (full_name) {
             await db.query(`UPDATE users SET full_name = ? WHERE id = ?`, [full_name, userId]);
         }
 
-        await db.query(
-            `UPDATE user_details 
-             SET phone_number = ?, passport_number = ?, current_location = ? 
-             WHERE user_id = ?`, 
-            [contact_number, passport_number, current_location, userId]
+        const phone = contact_number || phone_number || null;
+
+        const [existing] = await db.query(
+            `SELECT id FROM user_details WHERE user_id = ?`, [userId]
         );
-        
-        res.json({ success: true, message: "Profile updated successfully!" });
+
+        if (existing.length > 0) {
+            await db.query(`
+                UPDATE user_details
+                SET
+                    phone_number     = COALESCE(?, phone_number),
+                    passport_number  = COALESCE(?, passport_number),
+                    nid_number       = COALESCE(?, nid_number),
+                    nationality      = COALESCE(?, nationality),
+                    address          = COALESCE(?, address),
+                    current_location = COALESCE(?, current_location),
+                    profession       = COALESCE(?, profession)
+                WHERE user_id = ?
+            `, [phone, passport_number, nid_number, nationality, address, current_location, profession, userId]);
+        } else {
+            await db.query(`
+                INSERT INTO user_details
+                    (user_id, phone_number, passport_number, nid_number, nationality, address, current_location, profession)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            `, [userId, phone, passport_number, nid_number, nationality, address, current_location, profession]);
+        }
+
+        res.json({ success: true, message: 'Profile updated successfully!' });
     } catch (err) {
+        console.error('PUT /profile/update error:', err);
         res.status(500).json({ error: err.message });
     }
 });
 
-// --- 3. Messaging Logic (Basic) ---
-router.post('/messages/send', async (req, res) => {
-    const { sender_id, message } = req.body;
+// ─── 3. Change Password ─────────────────────────────────────────────────────────
+router.put('/change-password', async (req, res) => {
+    const { userId, oldPassword, newPassword } = req.body;
+
+    if (!userId || !oldPassword || !newPassword) {
+        return res.status(400).json({ message: 'All fields are required' });
+    }
+
     try {
-        // Admin ID default 1 dhora hoyeche (apnar SQL onushare)
-        await db.query("INSERT INTO messages (sender_id, receiver_id, message) VALUES (?, 1, ?)", [sender_id, message]);
-        res.json({ success: true });
+        const [users] = await db.query(`SELECT password FROM users WHERE id = ?`, [userId]);
+        if (users.length === 0) return res.status(404).json({ message: 'User not found' });
+
+        const isMatch = await bcrypt.compare(oldPassword, users[0].password);
+        if (!isMatch) return res.status(400).json({ message: 'Current password is incorrect' });
+
+        if (newPassword.length < 6) {
+            return res.status(400).json({ message: 'Password must be at least 6 characters' });
+        }
+
+        const hashedPass = await bcrypt.hash(newPassword, 10);
+        await db.query(`UPDATE users SET password = ? WHERE id = ?`, [hashedPass, userId]);
+
+        res.json({ success: true, message: 'Password updated successfully' });
     } catch (err) {
+        console.error('PUT /change-password error:', err);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+});
+
+// ─── 4. Messaging – Send ───────────────────────────────────────────────────────
+router.post('/messages/send', async (req, res) => {
+    const { sender_id, receiver_id, message } = req.body;
+
+    if (!sender_id || !message) {
+        return res.status(400).json({ message: 'sender_id and message are required' });
+    }
+
+    const to = receiver_id || 1; // default to admin (id=1)
+
+    try {
+        const [result] = await db.query(
+            `INSERT INTO messages (sender_id, receiver_id, message) VALUES (?, ?, ?)`,
+            [sender_id, to, message]
+        );
+        const [rows] = await db.query(`SELECT * FROM messages WHERE id = ?`, [result.insertId]);
+        res.json({ success: true, message: rows[0] });
+    } catch (err) {
+        console.error('POST /messages/send error:', err);
         res.status(500).json({ error: err.message });
     }
 });
 
+// ─── 5. Messaging – Fetch History ─────────────────────────────────────────────
 router.get('/messages/:userId', async (req, res) => {
     try {
         const userId = req.params.userId;
         const [msgs] = await db.query(`
-            SELECT * FROM messages 
-            WHERE (sender_id = ? AND receiver_id = 1) 
-            OR (sender_id = 1 AND receiver_id = ?) 
-            ORDER BY created_at ASC`, [userId, userId]);
+            SELECT * FROM messages
+            WHERE (sender_id = ? AND receiver_id = 1)
+               OR (sender_id = 1 AND receiver_id = ?)
+            ORDER BY created_at ASC
+        `, [userId, userId]);
         res.json(msgs);
     } catch (err) {
+        console.error('GET /messages/:userId error:', err);
         res.status(500).json({ error: err.message });
     }
 });
 
-router.put('/change-password', async (req, res) => {
-    const { userId, oldPassword, newPassword } = req.body;
+// ─── 6. Documents – Upload ────────────────────────────────────────────────────
+router.post('/documents/upload', upload.single('document'), async (req, res) => {
     try {
-        // 1. User ke find kora
-        const [users] = await db.query('SELECT password FROM users WHERE id = ?', [userId]);
-        if (users.length === 0) return res.status(404).json({ message: "User not found" });
+        const { user_id, doc_type } = req.body;
 
-        // 2. Old password match kora
-        const isMatch = await bcrypt.compare(oldPassword, users[0].password);
-        if (!isMatch) return res.status(400).json({ message: "Current password is incorrect" });
+        if (!req.file) return res.status(400).json({ message: 'No file uploaded' });
+        if (!user_id || !doc_type) return res.status(400).json({ message: 'user_id and doc_type required' });
 
-        // 3. New password hash kora and save kora
-        const hashedPass = await bcrypt.hash(newPassword, 10);
-        await db.query('UPDATE users SET password = ? WHERE id = ?', [hashedPass, userId]);
+        const filePath = `/uploads/documents/${req.file.filename}`;
 
-        res.json({ message: "Password updated successfully" });
+        // Check if document of this type already exists for the user
+        const [existing] = await db.query(
+            `SELECT id FROM user_documents WHERE user_id = ? AND doc_type = ?`,
+            [user_id, doc_type]
+        );
+
+        if (existing.length > 0) {
+            // Replace existing document
+            await db.query(
+                `UPDATE user_documents
+                 SET file_path = ?, original_name = ?, status = 'uploaded', uploaded_at = NOW()
+                 WHERE user_id = ? AND doc_type = ?`,
+                [filePath, req.file.originalname, user_id, doc_type]
+            );
+        } else {
+            await db.query(
+                `INSERT INTO user_documents (user_id, doc_type, file_path, original_name, status)
+                 VALUES (?, ?, ?, ?, 'uploaded')`,
+                [user_id, doc_type, filePath, req.file.originalname]
+            );
+        }
+
+        res.json({ success: true, message: 'Document uploaded successfully', path: filePath });
     } catch (err) {
-        res.status(500).json({ message: "Internal server error" });
+        console.error('POST /documents/upload error:', err);
+        res.status(500).json({ error: err.message });
     }
 });
 
-router.put('/profile/update', async (req, res) => {
-    // Frontend theke userId pathano hocche, tai eikhane userId e dhorlam
-    const { userId, full_name, passport_number, profession, current_location } = req.body;
-    
+// ─── 7. Documents – Fetch ─────────────────────────────────────────────────────
+router.get('/documents/:userId', async (req, res) => {
     try {
-        // Jodi full_name 'users' table e thake ar baki gula 'user_details' table e:
-        // Ager code e inconsistency chilo, tai ekta single logic set korchi:
-        
-        // Update users table (Full Name)
-        await db.query(`UPDATE users SET full_name = ? WHERE id = ?`, [full_name, userId]);
-
-        // Update user_details table (Other Info)
-        // Eikhane ensure hoye nin column name gula database er sathe mil ache kina
-        await db.query(
-            `UPDATE user_details 
-             SET passport_number = ?, profession = ?, current_location = ? 
-             WHERE user_id = ?`, 
-            [passport_number, profession, current_location, userId]
+        const [docs] = await db.query(
+            `SELECT * FROM user_documents WHERE user_id = ? ORDER BY uploaded_at DESC`,
+            [req.params.userId]
         );
-        
-        res.json({ success: true, message: "Profile updated successfully!" });
+        res.json(docs);
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: "Sync error: " + err.message });
+        console.error('GET /documents/:userId error:', err);
+        // Table may not exist yet – return empty array gracefully
+        res.json([]);
     }
 });
 

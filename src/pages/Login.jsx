@@ -37,7 +37,7 @@ const Login = () => {
             localStorage.setItem('source', res.data.source); // 'users' or 'b2b_partners'
 
             const userData = {
-                id: res.data.id,
+                id: res.data.user.id,  // ← res.data.id ছিল, এটাই bug
                 name: res.data.user.name || email.split('@')[0],
                 email: email,
                 role: res.data.role,

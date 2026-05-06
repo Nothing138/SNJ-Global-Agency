@@ -5,41 +5,55 @@ import {
     Phone, UserCircle, PlusCircle, Bell, FileText, Upload, CheckCircle,
     XCircle, Clock, AlertCircle, ChevronRight, Download, Globe,
     CreditCard, RefreshCw, MessageSquare, Star, Shield, Activity,
-    MoreHorizontal, EyeOff, Loader, ArrowRight, Info, Calendar
+    MoreHorizontal, EyeOff, Loader, ArrowRight, Info, Calendar,
+    Edit2, Save, X, Mail, MapPin, Hash, Fingerprint
 } from 'lucide-react';
 import Navbar from '../../components/Navbar';
 import io from 'socket.io-client';
 import { toast, Toaster } from 'react-hot-toast';
 
-const BASE_URL = "https://snj-global-agency-backend.onrender.com";
-const socket = io.connect(BASE_URL);
+const BASE_URL = "http://localhost:5000";
+
+// JWT থেকে user id বের করার helper
+const getUserId = (user) => {
+    if (user?.id) return user.id;
+    // token থেকে decode করো
+    try {
+        const token = localStorage.getItem('token');
+        if (token) {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            return payload.id;
+        }
+    } catch(e) {}
+    return null;
+};
 
 // ─── Status Config ─────────────────────────────────────────────────────────────
 const STATUS_CONFIG = {
-    submitted:         { color: 'text-amber-600',  bg: 'bg-amber-50',   border: 'border-amber-200',  dot: 'bg-amber-400',  label: 'Submitted' },
-    under_review:      { color: 'text-blue-600',   bg: 'bg-blue-50',    border: 'border-blue-200',   dot: 'bg-blue-400',   label: 'Under Review' },
-    processing:        { color: 'text-indigo-600', bg: 'bg-indigo-50',  border: 'border-indigo-200', dot: 'bg-indigo-400', label: 'Processing' },
-    embassy_review:    { color: 'text-purple-600', bg: 'bg-purple-50',  border: 'border-purple-200', dot: 'bg-purple-400', label: 'Embassy Review' },
-    approved:          { color: 'text-green-600',  bg: 'bg-green-50',   border: 'border-green-200',  dot: 'bg-green-500',  label: 'Approved' },
-    accept:            { color: 'text-green-600',  bg: 'bg-green-50',   border: 'border-green-200',  dot: 'bg-green-500',  label: 'Accepted' },
-    rejected:          { color: 'text-red-600',    bg: 'bg-red-50',     border: 'border-red-200',    dot: 'bg-red-500',    label: 'Rejected' },
-    reject:            { color: 'text-red-600',    bg: 'bg-red-50',     border: 'border-red-200',    dot: 'bg-red-500',    label: 'Rejected' },
-    on_hold:           { color: 'text-orange-600', bg: 'bg-orange-50',  border: 'border-orange-200', dot: 'bg-orange-400', label: 'On Hold' },
-    hold:              { color: 'text-orange-600', bg: 'bg-orange-50',  border: 'border-orange-200', dot: 'bg-orange-400', label: 'On Hold' },
-    requested:         { color: 'text-amber-600',  bg: 'bg-amber-50',   border: 'border-amber-200',  dot: 'bg-amber-400',  label: 'Requested' },
-    documents_verified:{ color: 'text-cyan-600',   bg: 'bg-cyan-50',    border: 'border-cyan-200',   dot: 'bg-cyan-400',   label: 'Docs Verified' },
-    decision:          { color: 'text-slate-600',  bg: 'bg-slate-50',   border: 'border-slate-200',  dot: 'bg-slate-400',  label: 'Decision' },
+    submitted:          { color: 'text-amber-600',  bg: 'bg-amber-50',   border: 'border-amber-200',  dot: 'bg-amber-400',  label: 'Submitted' },
+    under_review:       { color: 'text-blue-600',   bg: 'bg-blue-50',    border: 'border-blue-200',   dot: 'bg-blue-400',   label: 'Under Review' },
+    processing:         { color: 'text-indigo-600', bg: 'bg-indigo-50',  border: 'border-indigo-200', dot: 'bg-indigo-400', label: 'Processing' },
+    embassy_review:     { color: 'text-purple-600', bg: 'bg-purple-50',  border: 'border-purple-200', dot: 'bg-purple-400', label: 'Embassy Review' },
+    approved:           { color: 'text-green-600',  bg: 'bg-green-50',   border: 'border-green-200',  dot: 'bg-green-500',  label: 'Approved' },
+    accept:             { color: 'text-green-600',  bg: 'bg-green-50',   border: 'border-green-200',  dot: 'bg-green-500',  label: 'Accepted' },
+    rejected:           { color: 'text-red-600',    bg: 'bg-red-50',     border: 'border-red-200',    dot: 'bg-red-500',    label: 'Rejected' },
+    reject:             { color: 'text-red-600',    bg: 'bg-red-50',     border: 'border-red-200',    dot: 'bg-red-500',    label: 'Rejected' },
+    on_hold:            { color: 'text-orange-600', bg: 'bg-orange-50',  border: 'border-orange-200', dot: 'bg-orange-400', label: 'On Hold' },
+    hold:               { color: 'text-orange-600', bg: 'bg-orange-50',  border: 'border-orange-200', dot: 'bg-orange-400', label: 'On Hold' },
+    requested:          { color: 'text-amber-600',  bg: 'bg-amber-50',   border: 'border-amber-200',  dot: 'bg-amber-400',  label: 'Requested' },
+    documents_verified: { color: 'text-cyan-600',   bg: 'bg-cyan-50',    border: 'border-cyan-200',   dot: 'bg-cyan-400',   label: 'Docs Verified' },
+    decision:           { color: 'text-slate-600',  bg: 'bg-slate-50',   border: 'border-slate-200',  dot: 'bg-slate-400',  label: 'Decision' },
 };
 
 const getStatus = (s) => STATUS_CONFIG[s?.toLowerCase()?.replace(/ /g, '_')] || STATUS_CONFIG['requested'];
 
 // ─── Timeline Steps ─────────────────────────────────────────────────────────────
 const TIMELINE_STEPS = [
-    { key: 'submitted',          label: 'Submitted',          icon: FileText },
-    { key: 'under_review',       label: 'Docs Verified',      icon: CheckCircle },
-    { key: 'processing',         label: 'Processing',         icon: Activity },
-    { key: 'embassy_review',     label: 'Embassy / Co. Review', icon: Globe },
-    { key: 'approved',           label: 'Decision',           icon: Star },
+    { key: 'submitted',      label: 'Submitted',            icon: FileText },
+    { key: 'under_review',   label: 'Docs Verified',        icon: CheckCircle },
+    { key: 'processing',     label: 'Processing',           icon: Activity },
+    { key: 'embassy_review', label: 'Embassy / Co. Review', icon: Globe },
+    { key: 'approved',       label: 'Decision',             icon: Star },
 ];
 
 const getStepIndex = (status) => {
@@ -52,52 +66,58 @@ const getStepIndex = (status) => {
     return 0;
 };
 
+// ─── Socket singleton (module-level so it's not recreated on re-render) ────────
+let socket = null;
+const getSocket = () => {
+    if (!socket) {
+        socket = io(BASE_URL, { transports: ['websocket', 'polling'] });
+    }
+    return socket;
+};
+
 // ─── Main Component ─────────────────────────────────────────────────────────────
 const UserProfile = () => {
-    const [data, setData]           = useState(null);
-    const [loading, setLoading]     = useState(true);
-    const [activeTab, setActiveTab] = useState('overview');
-    const [newContact, setNewContact]           = useState("");
-    const [isSubmittingContact, setIsSubmittingContact] = useState(false);
-    const [notifications, setNotifications]     = useState([]);
-    const [showNotifs, setShowNotifs]           = useState(false);
-    const [selectedApp, setSelectedApp]         = useState(null);
-    const [unreadCount, setUnreadCount]         = useState(0);
+    const [data, setData]             = useState(null);
+    const [loading, setLoading]       = useState(true);
+    const [activeTab, setActiveTab]   = useState('overview');
+    const [notifications, setNotifications] = useState([]);
+    const [showNotifs, setShowNotifs] = useState(false);
+    const [selectedApp, setSelectedApp] = useState(null);
+    const [unreadCount, setUnreadCount] = useState(0);
 
     const user = JSON.parse(localStorage.getItem('user'));
+    const userId = getUserId(user); // ← এটা দিয়ে সব জায়গায় user.id replace করো
+
+    const sock = getSocket();
 
     useEffect(() => {
         if (user) {
             fetchProfile();
-            socket.emit("join_chat", user.id);
+            // Join room using user id as room name
+            sock.emit('join_chat', { room: String(user.id) });
 
-            // Listen for real-time status updates
-            socket.on("status_update", (update) => {
+            sock.on('status_update', (update) => {
                 addNotification({
-                    id: Date.now(),
-                    type: 'status',
+                    id: Date.now(), type: 'status',
                     message: `Your ${update.type} application status updated to "${update.status}"`,
-                    time: new Date(),
-                    read: false,
+                    time: new Date(), read: false,
                 });
                 fetchProfile();
                 toast.success(`Status Updated: ${update.status}`);
             });
 
-            socket.on("document_update", (update) => {
+            sock.on('document_update', (update) => {
                 addNotification({
-                    id: Date.now(),
-                    type: 'document',
+                    id: Date.now(), type: 'document',
                     message: `Document "${update.name}" was ${update.status}`,
-                    time: new Date(),
-                    read: false,
+                    time: new Date(), read: false,
                 });
                 fetchProfile();
             });
         }
         return () => {
-            socket.off("status_update");
-            socket.off("document_update");
+            sock.off('status_update');
+            sock.off('document_update');
         };
     }, []);
 
@@ -106,7 +126,8 @@ const UserProfile = () => {
             const res = await axios.get(`${BASE_URL}/api/users/profile/${user.id}`);
             setData(res.data);
         } catch (err) {
-            console.error("Error fetching data", err);
+            console.error('Error fetching profile', err);
+            toast.error('Failed to load profile');
         } finally {
             setLoading(false);
         }
@@ -117,27 +138,6 @@ const UserProfile = () => {
         setUnreadCount(prev => prev + 1);
     };
 
-    const handleUpdateContact = async (e) => {
-        e.preventDefault();
-        if (!newContact) return toast.error("Please enter a number");
-        setIsSubmittingContact(true);
-        try {
-            await axios.put(`${BASE_URL}/api/users/profile/update`, {
-                userId: user.id,
-                contact_number: newContact,
-                full_name: data?.profile?.full_name
-            });
-            toast.success("Contact number updated!");
-            setNewContact("");
-            fetchProfile();
-        } catch (err) {
-            toast.error("Failed to update contact");
-        } finally {
-            setIsSubmittingContact(false);
-        }
-    };
-
-    // Calculate profile completion
     const calcCompletion = () => {
         if (!data?.profile) return 0;
         const fields = ['full_name', 'email', 'phone_number', 'passport_number', 'nid_number', 'nationality', 'address'];
@@ -147,7 +147,7 @@ const UserProfile = () => {
 
     const TABS = [
         { id: 'overview',     label: 'Command Center', icon: ShieldCheck },
-        { id: 'applications', label: 'My Journey',     icon: Activity },
+        //{ id: 'applications', label: 'My Journey',     icon: Activity },
         { id: 'documents',    label: 'Documents',      icon: FileText },
         { id: 'chat',         label: 'Direct Support', icon: MessageSquare },
         { id: 'security',     label: 'Security',       icon: Lock },
@@ -161,22 +161,21 @@ const UserProfile = () => {
                 .font-body    { font-family: 'Inter', system-ui, sans-serif; }
                 .glass { background: rgba(255,255,255,0.85); backdrop-filter: blur(20px); }
                 .gold-line::before { content:''; position:absolute; left:0; top:0; bottom:0; width:3px; background: linear-gradient(180deg,#EAB308,#F59E0B); border-radius:999px; }
-                .step-connector { background: linear-gradient(90deg, #EAB308 0%, #EAB308 var(--fill), #E2E8F0 var(--fill), #E2E8F0 100%); }
                 .shimmer { background: linear-gradient(90deg,#f0f4f8 25%,#e2e8f0 50%,#f0f4f8 75%); background-size:200% 100%; animation: shimmer 1.5s infinite; }
                 @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
                 .notif-dot { animation: pulse 2s infinite; }
                 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
                 .card-hover { transition: all 0.3s cubic-bezier(.4,0,.2,1); }
                 .card-hover:hover { transform: translateY(-2px); box-shadow: 0 20px 40px rgba(11,31,58,0.1); }
-                .tab-active-line { position:relative; }
-                .tab-active-line::after { content:''; position:absolute; bottom:0; left:50%; transform:translateX(-50%); width:20px; height:2px; background:#EAB308; border-radius:999px; }
                 .progress-bar { transition: width 1s cubic-bezier(.4,0,.2,1); }
                 .fade-up { animation: fadeUp 0.5s ease both; }
                 @keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
                 .skeleton { border-radius:8px; }
+                .edit-input { width:100%; background:#F8FAFC; border:1.5px solid #E5E7EB; border-radius:12px; padding:8px 14px; font-size:13px; outline:none; color:#0F172A; transition:border-color 0.2s; font-family:'Inter',sans-serif; }
+                .edit-input:focus { border-color:#0B1F3A; }
             `}</style>
             <Toaster position="top-right" reverseOrder={false} toastOptions={{
-                style: { fontFamily:'Inter,sans-serif', fontSize:'13px', background:'#0B1F3A', color:'#EAB308' }
+                style: { fontFamily: 'Inter,sans-serif', fontSize: '13px', background: '#0B1F3A', color: '#EAB308' }
             }} />
             <Navbar />
 
@@ -192,7 +191,6 @@ const UserProfile = () => {
                             </h1>
                         </div>
                         <div className="flex items-center gap-3">
-                            {/* Notification Bell */}
                             <div className="relative">
                                 <button
                                     onClick={() => { setShowNotifs(!showNotifs); setUnreadCount(0); }}
@@ -234,7 +232,6 @@ const UserProfile = () => {
 
                         {/* ── Sidebar ────────────────────────────────── */}
                         <div className="lg:col-span-1 space-y-4">
-                            {/* Profile Card */}
                             <div className="glass border border-white/60 p-6 rounded-[2rem] text-center shadow-sm sticky top-24">
                                 <div className="relative w-24 h-24 mx-auto mb-4">
                                     <div className="w-full h-full bg-gradient-to-br from-[#0B1F3A] to-[#1a3a6b] rounded-[1.5rem] flex items-center justify-center shadow-xl">
@@ -253,13 +250,13 @@ const UserProfile = () => {
                                 ) : (
                                     <>
                                         <h2 className="font-display text-xl font-bold text-[#0B1F3A] leading-tight">
-                                            {data?.profile?.full_name || "Your Name"}
+                                            {data?.profile?.full_name || 'Your Name'}
                                         </h2>
                                         <p className="text-[9px] font-body font-semibold text-[#64748B] tracking-[0.2em] uppercase mb-1">
-                                            {data?.profile?.nationality || "Global Traveler"}
+                                            {data?.profile?.nationality || 'Global Traveler'}
                                         </p>
                                         <p className="text-[9px] font-body text-[#EAB308] font-bold tracking-widest uppercase mb-4">
-                                            {data?.profile?.role || "Client"}
+                                            {data?.profile?.role || 'Client'}
                                         </p>
                                     </>
                                 )}
@@ -278,7 +275,6 @@ const UserProfile = () => {
                                     </div>
                                 </div>
 
-                                {/* Nav Tabs */}
                                 <nav className="space-y-1.5">
                                     {TABS.map(tab => {
                                         const Icon = tab.icon;
@@ -305,10 +301,10 @@ const UserProfile = () => {
                                 <p className="text-[9px] font-bold uppercase tracking-widest text-[#64748B] mb-3">Applications</p>
                                 <div className="space-y-2">
                                     {[
-                                        { icon: Plane,    label: 'Visas',    count: data?.stats?.visas?.length || 0,    color: 'text-blue-500' },
-                                        { icon: Briefcase,label: 'Jobs',     count: data?.stats?.jobs?.length || 0,     color: 'text-purple-500' },
-                                        { icon: Map,      label: 'Tours',    count: data?.stats?.tours?.length || 0,    color: 'text-green-500' },
-                                        { icon: Ticket,   label: 'Flights',  count: data?.stats?.flights?.length || 0,  color: 'text-amber-500' },
+                                        { icon: Plane,     label: 'Visas',   count: data?.stats?.visas?.length || 0,   color: 'text-blue-500' },
+                                        { icon: Briefcase, label: 'Jobs',    count: data?.stats?.jobs?.length || 0,    color: 'text-purple-500' },
+                                        { icon: Map,       label: 'Tours',   count: data?.stats?.tours?.length || 0,   color: 'text-green-500' },
+                                        { icon: Ticket,    label: 'Flights', count: data?.stats?.flights?.length || 0, color: 'text-amber-500' },
                                     ].map(s => (
                                         <div key={s.label} className="flex items-center justify-between">
                                             <div className="flex items-center gap-2">
@@ -329,11 +325,9 @@ const UserProfile = () => {
                                     {activeTab === 'overview' && (
                                         <Overview
                                             data={data}
-                                            onContactSubmit={handleUpdateContact}
-                                            contactVal={newContact}
-                                            setContactVal={setNewContact}
-                                            isSubmitting={isSubmittingContact}
+                                            user={user}
                                             completion={calcCompletion()}
+                                            onRefresh={fetchProfile}
                                         />
                                     )}
                                     {activeTab === 'applications' && (
@@ -346,8 +340,12 @@ const UserProfile = () => {
                                     {activeTab === 'documents' && (
                                         <DocumentManager user={user} data={data} />
                                     )}
-                                    {activeTab === 'chat' && <SupportChat user={user} addNotification={addNotification} />}
-                                    {activeTab === 'security' && <SecuritySettings user={user} />}
+                                    {activeTab === 'chat' && (
+                                        <SupportChat user={user} addNotification={addNotification} socket={sock} />
+                                    )}
+                                    {activeTab === 'security' && (
+                                        <SecuritySettings user={user} data={data} onRefresh={fetchProfile} />
+                                    )}
                                 </>
                             )}
                         </div>
@@ -362,7 +360,7 @@ const UserProfile = () => {
 const SkeletonLoader = () => (
     <div className="space-y-6 fade-up">
         <div className="grid grid-cols-3 gap-4">
-            {[1,2,3].map(i => <div key={i} className="h-28 shimmer skeleton rounded-[1.5rem]" />)}
+            {[1, 2, 3].map(i => <div key={i} className="h-28 shimmer skeleton rounded-[1.5rem]" />)}
         </div>
         <div className="h-64 shimmer skeleton rounded-[2rem]" />
         <div className="h-48 shimmer skeleton rounded-[2rem]" />
@@ -370,15 +368,44 @@ const SkeletonLoader = () => (
 );
 
 // ─── Overview / Command Center ──────────────────────────────────────────────────
-const Overview = ({ data, onContactSubmit, contactVal, setContactVal, isSubmitting, completion }) => {
+const Overview = ({ data, user, completion, onRefresh }) => {
+    const [editMode, setEditMode] = useState(false);
+    const [saving, setSaving]     = useState(false);
+    const [form, setForm]         = useState({
+        full_name:       data?.profile?.full_name || '',
+        phone_number:    data?.profile?.phone_number || '',
+        nationality:     data?.profile?.nationality || '',
+        passport_number: data?.profile?.passport_number || '',
+        nid_number:      data?.profile?.nid_number || '',
+        address:         data?.profile?.address || '',
+    });
+
     const maskPassport = (num) => {
         if (!num) return 'N/A';
-        return num.slice(0, 3) + '•'.repeat(num.length - 5) + num.slice(-2);
+        return num.slice(0, 2) + '•'.repeat(Math.max(num.length - 4, 0)) + num.slice(-2);
+    };
+
+    const handleSave = async () => {
+        setSaving(true);
+        try {
+            await axios.put(`${BASE_URL}/api/users/profile/update`, {
+                userId: user.id,
+                ...form,
+                contact_number: form.phone_number,
+            });
+            toast.success('Profile updated successfully!');
+            setEditMode(false);
+            onRefresh();
+        } catch (err) {
+            toast.error(err.response?.data?.message || 'Failed to update profile');
+        } finally {
+            setSaving(false);
+        }
     };
 
     const allApps = [
-        ...(data?.stats?.visas || []).map(v => ({ ...v, appType: 'Visa', icon: Plane, title: v.destination_country, sub: v.visa_type })),
-        ...(data?.stats?.jobs || []).map(j => ({ ...j, appType: 'Job', icon: Briefcase, title: j.job_title, sub: j.company_name })),
+        ...(data?.stats?.visas || []).map(v => ({ ...v, appType: 'Visa',   icon: Plane,     title: v.destination_country, sub: v.visa_type })),
+        ...(data?.stats?.jobs  || []).map(j => ({ ...j, appType: 'Job',    icon: Briefcase, title: j.job_title,           sub: j.company_name })),
     ].slice(0, 3);
 
     return (
@@ -428,7 +455,6 @@ const Overview = ({ data, onContactSubmit, contactVal, setContactVal, isSubmitti
                                         <span className={`text-[10px] font-bold ${st.color}`}>{st.label}</span>
                                     </div>
                                 </div>
-                                {/* Mini progress */}
                                 <div className="mt-3 flex items-center gap-1">
                                     {TIMELINE_STEPS.map((step, idx) => {
                                         const current = getStepIndex(app.application_status || app.status);
@@ -449,65 +475,131 @@ const Overview = ({ data, onContactSubmit, contactVal, setContactVal, isSubmitti
                 </div>
             )}
 
-            {/* Personnel Identity */}
+            {/* Personnel Identity (Editable) */}
             <div className="glass border border-white/60 p-8 rounded-[2rem] shadow-sm">
                 <div className="flex items-center justify-between mb-6">
                     <h3 className="font-display text-2xl font-bold text-[#0B1F3A] flex items-center gap-3">
                         <ShieldCheck className="text-[#EAB308]" size={24} /> Personnel Identity
                     </h3>
-                    <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 bg-green-400 rounded-full" />
-                        <span className="text-[10px] font-semibold text-green-600 uppercase tracking-widest">Verified</span>
+                    <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 bg-green-400 rounded-full" />
+                            <span className="text-[10px] font-semibold text-green-600 uppercase tracking-widest">Verified</span>
+                        </div>
+                        {!editMode ? (
+                            <button
+                                onClick={() => setEditMode(true)}
+                                className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-[#0B1F3A] bg-[#F0F4F8] hover:bg-[#EAB308]/10 border border-[#E5E7EB] hover:border-[#EAB308] px-3 py-2 rounded-xl transition-all"
+                            >
+                                <Edit2 size={12} /> Edit
+                            </button>
+                        ) : (
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={() => setEditMode(false)}
+                                    className="flex items-center gap-1.5 text-[10px] font-bold uppercase px-3 py-2 rounded-xl bg-[#F0F4F8] text-[#64748B] hover:bg-red-50 hover:text-red-600 border border-[#E5E7EB] transition-all"
+                                >
+                                    <X size={12} /> Cancel
+                                </button>
+                                <button
+                                    onClick={handleSave}
+                                    disabled={saving}
+                                    className="flex items-center gap-1.5 text-[10px] font-bold uppercase px-4 py-2 rounded-xl bg-[#0B1F3A] text-[#EAB308] hover:opacity-90 transition-all disabled:opacity-60"
+                                >
+                                    {saving ? <Loader size={12} className="animate-spin" /> : <Save size={12} />}
+                                    {saving ? 'Saving...' : 'Save'}
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <InfoItem icon={<UserCircle size={13} />} label="Legal Full Name"   value={data?.profile?.full_name} />
-                    <InfoItem icon={<Globe size={13} />}       label="Nationality"        value={data?.profile?.nationality} />
-                    <InfoItem icon={<CreditCard size={13} />}  label="Passport Number"   value={maskPassport(data?.profile?.passport_number)} secure />
-                    <InfoItem icon={<Shield size={13} />}      label="National ID"        value={data?.profile?.nid_number ? '••••' + data.profile.nid_number.slice(-4) : 'N/A'} secure />
+                    {/* Full Name */}
+                    <EditableInfoItem
+                        icon={<UserCircle size={13} />}
+                        label="Legal Full Name"
+                        value={form.full_name}
+                        field="full_name"
+                        editMode={editMode}
+                        onChange={(val) => setForm(p => ({ ...p, full_name: val }))}
+                    />
 
-                    {/* Phone / Add Contact */}
+                    {/* Nationality */}
+                    <EditableInfoItem
+                        icon={<Globe size={13} />}
+                        label="Nationality"
+                        value={form.nationality}
+                        field="nationality"
+                        editMode={editMode}
+                        onChange={(val) => setForm(p => ({ ...p, nationality: val }))}
+                    />
+
+                    {/* Passport */}
+                    <EditableInfoItem
+                        icon={<CreditCard size={13} />}
+                        label="Passport Number"
+                        value={editMode ? form.passport_number : maskPassport(form.passport_number)}
+                        field="passport_number"
+                        editMode={editMode}
+                        secure={!editMode}
+                        onChange={(val) => setForm(p => ({ ...p, passport_number: val }))}
+                    />
+
+                    {/* NID */}
+                    <EditableInfoItem
+                        icon={<Fingerprint size={13} />}
+                        label="National ID"
+                        value={editMode ? form.nid_number : (form.nid_number ? '••••' + form.nid_number.slice(-4) : 'N/A')}
+                        field="nid_number"
+                        editMode={editMode}
+                        secure={!editMode}
+                        onChange={(val) => setForm(p => ({ ...p, nid_number: val }))}
+                    />
+
+                    {/* Phone */}
+                    <EditableInfoItem
+                        icon={<Phone size={13} />}
+                        label="Primary Contact"
+                        value={form.phone_number}
+                        field="phone_number"
+                        editMode={editMode}
+                        placeholder="Add contact number"
+                        onChange={(val) => setForm(p => ({ ...p, phone_number: val }))}
+                    />
+
+                    {/* Email (read-only always) */}
                     <div>
-                        <p className="text-[9px] font-bold text-[#EAB308] uppercase tracking-widest mb-2 flex items-center gap-2">
-                            <Phone size={11} /> Primary Contact
+                        <p className="text-[9px] font-bold text-[#EAB308] uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
+                            <Mail size={13} /> Email Identity
                         </p>
-                        {data?.profile?.phone_number ? (
-                            <p className="text-base font-bold text-[#0F172A]">{data.profile.phone_number}</p>
-                        ) : (
-                            <form onSubmit={onContactSubmit} className="flex gap-2 mt-1">
-                                <input
-                                    type="text"
-                                    placeholder="Add contact number"
-                                    value={contactVal}
-                                    onChange={(e) => setContactVal(e.target.value)}
-                                    className="flex-1 bg-[#F8FAFC] border border-[#E5E7EB] rounded-xl px-3 py-2 text-xs outline-none focus:border-[#0B1F3A] text-[#0F172A]"
-                                />
-                                <button
-                                    type="submit"
-                                    disabled={isSubmitting}
-                                    className="bg-[#0B1F3A] text-[#EAB308] p-2 rounded-xl hover:opacity-90 transition-opacity"
-                                >
-                                    {isSubmitting ? <Loader size={15} className="animate-spin" /> : <PlusCircle size={15} />}
-                                </button>
-                            </form>
-                        )}
+                        <p className="text-sm font-bold text-[#0F172A]">{data?.profile?.email || 'Not specified'}</p>
+                        <p className="text-[9px] text-[#94A3B8] mt-0.5">Email cannot be changed here</p>
                     </div>
 
-                    <InfoItem icon={<User size={13} />} label="Email Identity" value={data?.profile?.email} />
-                    {data?.profile?.address && (
-                        <div className="md:col-span-2">
-                            <InfoItem icon={<Globe size={13} />} label="Address" value={data?.profile?.address} />
-                        </div>
-                    )}
+                    {/* Address */}
+                    <div className="md:col-span-2">
+                        <EditableInfoItem
+                            icon={<MapPin size={13} />}
+                            label="Address"
+                            value={form.address}
+                            field="address"
+                            editMode={editMode}
+                            placeholder="Your address"
+                            onChange={(val) => setForm(p => ({ ...p, address: val }))}
+                        />
+                    </div>
                 </div>
 
-                {completion < 100 && (
+                {completion < 100 && !editMode && (
                     <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-2xl flex items-start gap-3">
                         <Info size={16} className="text-amber-600 flex-shrink-0 mt-0.5" />
                         <div>
                             <p className="text-xs font-bold text-amber-700">Complete Your Profile</p>
-                            <p className="text-[11px] text-amber-600 mt-0.5">A complete profile speeds up application processing. {100 - completion}% remaining.</p>
+                            <p className="text-[11px] text-amber-600 mt-0.5">
+                                A complete profile speeds up application processing. {100 - completion}% remaining.{' '}
+                                <button onClick={() => setEditMode(true)} className="underline font-bold">Edit now</button>
+                            </p>
                         </div>
                     </div>
                 )}
@@ -516,27 +608,45 @@ const Overview = ({ data, onContactSubmit, contactVal, setContactVal, isSubmitti
     );
 };
 
+// ─── Editable Info Item ─────────────────────────────────────────────────────────
+const EditableInfoItem = ({ icon, label, value, field, editMode, onChange, secure, placeholder }) => (
+    <div>
+        <p className="text-[9px] font-bold text-[#EAB308] uppercase tracking-widest mb-1.5 flex items-center gap-1.5 font-body">
+            {icon} {label}
+        </p>
+        {editMode ? (
+            <input
+                className="edit-input"
+                value={value || ''}
+                onChange={(e) => onChange(e.target.value)}
+                placeholder={placeholder || `Enter ${label.toLowerCase()}`}
+            />
+        ) : (
+            <p className={`text-sm font-bold text-[#0F172A] font-body ${secure ? 'font-mono tracking-wider' : ''}`}>
+                {value || 'Not specified'}
+            </p>
+        )}
+    </div>
+);
+
 // ─── Applications / My Journey ──────────────────────────────────────────────────
-const Applications = ({ data, selectedApp, setSelectedApp }) => {
+/*const Applications = ({ data, selectedApp, setSelectedApp }) => {
     const [subTab, setSubTab] = useState('visa');
 
     const tabs = [
-        { id: 'visa',   label: 'Visa',    icon: Plane,     items: data?.stats?.visas || [] },
-        { id: 'job',    label: 'Job',     icon: Briefcase, items: data?.stats?.jobs || [] },
-        { id: 'tour',   label: 'Tour',    icon: Map,       items: data?.stats?.tours || [] },
-        { id: 'flight', label: 'Flight',  icon: Ticket,    items: data?.stats?.flights || [] },
+        { id: 'visa',   label: 'Visa',   icon: Plane,     items: data?.stats?.visas || [] },
+        { id: 'job',    label: 'Job',    icon: Briefcase, items: data?.stats?.jobs || [] },
+        { id: 'tour',   label: 'Tour',   icon: Map,       items: data?.stats?.tours || [] },
+        { id: 'flight', label: 'Flight', icon: Ticket,    items: data?.stats?.flights || [] },
     ];
 
-    const getItems = () => {
-        const tab = tabs.find(t => t.id === subTab);
-        return tab?.items || [];
-    };
+    const getItems = () => tabs.find(t => t.id === subTab)?.items || [];
 
     const mapItem = (item) => {
         switch (subTab) {
             case 'visa':   return { title: item.destination_country, sub: item.visa_type, status: item.application_status, date: item.submitted_at, note: item.admin_note, icon: Plane, country: item.destination_country, type: 'Visa' };
             case 'job':    return { title: item.job_title, sub: item.company_name, status: item.status, date: item.applied_at, note: item.admin_note, icon: Briefcase, country: item.country, type: 'Job' };
-            case 'tour':   return { title: item.tour_name, sub: item.destination, status: item.status, date: item.booked_at, note: item.admin_note, icon: Map, country: item.destination, type: 'Tour' };
+            case 'tour':   return { title: item.tour_name || item.title, sub: item.destination, status: item.status, date: item.booked_at, note: item.admin_note, icon: Map, country: item.destination, type: 'Tour' };
             case 'flight': return { title: `${item.departure_city} → ${item.destination_city}`, sub: `$${item.total_cost || '0'}`, status: item.status, date: item.travel_date, note: item.admin_note, icon: Ticket, country: item.destination_city, type: 'Flight' };
             default:       return {};
         }
@@ -548,7 +658,6 @@ const Applications = ({ data, selectedApp, setSelectedApp }) => {
 
     return (
         <div className="space-y-5 fade-up font-body">
-            {/* Sub tabs */}
             <div className="glass border border-white/60 p-1.5 rounded-[1.5rem] shadow-sm flex gap-1.5">
                 {tabs.map(tab => {
                     const Icon = tab.icon;
@@ -561,12 +670,16 @@ const Applications = ({ data, selectedApp, setSelectedApp }) => {
                             }`}
                         >
                             <Icon size={12} /> {tab.label}
+                            {tab.items.length > 0 && (
+                                <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold ${subTab === tab.id ? 'bg-[#EAB308]/20 text-[#EAB308]' : 'bg-[#E5E7EB] text-[#64748B]'}`}>
+                                    {tab.items.length}
+                                </span>
+                            )}
                         </button>
                     );
                 })}
             </div>
 
-            {/* Application cards */}
             <div className="space-y-3">
                 {getItems().length === 0 ? (
                     <div className="glass border border-white/60 rounded-[2rem] p-16 text-center shadow-sm">
@@ -604,7 +717,7 @@ const Applications = ({ data, selectedApp, setSelectedApp }) => {
                                     </div>
                                 </div>
 
-                                {/* Timeline Progress */}
+                                {/* Timeline Progress 
                                 <div className="relative">
                                     <div className="flex items-center justify-between relative z-10">
                                         {TIMELINE_STEPS.map((step, idx) => {
@@ -629,7 +742,6 @@ const Applications = ({ data, selectedApp, setSelectedApp }) => {
                                             );
                                         })}
                                     </div>
-                                    {/* Connector line */}
                                     <div className="absolute top-3.5 left-3.5 right-3.5 h-0.5 bg-[#E2E8F0] -z-0">
                                         <div
                                             className="h-full bg-gradient-to-r from-[#0B1F3A] to-[#EAB308] transition-all duration-700"
@@ -638,11 +750,10 @@ const Applications = ({ data, selectedApp, setSelectedApp }) => {
                                     </div>
                                 </div>
 
-                                {/* Footer meta */}
                                 <div className="flex items-center justify-between mt-4 pt-3 border-t border-[#F0F4F8]">
                                     <div className="flex items-center gap-1.5 text-[10px] text-[#64748B]">
                                         <Calendar size={10} />
-                                        {mapped.date ? new Date(mapped.date).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' }) : 'Date not set'}
+                                        {mapped.date ? new Date(mapped.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Date not set'}
                                     </div>
                                     {mapped.note && (
                                         <div className="flex items-center gap-1.5 text-[10px] text-[#0B1F3A] font-semibold">
@@ -660,11 +771,10 @@ const Applications = ({ data, selectedApp, setSelectedApp }) => {
             </div>
         </div>
     );
-};
+};*/
 
 // ─── Application Detail ─────────────────────────────────────────────────────────
 const ApplicationDetail = ({ app, onBack }) => {
-    const st = getStatus(app.status);
     const stepIdx = getStepIndex(app.status);
 
     return (
@@ -673,7 +783,6 @@ const ApplicationDetail = ({ app, onBack }) => {
                 <ChevronRight size={14} className="rotate-180" /> Back to Applications
             </button>
 
-            {/* Header */}
             <div className="glass border border-white/60 p-7 rounded-[2rem] shadow-sm">
                 <div className="flex items-start justify-between mb-6">
                     <div>
@@ -685,15 +794,14 @@ const ApplicationDetail = ({ app, onBack }) => {
                 </div>
 
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
-                    <DetailMeta label="Type"       value={app.type} />
-                    <DetailMeta label="Country"    value={app.country || 'N/A'} />
-                    <DetailMeta label="Submitted"  value={app.date ? new Date(app.date).toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric' }) : 'N/A'} />
-                    <DetailMeta label="Handled by" value="SNJ Admin Team" highlight />
+                    <DetailMeta label="Type"        value={app.type} />
+                    <DetailMeta label="Country"     value={app.country || 'N/A'} />
+                    <DetailMeta label="Submitted"   value={app.date ? new Date(app.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : 'N/A'} />
+                    <DetailMeta label="Handled by"  value="SNJ Admin Team" highlight />
                     <DetailMeta label="Last Updated" value={new Date().toLocaleDateString()} />
-                    <DetailMeta label="Next Step" value={TIMELINE_STEPS[Math.min(stepIdx + 1, TIMELINE_STEPS.length - 1)]?.label || 'Awaiting Decision'} />
+                    <DetailMeta label="Next Step"   value={TIMELINE_STEPS[Math.min(stepIdx + 1, TIMELINE_STEPS.length - 1)]?.label || 'Awaiting Decision'} />
                 </div>
 
-                {/* Full Timeline */}
                 <div>
                     <p className="text-[10px] font-bold uppercase tracking-widest text-[#64748B] mb-5">Application Timeline</p>
                     <div className="space-y-0">
@@ -714,7 +822,7 @@ const ApplicationDetail = ({ app, onBack }) => {
                                         </div>
                                         {!isLast && <div className={`w-0.5 h-8 mt-1 ${done ? 'bg-[#0B1F3A]' : 'bg-[#E2E8F0]'}`} />}
                                     </div>
-                                    <div className={`pb-6 ${isLast ? '' : ''}`}>
+                                    <div className="pb-6">
                                         <p className={`text-sm font-bold ${done ? 'text-[#0B1F3A]' : 'text-[#CBD5E1]'}`}>{step.label}</p>
                                         {current && (
                                             <p className="text-[10px] text-[#EAB308] font-semibold mt-0.5 flex items-center gap-1">
@@ -731,7 +839,6 @@ const ApplicationDetail = ({ app, onBack }) => {
                     </div>
                 </div>
 
-                {/* Admin Note */}
                 {app.note && (
                     <div className="mt-4 p-5 bg-[#0B1F3A]/5 border border-[#0B1F3A]/10 rounded-2xl relative gold-line pl-6">
                         <p className="text-[9px] font-bold text-[#EAB308] uppercase tracking-widest mb-1">Admin Note</p>
@@ -739,7 +846,6 @@ const ApplicationDetail = ({ app, onBack }) => {
                     </div>
                 )}
 
-                {/* Next Step Guidance */}
                 <div className="mt-5 p-4 bg-blue-50 border border-blue-100 rounded-2xl flex items-center gap-3">
                     <ArrowRight size={16} className="text-blue-500 flex-shrink-0" />
                     <div>
@@ -758,28 +864,29 @@ const ApplicationDetail = ({ app, onBack }) => {
 
 // ─── Document Manager ───────────────────────────────────────────────────────────
 const DocumentManager = ({ user, data }) => {
-    const [uploads, setUploads] = useState({});
     const [uploading, setUploading] = useState({});
-    const [docs, setDocs] = useState([]);
+    const [docs, setDocs]           = useState([]);
+    const [loadingDocs, setLoadingDocs] = useState(true);
 
-    useEffect(() => {
-        fetchDocuments();
-    }, []);
+    useEffect(() => { fetchDocuments(); }, []);
 
     const fetchDocuments = async () => {
+        setLoadingDocs(true);
         try {
             const res = await axios.get(`${BASE_URL}/api/users/documents/${user.id}`);
             setDocs(res.data || []);
         } catch (err) {
-            // Documents endpoint may not exist yet
+            // endpoint may not exist yet
+        } finally {
+            setLoadingDocs(false);
         }
     };
 
     const handleUpload = async (docType, file) => {
         if (!file) return;
-        const allowed = ['image/jpeg','image/png','application/pdf'];
-        if (!allowed.includes(file.type)) return toast.error("Only JPG, PNG or PDF allowed");
-        if (file.size > 5 * 1024 * 1024) return toast.error("Max file size: 5MB");
+        const allowed = ['image/jpeg', 'image/png', 'application/pdf'];
+        if (!allowed.includes(file.type)) return toast.error('Only JPG, PNG or PDF allowed');
+        if (file.size > 5 * 1024 * 1024) return toast.error('Max file size: 5MB');
 
         setUploading(prev => ({ ...prev, [docType]: true }));
         const formData = new FormData();
@@ -793,7 +900,7 @@ const DocumentManager = ({ user, data }) => {
             toast.success(`${docType} uploaded successfully!`);
             fetchDocuments();
         } catch (err) {
-            toast.error("Upload failed. Please try again.");
+            toast.error('Upload failed. Please try again.');
         } finally {
             setUploading(prev => ({ ...prev, [docType]: false }));
         }
@@ -809,7 +916,6 @@ const DocumentManager = ({ user, data }) => {
             ],
             meta: [
                 { label: 'Passport Number', value: data?.profile?.passport_number ? '••' + data.profile.passport_number.slice(-4) : 'N/A' },
-                { label: 'Expiry Date',     value: data?.profile?.passport_expiry || 'N/A' },
                 { label: 'Country',         value: data?.profile?.nationality || 'N/A' },
             ]
         },
@@ -828,26 +934,22 @@ const DocumentManager = ({ user, data }) => {
             title: 'Supporting Documents',
             icon: FileText,
             items: [
-                { key: 'cv',               label: 'CV / Resume',          accept: '.pdf,.doc,.docx' },
-                { key: 'bank_statement',   label: 'Bank Statement',       accept: '.pdf' },
-                { key: 'certificate',      label: 'Certificates / Degrees', accept: '.pdf,.jpg,.png' },
-                { key: 'photo',            label: 'Passport Size Photo',  accept: '.jpg,.jpeg,.png' },
+                { key: 'cv',             label: 'CV / Resume',            accept: '.pdf,.doc,.docx' },
+                { key: 'bank_statement', label: 'Bank Statement',         accept: '.pdf' },
+                { key: 'certificate',    label: 'Certificates / Degrees', accept: '.pdf,.jpg,.png' },
+                { key: 'photo',          label: 'Passport Size Photo',    accept: '.jpg,.jpeg,.png' },
             ],
             meta: []
         }
     ];
 
-    const getDocStatus = (key) => {
-        const doc = docs.find(d => d.doc_type === key);
-        if (!doc) return null;
-        return doc.status; // 'uploaded' | 'verified' | 'rejected'
-    };
+    const getDoc = (key) => docs.find(d => d.doc_type === key);
 
     const DocStatusBadge = ({ status }) => {
         const cfg = {
-            verified: { color: 'text-green-600', bg: 'bg-green-50', border: 'border-green-200', icon: CheckCircle,  label: 'Verified' },
-            rejected: { color: 'text-red-600',   bg: 'bg-red-50',   border: 'border-red-200',   icon: XCircle,      label: 'Rejected' },
-            uploaded: { color: 'text-blue-600',  bg: 'bg-blue-50',  border: 'border-blue-200',  icon: Clock,        label: 'Pending Review' },
+            verified: { color: 'text-green-600', bg: 'bg-green-50', border: 'border-green-200', icon: CheckCircle, label: 'Verified' },
+            rejected: { color: 'text-red-600',   bg: 'bg-red-50',   border: 'border-red-200',   icon: XCircle,     label: 'Rejected' },
+            uploaded: { color: 'text-blue-600',  bg: 'bg-blue-50',  border: 'border-blue-200',  icon: Clock,       label: 'Pending Review' },
         }[status] || null;
         if (!cfg) return null;
         const Icon = cfg.icon;
@@ -875,11 +977,13 @@ const DocumentManager = ({ user, data }) => {
                             <div className="w-9 h-9 bg-[#0B1F3A] rounded-xl flex items-center justify-center">
                                 <CatIcon size={14} className="text-[#EAB308]" />
                             </div>
-                            <h3 className="font-bold text-sm text-[#0B1F3A] uppercase tracking-wide">{cat.title}</h3>
+                            <div>
+                                <h3 className="font-bold text-sm text-[#0B1F3A] uppercase tracking-wide">{cat.title}</h3>
+                                <p className="text-[10px] text-[#64748B]">{cat.items.filter(i => getDoc(i.key)).length}/{cat.items.length} uploaded</p>
+                            </div>
                         </div>
 
                         <div className="p-6 space-y-4">
-                            {/* Metadata */}
                             {cat.meta.length > 0 && (
                                 <div className="flex flex-wrap gap-4 pb-4 border-b border-[#F0F4F8]">
                                     {cat.meta.map((m, mi) => (
@@ -891,14 +995,13 @@ const DocumentManager = ({ user, data }) => {
                                 </div>
                             )}
 
-                            {/* Upload Items */}
                             {cat.items.map((item, ii) => {
-                                const docStatus = getDocStatus(item.key);
+                                const doc = getDoc(item.key);
                                 return (
                                     <div key={ii} className="flex items-center justify-between p-4 bg-[#F8FAFC] border border-[#E5E7EB] rounded-2xl">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 bg-[#E5E7EB] rounded-xl flex items-center justify-center">
-                                                <FileText size={12} className="text-[#64748B]" />
+                                            <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${doc ? 'bg-green-50 border border-green-200' : 'bg-[#E5E7EB]'}`}>
+                                                <FileText size={12} className={doc ? 'text-green-500' : 'text-[#64748B]'} />
                                             </div>
                                             <div>
                                                 <p className="text-xs font-semibold text-[#0B1F3A]">{item.label}</p>
@@ -906,15 +1009,15 @@ const DocumentManager = ({ user, data }) => {
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            {docStatus && <DocStatusBadge status={docStatus} />}
+                                            {doc && <DocStatusBadge status={doc.status} />}
                                             <label className={`flex items-center gap-1.5 text-[10px] font-bold uppercase px-3 py-2 rounded-xl cursor-pointer transition-all ${
                                                 uploading[item.key]
-                                                    ? 'bg-[#E5E7EB] text-[#94A3B8]'
+                                                    ? 'bg-[#E5E7EB] text-[#94A3B8] cursor-not-allowed'
                                                     : 'bg-[#0B1F3A] text-[#EAB308] hover:opacity-90'
                                             }`}>
                                                 {uploading[item.key]
                                                     ? <><Loader size={11} className="animate-spin" /> Uploading</>
-                                                    : <><Upload size={11} /> {docStatus ? 'Replace' : 'Upload'}</>
+                                                    : <><Upload size={11} /> {doc ? 'Replace' : 'Upload'}</>
                                                 }
                                                 <input
                                                     type="file"
@@ -945,55 +1048,82 @@ const DocumentManager = ({ user, data }) => {
 };
 
 // ─── Support Chat ───────────────────────────────────────────────────────────────
-const SupportChat = ({ user, addNotification }) => {
-    const [msg, setMsg]         = useState("");
-    const [history, setHistory] = useState([]);
+const SupportChat = ({ user, addNotification, socket }) => {
+    const [msg, setMsg]           = useState('');
+    const [history, setHistory]   = useState([]);
     const [isTyping, setIsTyping] = useState(false);
+    const [sending, setSending]   = useState(false);
     const scrollRef = useRef();
 
+    const ROOM = `chat_${Math.min(user.id, 1)}_${Math.max(user.id, 1)}`;
+
     useEffect(() => {
+        // Fetch message history
         const fetchMessages = async () => {
             try {
                 const res = await axios.get(`${BASE_URL}/api/users/messages/${user.id}`);
                 setHistory(res.data || []);
-            } catch (err) {}
+            } catch (err) {
+                console.error('Could not load messages', err);
+            }
         };
         fetchMessages();
-    }, [user.id]);
 
-    useEffect(() => {
-        socket.on("receive_message", (incomingData) => {
-            setHistory(prev => [...prev, incomingData]);
-            setIsTyping(false);
-            addNotification?.({
-                id: Date.now(),
-                type: 'message',
-                message: 'New message from Admin Support',
-                time: new Date(),
-                read: false,
+        // Join the specific chat room
+        socket.emit('join_chat', { room: ROOM });
+
+        socket.on('receive_message', (incomingData) => {
+            setHistory(prev => {
+                // Avoid duplicate if we already added optimistically
+                if (prev.some(m => m.id && m.id === incomingData.id)) return prev;
+                return [...prev, incomingData];
             });
+            setIsTyping(false);
+            if (incomingData.sender_id !== user.id) {
+                addNotification?.({
+                    id: Date.now(), type: 'message',
+                    message: 'New message from Admin Support',
+                    time: new Date(), read: false,
+                });
+            }
         });
-        socket.on("admin_typing", () => setIsTyping(true));
+
+        socket.on('admin_typing', () => {
+            setIsTyping(true);
+            setTimeout(() => setIsTyping(false), 3000);
+        });
+
         return () => {
-            socket.off("receive_message");
-            socket.off("admin_typing");
+            socket.off('receive_message');
+            socket.off('admin_typing');
         };
     }, []);
 
     useEffect(() => {
         scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, [history]);
+    }, [history, isTyping]);
 
     const handleSend = async () => {
-        if (!msg.trim()) return;
-        const chatData = { sender_id: user.id, receiver_id: 1, message: msg };
+        if (!msg.trim() || sending) return;
+        const msgText = msg.trim();
+        setMsg('');
+        setSending(true);
+
+        // Optimistic update
+        const optimistic = { sender_id: user.id, receiver_id: 1, message: msgText, created_at: new Date() };
+        setHistory(prev => [...prev, optimistic]);
+
         try {
-            await axios.post(`${BASE_URL}/api/users/messages/send`, chatData);
-            socket.emit("send_message", chatData);
-            setHistory(prev => [...prev, { ...chatData, created_at: new Date() }]);
-            setMsg("");
+            await axios.post(`${BASE_URL}/api/users/messages/send`, {
+                sender_id: user.id, receiver_id: 1, message: msgText
+            });
+            socket.emit('send_message', { room: ROOM, sender_id: user.id, receiver_id: 1, message: msgText });
         } catch (err) {
-            toast.error("Message failed to send");
+            toast.error('Message failed to send');
+            setHistory(prev => prev.filter(m => m !== optimistic));
+            setMsg(msgText);
+        } finally {
+            setSending(false);
         }
     };
 
@@ -1001,11 +1131,18 @@ const SupportChat = ({ user, addNotification }) => {
         if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
     };
 
+    const groupedHistory = history.reduce((acc, m) => {
+        const date = new Date(m.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+        if (!acc[date]) acc[date] = [];
+        acc[date].push(m);
+        return acc;
+    }, {});
+
     return (
         <div className="fade-up font-body">
             <div className="glass border border-white/60 rounded-[2rem] h-[620px] flex flex-col overflow-hidden shadow-sm">
                 {/* Header */}
-                <div className="px-6 py-4 bg-[#0B1F3A] flex items-center gap-3">
+                <div className="px-6 py-4 bg-[#0B1F3A] flex items-center gap-3 flex-shrink-0">
                     <div className="relative">
                         <div className="w-10 h-10 bg-[#EAB308] text-[#0B1F3A] rounded-full flex items-center justify-center font-bold text-xs">AD</div>
                         <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-400 border-2 border-[#0B1F3A] rounded-full" />
@@ -1021,7 +1158,7 @@ const SupportChat = ({ user, addNotification }) => {
                 </div>
 
                 {/* Messages */}
-                <div className="flex-1 overflow-y-auto p-5 space-y-3 bg-[#F8FAFC]">
+                <div className="flex-1 overflow-y-auto p-5 space-y-4 bg-[#F8FAFC]">
                     {history.length === 0 && (
                         <div className="flex flex-col items-center justify-center h-full text-center">
                             <div className="w-14 h-14 bg-[#0B1F3A]/10 rounded-2xl flex items-center justify-center mb-3">
@@ -1031,29 +1168,46 @@ const SupportChat = ({ user, addNotification }) => {
                             <p className="text-xs text-[#94A3B8] mt-1">Our support team typically replies within minutes</p>
                         </div>
                     )}
-                    {history.map((m, i) => {
-                        const isUser = m.sender_id === user.id;
-                        return (
-                            <div key={i} className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
-                                <div className={`max-w-[75%] px-5 py-3 rounded-2xl text-xs leading-relaxed ${
-                                    isUser
-                                        ? 'bg-[#0B1F3A] text-[#EAB308] rounded-tr-none font-semibold'
-                                        : 'bg-white text-[#0F172A] rounded-tl-none border border-[#E5E7EB] shadow-sm'
-                                }`}>
-                                    {m.message}
-                                    <div className={`text-[9px] mt-1 ${isUser ? 'text-[#EAB308]/60 text-right' : 'text-[#94A3B8]'}`}>
-                                        {new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                    </div>
-                                </div>
+
+                    {Object.entries(groupedHistory).map(([date, msgs]) => (
+                        <div key={date}>
+                            <div className="flex items-center gap-3 my-3">
+                                <div className="flex-1 h-px bg-[#E5E7EB]" />
+                                <span className="text-[9px] font-bold text-[#94A3B8] uppercase tracking-widest">{date}</span>
+                                <div className="flex-1 h-px bg-[#E5E7EB]" />
                             </div>
-                        );
-                    })}
+                            <div className="space-y-2">
+                                {msgs.map((m, i) => {
+                                    const isUser = m.sender_id === user.id || m.sender_id === String(user.id);
+                                    return (
+                                        <div key={i} className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
+                                            {!isUser && (
+                                                <div className="w-7 h-7 bg-[#EAB308] text-[#0B1F3A] rounded-full flex items-center justify-center font-bold text-[9px] mr-2 flex-shrink-0 self-end mb-1">AD</div>
+                                            )}
+                                            <div className={`max-w-[72%] px-4 py-3 rounded-2xl text-xs leading-relaxed ${
+                                                isUser
+                                                    ? 'bg-[#0B1F3A] text-[#EAB308] rounded-tr-none font-semibold'
+                                                    : 'bg-white text-[#0F172A] rounded-tl-none border border-[#E5E7EB] shadow-sm'
+                                            }`}>
+                                                {m.message}
+                                                <div className={`text-[9px] mt-1 ${isUser ? 'text-[#EAB308]/60 text-right' : 'text-[#94A3B8]'}`}>
+                                                    {new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    ))}
+
                     {isTyping && (
-                        <div className="flex justify-start">
+                        <div className="flex justify-start items-end gap-2">
+                            <div className="w-7 h-7 bg-[#EAB308] text-[#0B1F3A] rounded-full flex items-center justify-center font-bold text-[9px] flex-shrink-0">AD</div>
                             <div className="bg-white border border-[#E5E7EB] px-5 py-3 rounded-2xl rounded-tl-none shadow-sm">
                                 <div className="flex gap-1 items-center">
-                                    {[0,1,2].map(i => (
-                                        <span key={i} className="w-1.5 h-1.5 bg-[#94A3B8] rounded-full animate-bounce" style={{ animationDelay: `${i*0.15}s` }} />
+                                    {[0, 1, 2].map(i => (
+                                        <span key={i} className="w-1.5 h-1.5 bg-[#94A3B8] rounded-full animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
                                     ))}
                                 </div>
                             </div>
@@ -1063,7 +1217,7 @@ const SupportChat = ({ user, addNotification }) => {
                 </div>
 
                 {/* Input */}
-                <div className="p-4 border-t border-[#E5E7EB] flex gap-3 bg-white">
+                <div className="p-4 border-t border-[#E5E7EB] flex gap-3 bg-white flex-shrink-0">
                     <input
                         value={msg}
                         onChange={e => setMsg(e.target.value)}
@@ -1073,10 +1227,10 @@ const SupportChat = ({ user, addNotification }) => {
                     />
                     <button
                         onClick={handleSend}
-                        disabled={!msg.trim()}
+                        disabled={!msg.trim() || sending}
                         className="bg-[#0B1F3A] text-[#EAB308] p-3.5 rounded-full hover:opacity-90 disabled:opacity-40 transition-all"
                     >
-                        <Send size={16} />
+                        {sending ? <Loader size={16} className="animate-spin" /> : <Send size={16} />}
                     </button>
                 </div>
             </div>
@@ -1085,8 +1239,11 @@ const SupportChat = ({ user, addNotification }) => {
 };
 
 // ─── Security Settings ──────────────────────────────────────────────────────────
-const SecuritySettings = ({ user }) => {
-    const [passwords, setPasswords] = useState({ old: "", new: "", confirm: "" });
+const SecuritySettings = ({ user, data, onRefresh }) => {
+    const [tab, setTab]           = useState('password');
+    const [passwords, setPasswords] = useState({ old: '', new: '', confirm: '' });
+    const [emailForm, setEmailForm] = useState({ newEmail: '', password: '' });
+    const [nameForm, setNameForm]   = useState({ full_name: data?.profile?.full_name || '' });
     const [loading, setLoading]     = useState(false);
     const [showPass, setShowPass]   = useState(false);
     const [strength, setStrength]   = useState(0);
@@ -1100,88 +1257,179 @@ const SecuritySettings = ({ user }) => {
         setStrength(score);
     };
 
-    const handleUpdate = async (e) => {
+    const handlePasswordUpdate = async (e) => {
         e.preventDefault();
-        if (passwords.new !== passwords.confirm) return toast.error("Passwords do not match!");
-        if (passwords.new.length < 6) return toast.error("Password must be at least 6 characters");
+        if (passwords.new !== passwords.confirm) return toast.error('Passwords do not match!');
+        if (passwords.new.length < 6) return toast.error('Password must be at least 6 characters');
         setLoading(true);
         try {
             await axios.put(`${BASE_URL}/api/users/change-password`, {
                 userId: user.id, oldPassword: passwords.old, newPassword: passwords.new
             });
-            toast.success("Security credentials updated!");
-            setPasswords({ old: "", new: "", confirm: "" });
+            toast.success('Password updated successfully!');
+            setPasswords({ old: '', new: '', confirm: '' });
             setStrength(0);
         } catch (err) {
-            toast.error(err.response?.data?.message || "Update failed");
+            toast.error(err.response?.data?.message || 'Update failed');
+        } finally { setLoading(false); }
+    };
+
+    const handleNameUpdate = async (e) => {
+        e.preventDefault();
+        if (!nameForm.full_name.trim()) return toast.error('Name cannot be empty');
+        setLoading(true);
+        try {
+            await axios.put(`${BASE_URL}/api/users/profile/update`, {
+                userId: user.id,
+                full_name: nameForm.full_name,
+            });
+            toast.success('Name updated!');
+            onRefresh();
+        } catch (err) {
+            toast.error('Failed to update name');
         } finally { setLoading(false); }
     };
 
     const strengthConfig = [
-        { label: 'Weak',    color: 'bg-red-400' },
-        { label: 'Fair',    color: 'bg-orange-400' },
-        { label: 'Good',    color: 'bg-amber-400' },
-        { label: 'Strong',  color: 'bg-green-400' },
+        { label: 'Weak',   color: 'bg-red-400',    text: 'text-red-500' },
+        { label: 'Fair',   color: 'bg-orange-400',  text: 'text-orange-500' },
+        { label: 'Good',   color: 'bg-amber-400',   text: 'text-amber-500' },
+        { label: 'Strong', color: 'bg-green-400',   text: 'text-green-500' },
+    ];
+
+    const secTabs = [
+        { id: 'password', label: 'Password',   icon: Lock },
+        { id: 'name',     label: 'Update Name', icon: UserCircle },
     ];
 
     return (
         <div className="fade-up font-body space-y-5">
-            <div className="glass border border-white/60 p-8 rounded-[2rem] shadow-sm">
-                <div className="flex items-center gap-3 mb-7">
-                    <div className="w-10 h-10 bg-[#0B1F3A] rounded-xl flex items-center justify-center">
-                        <Lock size={16} className="text-[#EAB308]" />
-                    </div>
-                    <div>
-                        <h3 className="font-display text-2xl font-bold text-[#0B1F3A]">Security Guard</h3>
-                        <p className="text-[11px] text-[#64748B]">Manage your account credentials</p>
-                    </div>
-                </div>
+            {/* Tab Switcher */}
+            <div className="glass border border-white/60 p-1.5 rounded-[1.5rem] shadow-sm flex gap-1.5">
+                {secTabs.map(t => {
+                    const Icon = t.icon;
+                    return (
+                        <button key={t.id} onClick={() => setTab(t.id)}
+                            className={`flex-1 py-3 rounded-xl text-[10px] font-semibold uppercase tracking-widest flex items-center justify-center gap-2 transition-all ${
+                                tab === t.id ? 'bg-[#0B1F3A] text-[#EAB308] shadow-md' : 'text-[#64748B] hover:bg-[#F0F4F8]'
+                            }`}>
+                            <Icon size={12} /> {t.label}
+                        </button>
+                    );
+                })}
+            </div>
 
-                <form onSubmit={handleUpdate} className="max-w-md space-y-4">
-                    <PasswordField label="Current Password"  value={passwords.old}     show={showPass} onChange={(val) => setPasswords({...passwords, old: val})} />
-                    <PasswordField label="New Password"      value={passwords.new}     show={showPass}
-                        onChange={(val) => { setPasswords({...passwords, new: val}); calcStrength(val); }} />
-
-                    {/* Strength bar */}
-                    {passwords.new && (
+            {/* Change Password */}
+            {tab === 'password' && (
+                <div className="glass border border-white/60 p-8 rounded-[2rem] shadow-sm">
+                    <div className="flex items-center gap-3 mb-7">
+                        <div className="w-10 h-10 bg-[#0B1F3A] rounded-xl flex items-center justify-center">
+                            <Lock size={16} className="text-[#EAB308]" />
+                        </div>
                         <div>
-                            <div className="flex gap-1 mb-1">
-                                {[1,2,3,4].map(i => (
-                                    <div key={i} className={`h-1 flex-1 rounded-full transition-all ${i <= strength ? strengthConfig[strength - 1]?.color : 'bg-[#E5E7EB]'}`} />
-                                ))}
+                            <h3 className="font-display text-2xl font-bold text-[#0B1F3A]">Change Password</h3>
+                            <p className="text-[11px] text-[#64748B]">Keep your account secure</p>
+                        </div>
+                    </div>
+
+                    <form onSubmit={handlePasswordUpdate} className="max-w-md space-y-4">
+                        <PasswordField label="Current Password" value={passwords.old} show={showPass}
+                            onChange={(val) => setPasswords({ ...passwords, old: val })} />
+                        <PasswordField label="New Password" value={passwords.new} show={showPass}
+                            onChange={(val) => { setPasswords({ ...passwords, new: val }); calcStrength(val); }} />
+
+                        {passwords.new && (
+                            <div>
+                                <div className="flex gap-1 mb-1">
+                                    {[1, 2, 3, 4].map(i => (
+                                        <div key={i} className={`h-1 flex-1 rounded-full transition-all ${i <= strength ? strengthConfig[strength - 1]?.color : 'bg-[#E5E7EB]'}`} />
+                                    ))}
+                                </div>
+                                {strength > 0 && (
+                                    <p className={`text-[10px] font-semibold ${strengthConfig[strength - 1]?.text}`}>
+                                        Password strength: {strengthConfig[strength - 1]?.label}
+                                    </p>
+                                )}
                             </div>
-                            <p className={`text-[10px] font-semibold ${strengthConfig[strength - 1]?.color.replace('bg-','text-') || 'text-[#94A3B8]'}`}>
-                                {strength > 0 ? `Password strength: ${strengthConfig[strength - 1]?.label}` : ''}
+                        )}
+
+                        <PasswordField label="Confirm New Password" value={passwords.confirm} show={showPass}
+                            onChange={(val) => setPasswords({ ...passwords, confirm: val })} />
+
+                        {passwords.confirm && passwords.new !== passwords.confirm && (
+                            <p className="text-[10px] text-red-500 font-semibold flex items-center gap-1">
+                                <XCircle size={11} /> Passwords do not match
+                            </p>
+                        )}
+                        {passwords.confirm && passwords.new === passwords.confirm && passwords.new && (
+                            <p className="text-[10px] text-green-500 font-semibold flex items-center gap-1">
+                                <CheckCircle size={11} /> Passwords match
+                            </p>
+                        )}
+
+                        <div className="flex gap-3 pt-2">
+                            <button type="button" onClick={() => setShowPass(!showPass)}
+                                className="p-4 bg-[#F8FAFC] border border-[#E5E7EB] rounded-2xl text-[#0B1F3A] hover:border-[#0B1F3A] transition-colors">
+                                {showPass ? <EyeOff size={18} /> : <Eye size={18} />}
+                            </button>
+                            <button type="submit" disabled={loading}
+                                className="flex-1 bg-[#0B1F3A] text-[#EAB308] py-4 rounded-2xl font-bold uppercase text-[10px] tracking-widest hover:opacity-95 disabled:opacity-60 flex items-center justify-center gap-2">
+                                {loading ? <><Loader size={14} className="animate-spin" /> Updating...</> : 'Update Password'}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            )}
+
+            {/* Update Name */}
+            {tab === 'name' && (
+                <div className="glass border border-white/60 p-8 rounded-[2rem] shadow-sm">
+                    <div className="flex items-center gap-3 mb-7">
+                        <div className="w-10 h-10 bg-[#0B1F3A] rounded-xl flex items-center justify-center">
+                            <UserCircle size={16} className="text-[#EAB308]" />
+                        </div>
+                        <div>
+                            <h3 className="font-display text-2xl font-bold text-[#0B1F3A]">Update Name</h3>
+                            <p className="text-[11px] text-[#64748B]">Change your display name</p>
+                        </div>
+                    </div>
+
+                    <form onSubmit={handleNameUpdate} className="max-w-md space-y-4">
+                        <div>
+                            <label className="text-[9px] font-bold text-[#EAB308] uppercase tracking-widest mb-2 block">Full Name</label>
+                            <input
+                                type="text"
+                                value={nameForm.full_name}
+                                onChange={(e) => setNameForm({ full_name: e.target.value })}
+                                required
+                                className="w-full bg-[#F8FAFC] border border-[#E5E7EB] rounded-2xl px-5 py-4 text-sm focus:border-[#0B1F3A] outline-none text-[#0F172A] transition-colors font-body"
+                                placeholder="Your full name"
+                            />
+                        </div>
+
+                        <div className="p-3 bg-blue-50 border border-blue-100 rounded-xl">
+                            <p className="text-[10px] text-blue-600 font-semibold">
+                                Current name: <span className="text-blue-800">{data?.profile?.full_name || 'Not set'}</span>
                             </p>
                         </div>
-                    )}
 
-                    <PasswordField label="Confirm Password"  value={passwords.confirm}  show={showPass} onChange={(val) => setPasswords({...passwords, confirm: val})} />
-
-                    <div className="flex gap-3 pt-2">
-                        <button type="button" onClick={() => setShowPass(!showPass)}
-                            className="p-4 bg-[#F8FAFC] border border-[#E5E7EB] rounded-2xl text-[#0B1F3A] hover:border-[#0B1F3A] transition-colors">
-                            {showPass ? <EyeOff size={18} /> : <Eye size={18} />}
+                        <button type="submit" disabled={loading}
+                            className="w-full bg-[#0B1F3A] text-[#EAB308] py-4 rounded-2xl font-bold uppercase text-[10px] tracking-widest hover:opacity-95 disabled:opacity-60 flex items-center justify-center gap-2">
+                            {loading ? <><Loader size={14} className="animate-spin" /> Saving...</> : <><Save size={14} /> Save Name</>}
                         </button>
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="flex-1 bg-[#0B1F3A] text-[#EAB308] py-4 rounded-2xl font-bold uppercase text-[10px] tracking-widest hover:opacity-95 disabled:opacity-60 flex items-center justify-center gap-2"
-                        >
-                            {loading ? <><Loader size={14} className="animate-spin" /> Updating...</> : 'Update Credentials'}
-                        </button>
-                    </div>
-                </form>
-            </div>
+                    </form>
+                </div>
+            )}
 
             {/* Security Tips */}
             <div className="glass border border-white/60 p-6 rounded-[2rem] shadow-sm">
                 <p className="text-[10px] font-bold uppercase tracking-widest text-[#64748B] mb-4">Security Tips</p>
                 <div className="space-y-3">
                     {[
-                        'Use a strong password with uppercase, numbers & symbols',
+                        'Use a strong password with uppercase letters, numbers & symbols',
                         'Never share your account credentials with anyone',
-                        'Contact support if you notice any suspicious activity',
+                        'Contact support immediately if you notice any suspicious activity',
+                        'Update your password regularly for better security',
                     ].map((tip, i) => (
                         <div key={i} className="flex items-start gap-3">
                             <div className="w-5 h-5 bg-green-50 border border-green-200 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -1197,17 +1445,6 @@ const SecuritySettings = ({ user }) => {
 };
 
 // ─── Reusable UI Components ─────────────────────────────────────────────────────
-const InfoItem = ({ label, value, icon, secure }) => (
-    <div>
-        <p className="text-[9px] font-bold text-[#EAB308] uppercase tracking-widest mb-1.5 flex items-center gap-1.5 font-body">
-            {icon} {label}
-        </p>
-        <p className={`text-sm font-bold text-[#0F172A] font-body ${secure ? 'font-mono tracking-wider' : ''}`}>
-            {value || 'Not specified'}
-        </p>
-    </div>
-);
-
 const StatusBadge = ({ status, large }) => {
     const st = getStatus(status);
     return (
@@ -1229,7 +1466,7 @@ const PasswordField = ({ label, value, onChange, show }) => (
     <div className="font-body">
         <label className="text-[9px] font-bold text-[#EAB308] uppercase tracking-widest mb-2 block">{label}</label>
         <input
-            type={show ? "text" : "password"}
+            type={show ? 'text' : 'password'}
             value={value}
             onChange={(e) => onChange(e.target.value)}
             required
