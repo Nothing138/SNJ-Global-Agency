@@ -114,6 +114,8 @@ const AdminLayout = () => {
               { label: 'B2B Pricing', to: '/admin/b2b/pricing' },
             ]}
           />
+          <SidebarItem to="/admin/applicant-list" icon={<LayoutDashboard size={22}/>} label="Applicant-List" isOpen={isSidebarOpen} currentPath={location.pathname} />
+
           {/* Public Relations */}
           <SidebarDropdown 
             label="Public Relations" icon={<MessageSquare size={22}/>} isOpen={isSidebarOpen} isMenuOpen={openMenus.chat} onClick={() => toggleMenu('chat')}

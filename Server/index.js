@@ -54,6 +54,8 @@ const b2bDashboardRoutes  = require('./routes/B2bdashboardroutes');
 const assignTaskRoutes    = require('./routes/AssigntaskRoute');
 const b2bPricingRoutes    = require('./routes/b2bPricingRoutes');
 const paymentRoutes       = require('./routes/paymentRoutes');
+const employerPaymentRoutes = require('./routes/employerPaymentRoutes');
+const applicantRoutes = require('./routes/applicantTrackingRoutes');
 
 app.use('/api/auth',          authRoutes);
 app.use('/api/blogs',         blogRoutes);
@@ -78,6 +80,8 @@ app.use('/api/b2b/pricing',   b2bPricingRoutes);
 app.use('/api/b2b/dashboard', b2bDashboardRoutes);
 app.use('/api/admin',         assignTaskRoutes);
 app.use('/api/payment',       paymentRoutes);
+app.use('/api/employer-payment', employerPaymentRoutes);
+app.use('/api/applicants', applicantRoutes);
 
 // ─── Static Files ──────────────────────────────────────────────────────────────
 app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));

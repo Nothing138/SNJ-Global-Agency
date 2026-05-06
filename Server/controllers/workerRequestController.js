@@ -377,3 +377,144 @@ exports.getAllRequests = async (req, res) => {
         return res.status(500).json({ success: false, message: err.message });
     }
 };
+
+// ─── 11. Record Payment — reduces due_payment after successful Stripe payment ──
+// POST /api/worker-requests/record-payment
+exports.recordPayment = async (req, res) => {
+    try {
+        const { employer_id, amount_paid, reference, request_id } = req.body;
+
+        if (!employer_id || !amount_paid) {
+            return res.status(400).json({
+                success: false,
+                message: 'employer_id and amount_paid are required'
+            });
+        }
+
+        const paid = parseFloat(amount_paid);
+        if (isNaN(paid) || paid <= 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'amount_paid must be a positive number'
+            });
+        }
+
+        // If a specific request_id is given, reduce its due first
+        if (request_id) {
+            const rows = await query(
+                'SELECT * FROM worker_requests WHERE id = ? AND employer_id = ?',
+                [parseInt(request_id), parseInt(employer_id)]
+            );
+            if (!rows.length) {
+                return res.status(404).json({ success: false, message: 'Worker request not found' });
+            }
+            const req_row = rows[0];
+            const current_due = parseFloat(req_row.due_payment || 0);
+            const new_due     = Math.max(0, current_due - paid);
+            const new_paid    = parseFloat(req_row.total_paid || 0) + paid;
+
+            await query(
+                'UPDATE worker_requests SET due_payment = ?, total_paid = ? WHERE id = ?',
+                [new_due, new_paid, parseInt(request_id)]
+            );
+
+            await createNotification(
+                parseInt(employer_id),
+                'verify',
+                'Payment Recorded ✓',
+                `Payment of $${paid.toFixed(2)} recorded for REQ-${request_id}. ` +
+                `Remaining due: $${new_due.toFixed(2)}. Reference: ${reference || 'N/A'}.`,
+                0
+            );
+
+            return res.json({
+                success: true,
+                message: 'Payment recorded successfully',
+                data: {
+                    request_id: parseInt(request_id),
+                    amount_paid:    paid,
+                    previous_due:   current_due,
+                    new_due:        new_due,
+                    new_total_paid: new_paid
+                }
+            });
+        }
+
+        // No specific request_id → distribute across all pending dues (oldest first)
+        const pending_rows = await query(
+            `SELECT * FROM worker_requests
+             WHERE employer_id = ? AND due_payment > 0
+             ORDER BY created_at ASC`,
+            [parseInt(employer_id)]
+        );
+
+        if (!pending_rows.length) {
+            // No dues — just record as general credit on most recent request
+            const latest = await query(
+                `SELECT * FROM worker_requests WHERE employer_id = ? ORDER BY created_at DESC LIMIT 1`,
+                [parseInt(employer_id)]
+            );
+            if (latest.length) {
+                const new_paid = parseFloat(latest[0].total_paid || 0) + paid;
+                await query(
+                    'UPDATE worker_requests SET total_paid = ? WHERE id = ?',
+                    [new_paid, latest[0].id]
+                );
+            }
+
+            await createNotification(
+                parseInt(employer_id),
+                'verify',
+                'Payment Received ✓',
+                `Payment of $${paid.toFixed(2)} received. No pending dues. Reference: ${reference || 'N/A'}.`,
+                0
+            );
+
+            return res.json({
+                success: true,
+                message: 'Payment recorded. No dues to reduce.',
+                data: { amount_paid: paid, dues_reduced: 0 }
+            });
+        }
+
+        // Distribute payment across requests
+        let remaining = paid;
+        const updates = [];
+
+        for (const row of pending_rows) {
+            if (remaining <= 0) break;
+
+            const current_due  = parseFloat(row.due_payment);
+            const deduct       = Math.min(remaining, current_due);
+            const new_due      = parseFloat((current_due - deduct).toFixed(2));
+            const new_paid     = parseFloat((parseFloat(row.total_paid || 0) + deduct).toFixed(2));
+
+            await query(
+                'UPDATE worker_requests SET due_payment = ?, total_paid = ? WHERE id = ?',
+                [new_due, new_paid, row.id]
+            );
+
+            updates.push({ request_id: row.id, deducted: deduct, new_due });
+            remaining = parseFloat((remaining - deduct).toFixed(2));
+        }
+
+        await createNotification(
+            parseInt(employer_id),
+            'verify',
+            'Payment Processed ✓',
+            `Payment of $${paid.toFixed(2)} processed across ${updates.length} request(s). ` +
+            `Reference: ${reference || 'N/A'}.`,
+            0
+        );
+
+        return res.json({
+            success: true,
+            message: 'Payment distributed and recorded successfully',
+            data: { total_paid: paid, distributions: updates, unallocated: remaining }
+        });
+
+    } catch (err) {
+        console.error('recordPayment error:', err);
+        return res.status(500).json({ success: false, message: err.message });
+    }
+};

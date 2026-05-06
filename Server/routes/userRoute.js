@@ -81,7 +81,26 @@ router.get('/profile/:id', async (req, res) => {
     }
 });
 
-// ─── 2. Update Profile ─────────────────────────────────────────────────────────
+// ─── 2. Get Applicant Tracking ─────────────────────────────────────────────────
+// Returns { visa, job, flight, trip } values (0–100) from applicant_tracking table
+router.get('/tracking/:userId', async (req, res) => {
+    try {
+        const userId = req.params.userId;
+        const [rows] = await db.query(
+            `SELECT visa, job, flight, trip FROM applicant_tracking WHERE user_id = ?`,
+            [userId]
+        );
+        if (rows.length === 0) {
+            return res.json({ visa: 0, job: 0, flight: 0, trip: 0 });
+        }
+        res.json(rows[0]);
+    } catch (err) {
+        console.error('GET /tracking/:userId error:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// ─── 3. Update Profile ─────────────────────────────────────────────────────────
 router.put('/profile/update', async (req, res) => {
     const {
         userId,
@@ -137,7 +156,7 @@ router.put('/profile/update', async (req, res) => {
     }
 });
 
-// ─── 3. Change Password ─────────────────────────────────────────────────────────
+// ─── 4. Change Password ─────────────────────────────────────────────────────────
 router.put('/change-password', async (req, res) => {
     const { userId, oldPassword, newPassword } = req.body;
 
@@ -166,7 +185,7 @@ router.put('/change-password', async (req, res) => {
     }
 });
 
-// ─── 4. Messaging – Send ───────────────────────────────────────────────────────
+// ─── 5. Messaging – Send ───────────────────────────────────────────────────────
 router.post('/messages/send', async (req, res) => {
     const { sender_id, receiver_id, message } = req.body;
 
@@ -174,7 +193,7 @@ router.post('/messages/send', async (req, res) => {
         return res.status(400).json({ message: 'sender_id and message are required' });
     }
 
-    const to = receiver_id || 1; // default to admin (id=1)
+    const to = receiver_id || 1;
 
     try {
         const [result] = await db.query(
@@ -189,7 +208,7 @@ router.post('/messages/send', async (req, res) => {
     }
 });
 
-// ─── 5. Messaging – Fetch History ─────────────────────────────────────────────
+// ─── 6. Messaging – Fetch History ─────────────────────────────────────────────
 router.get('/messages/:userId', async (req, res) => {
     try {
         const userId = req.params.userId;
@@ -206,7 +225,7 @@ router.get('/messages/:userId', async (req, res) => {
     }
 });
 
-// ─── 6. Documents – Upload ────────────────────────────────────────────────────
+// ─── 7. Documents – Upload ────────────────────────────────────────────────────
 router.post('/documents/upload', upload.single('document'), async (req, res) => {
     try {
         const { user_id, doc_type } = req.body;
@@ -216,14 +235,12 @@ router.post('/documents/upload', upload.single('document'), async (req, res) => 
 
         const filePath = `/uploads/documents/${req.file.filename}`;
 
-        // Check if document of this type already exists for the user
         const [existing] = await db.query(
             `SELECT id FROM user_documents WHERE user_id = ? AND doc_type = ?`,
             [user_id, doc_type]
         );
 
         if (existing.length > 0) {
-            // Replace existing document
             await db.query(
                 `UPDATE user_documents
                  SET file_path = ?, original_name = ?, status = 'uploaded', uploaded_at = NOW()
@@ -245,7 +262,7 @@ router.post('/documents/upload', upload.single('document'), async (req, res) => 
     }
 });
 
-// ─── 7. Documents – Fetch ─────────────────────────────────────────────────────
+// ─── 8. Documents – Fetch ─────────────────────────────────────────────────────
 router.get('/documents/:userId', async (req, res) => {
     try {
         const [docs] = await db.query(
@@ -255,7 +272,6 @@ router.get('/documents/:userId', async (req, res) => {
         res.json(docs);
     } catch (err) {
         console.error('GET /documents/:userId error:', err);
-        // Table may not exist yet – return empty array gracefully
         res.json([]);
     }
 });

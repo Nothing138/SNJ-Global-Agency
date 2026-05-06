@@ -1,5 +1,3 @@
-// routes/employerRoutes.js
-
 const express = require('express');
 const router  = express.Router();
 
@@ -11,6 +9,7 @@ const employerRouter = express.Router();
 
 employerRouter.post('/send-otp',  employerController.sendOtp);
 employerRouter.post('/register',  employerController.registerEmployer);
+employerRouter.post('/login',     employerController.loginEmployer);
 
 employerRouter.get('/list',       employerController.getAllEmployers);
 employerRouter.get('/:id',        employerController.getEmployerById);
@@ -20,11 +19,12 @@ employerRouter.delete('/:id',     employerController.deleteEmployer);
 // ─── Worker Request Routes (/api/worker-requests) ─────────────────────────────
 const workerRouter = express.Router();
 
-workerRouter.get('/',              workerRequestController.getAllRequests);
-workerRouter.post('/',             workerRequestController.create);
-workerRouter.put('/:id/set-amount', workerRequestController.setAmount);   // ← নতুন: Amount সেট করার route
-workerRouter.put('/:id',           workerRequestController.update);
-workerRouter.delete('/:id',        workerRequestController.remove);
+workerRouter.get('/',                    workerRequestController.getByEmployer);
+workerRouter.post('/',                   workerRequestController.create);
+workerRouter.post('/record-payment',     workerRequestController.recordPayment);   // ← নতুন
+workerRouter.put('/:id/set-amount',      workerRequestController.setAmount);
+workerRouter.put('/:id',                 workerRequestController.update);
+workerRouter.delete('/:id',              workerRequestController.remove);
 
 // ─── Notification Routes (/api/notifications) ─────────────────────────────────
 const notifRouter = express.Router();

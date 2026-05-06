@@ -870,140 +870,240 @@ const ProgressPage = ({ employerId }) => {
   );
 };
 
-// ─── ✅ UPDATED Payment Component — Dynamic amount & reference ─────────────────
-const Payment = () => {
+// ─── Payment Component ─────────────────────────────────────────────────────────
+const Payment = ({ employerId }) => {
   const navigate = useNavigate();
 
-  // ── Local state for form inputs ───────────────────────────────────────────
-  const [payAmount, setPayAmount] = useState('');
-  const [payRef,    setPayRef]    = useState('');
-  const [amtError,  setAmtError]  = useState('');
+  const [payAmount,  setPayAmount]  = useState('');
+  const [payRef,     setPayRef]     = useState('');
+  const [requestId,  setRequestId]  = useState('');
+  const [amtError,   setAmtError]   = useState('');
 
-  const handlePaymentRedirect = () => {
-    // Validation
+  const [totals,        setTotals]        = useState({ total_paid: 0, due_payment: 0, balance: 0 });
+  const [requests,      setRequests]      = useState([]);
+  const [totalsLoading, setTotalsLoading] = useState(true);
+  const [totalsError,   setTotalsError]   = useState('');
+  const [payToast,      setPayToast]      = useState({ msg: '', type: 'ok' });
+
+  const showPayToast = (msg, type = 'ok') => {
+    setPayToast({ msg, type });
+    setTimeout(() => setPayToast({ msg: '', type: 'ok' }), 5000);
+  };
+
+  const fetchTotals = useCallback(async () => {
+    try {
+      setTotalsError('');
+      const data = await apiFetch(`/worker-requests?employer_id=${employerId}`);
+      const rows = data?.data || [];
+      setRequests(rows);
+      const total_paid  = rows.reduce((s, r) => s + parseFloat(r.total_paid  || 0), 0);
+      const due_payment = rows.reduce((s, r) => s + parseFloat(r.due_payment || 0), 0);
+      const balance     = rows.reduce((s, r) => {
+        const b = r.balance_amount != null
+          ? parseFloat(r.balance_amount)
+          : parseFloat(r.total_paid || 0) - parseFloat(r.due_payment || 0);
+        return s + b;
+      }, 0);
+      setTotals({ total_paid, due_payment, balance });
+    } catch (e) {
+      setTotalsError(e.message);
+    } finally {
+      setTotalsLoading(false);
+    }
+  }, [employerId]);
+
+  useEffect(() => {
+    fetchTotals();
+    const t = setInterval(fetchTotals, REFRESH_INTERVAL);
+    return () => clearInterval(t);
+  }, [fetchTotals]);
+
+  // ── Payment success থেকে ফিরে এলে due update করব ──
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('payment_success') === '1') {
+      window.history.replaceState({}, '', window.location.pathname);
+      fetchTotals();
+      showPayToast('✓ Payment successful! Records updated.', 'ok');
+    }
+    if (params.get('payment_cancelled') === '1') {
+      window.history.replaceState({}, '', window.location.pathname);
+      showPayToast('Payment was cancelled. No charges made.', 'err');
+    }
+  }, [fetchTotals]);
+
+  const handleProceedToPayment = () => {
     if (!payAmount || parseFloat(payAmount) <= 0) {
       setAmtError('Please enter a valid amount greater than 0');
       return;
     }
     setAmtError('');
 
-    // Navigate to /payment with dynamic state
+    // ── আপনার existing /payment page-এ navigate করব, extra data পাঠাব ──
     navigate('/payment', {
       state: {
-        amount:    parseFloat(payAmount),
-        reference: payRef.trim() || 'SNJ-GENERAL',
-        currency:  'usd',
-        label:     'Worker Placement Service Fee',
+        amount:      parseFloat(payAmount),
+        reference:   payRef.trim() || 'SNJ-GENERAL',
+        currency:    'usd',
+        label:       'Worker Placement Service Fee',
+        employer_id: employerId,
+        request_id:  requestId ? parseInt(requestId) : null,
+        returnTo:    'employer',   // ← এটাই key — payment success-এ employer dashboard-এ ফিরবে
       },
     });
   };
 
+  const fmt     = (v) => totalsLoading ? '…' : '$' + parseFloat(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const hasDue  = totals.due_payment > 0;
+  const dueReqs = requests.filter(r => parseFloat(r.due_payment || 0) > 0);
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
 
-      {/* Summary Cards */}
+      {payToast.msg && (
+        <div style={{ padding: '14px 20px', borderRadius: 12, fontWeight: 'bold', fontSize: 13, background: payToast.type === 'ok' ? '#059669' : '#DC2626', color: '#fff', display: 'flex', alignItems: 'center', gap: 10 }}>
+          {payToast.type === 'ok' ? '✓' : '✕'} {payToast.msg}
+        </div>
+      )}
+
+      {totalsError && <Err message={totalsError} onRetry={fetchTotals} />}
+
+      {/* Due banner */}
+      {hasDue && !totalsLoading && (
+        <div style={{ background: 'linear-gradient(135deg,#7c2d12,#b91c1c)', borderRadius: 16, padding: '18px 22px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', border: '1px solid rgba(239,68,68,.3)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+            <div style={{ width: 42, height: 42, background: 'rgba(255,255,255,.15)', borderRadius: 11, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <AlertIcon size={20} />
+            </div>
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 900, color: '#fff', textTransform: 'uppercase', letterSpacing: '.06em' }}>⚡ Outstanding Payment Due</div>
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,.75)', marginTop: 3, fontStyle: 'italic' }}>{fmt(totals.due_payment)} pending across {dueReqs.length} request(s)</div>
+            </div>
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ fontSize: 28, fontWeight: 900, color: '#FCA5A5' }}>{fmt(totals.due_payment)}</div>
+            <div style={{ fontSize: 9, color: 'rgba(255,255,255,.6)', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: 1 }}>Total Due</div>
+          </div>
+        </div>
+      )}
+
+      {/* Summary cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12 }}>
         {[
-          { label: 'Total Paid',      value: '$0', sub: 'Completed invoices', bg: '#f0fdf4', border: '#bbf7d0', color: '#15803d', icon: '✅' },
-          { label: 'Pending Payment', value: '$0', sub: 'Active files total',  bg: '#fffbeb', border: '#fde68a', color: '#b45309', icon: '⏳' },
-          
+          { label: 'Total Paid',  value: fmt(totals.total_paid),  sub: 'Cumulative payments received', bg: '#f0fdf4', border: '#bbf7d0', color: '#15803d', icon: '✅' },
+          { label: 'Pending Due', value: fmt(totals.due_payment),  sub: 'Amount still outstanding',    bg: hasDue ? '#fef2f2' : '#f0fdf4', border: hasDue ? '#fca5a5' : '#bbf7d0', color: hasDue ? '#b91c1c' : '#15803d', icon: hasDue ? '⏳' : '✅' },
+          { label: 'Balance',     value: fmt(totals.balance),      sub: 'total_paid − due_payment',    bg: totals.balance >= 0 ? '#f0fdf4' : '#fef2f2', border: totals.balance >= 0 ? '#bbf7d0' : '#fca5a5', color: totals.balance >= 0 ? '#15803d' : '#b91c1c', icon: totals.balance >= 0 ? '💰' : '⚠️' },
         ].map((st, i) => (
           <div key={i} style={{ background: st.bg, border: `1px solid ${st.border}`, borderRadius: 16, padding: 20 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
               <div style={{ fontSize: 9, fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1, color: '#64748b' }}>{st.label}</div>
-              <span style={{ fontSize: 16 }}>{st.icon}</span>
+              <span style={{ fontSize: 18 }}>{st.icon}</span>
             </div>
-            <div style={{ fontSize: 26, fontWeight: 900, color: st.color }}>{st.value}</div>
+            <div style={{ fontSize: 26, fontWeight: 900, color: st.color }}>
+              {totalsLoading ? <span style={{ fontSize: 13, color: '#94a3b8', fontStyle: 'italic' }}>Loading…</span> : st.value}
+            </div>
             <div style={{ fontSize: 9, color: '#94a3b8', marginTop: 4, fontWeight: 700 }}>{st.sub}</div>
           </div>
         ))}
       </div>
 
-      {/* Payment Form */}
-      <div style={{ background: '#fff', border: '1px solid #f1f5f9', borderRadius: 18, padding: 22 }}>
-        <div style={{ fontSize: 10, fontWeight: 900, color: '#0B1F3A', textTransform: 'uppercase', letterSpacing: 2, marginBottom: 20 }}>
-          Make a Payment
-        </div>
-        <div style={{ maxWidth: 520 }}>
-
-          {/* ── Amount Input ── */}
-          <div style={{ marginBottom: 14 }}>
-            <label style={{ display: 'block', fontSize: 9, fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1.5, color: '#0B1F3A', marginBottom: 6, fontFamily: '"Times New Roman", serif' }}>
-              Payment Amount (USD) *
-            </label>
-            <input
-              type="number"
-              placeholder="Enter amount e.g. 150"
-              min="1"
-              value={payAmount}
-              onChange={e => { setPayAmount(e.target.value); setAmtError(''); }}
-              style={{
-                width: '100%', padding: '12px 16px',
-                background: '#f8fafc',
-                border: `1px solid ${amtError ? '#ef4444' : '#e2e8f0'}`,
-                borderRadius: 12, fontSize: 13,
-                fontFamily: '"Times New Roman", serif',
-                outline: 'none', boxSizing: 'border-box',
-              }}
-            />
-            {amtError && (
-              <div style={{ fontSize: 11, color: '#ef4444', marginTop: 4, fontWeight: 600 }}>{amtError}</div>
-            )}
+      {/* Per-request due breakdown */}
+      {dueReqs.length > 0 && (
+        <div style={{ background: '#fff', border: '1px solid var(--border)', borderRadius: 16, overflow: 'hidden' }}>
+          <div style={{ padding: '14px 20px', borderBottom: '1px solid #fee2e2', background: '#fef2f2' }}>
+            <div style={{ fontSize: 10, fontWeight: 900, color: '#b91c1c', textTransform: 'uppercase', letterSpacing: 1.5 }}>Outstanding Due — Per Request</div>
           </div>
-
-          {/* ── Reference Input ── */}
-          <div style={{ marginBottom: 14 }}>
-            <label style={{ display: 'block', fontSize: 9, fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1.5, color: '#0B1F3A', marginBottom: 6, fontFamily: '"Times New Roman", serif' }}>
-              Payment Reference (File ID)
-            </label>
-            <input
-              type="text"
-              placeholder="e.g. SNJ-2024-001"
-              value={payRef}
-              onChange={e => setPayRef(e.target.value)}
-              style={{
-                width: '100%', padding: '12px 16px',
-                background: '#f8fafc', border: '1px solid #e2e8f0',
-                borderRadius: 12, fontSize: 13,
-                fontFamily: '"Times New Roman", serif',
-                outline: 'none', boxSizing: 'border-box',
-              }}
-            />
-          </div>
-
-          {/* ── Live Preview ── */}
-          {payAmount && parseFloat(payAmount) > 0 && (
-            <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 12, padding: '12px 16px', marginBottom: 14, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div>
-                <div style={{ fontSize: 9, fontWeight: 900, textTransform: 'uppercase', color: '#64748b', letterSpacing: 1 }}>You will be charged</div>
-                <div style={{ fontSize: 20, fontWeight: 900, color: '#15803d', marginTop: 2 }}>${parseFloat(payAmount).toFixed(2)} USD</div>
+          {dueReqs.map((r, i) => (
+            <div key={r.id} style={{ padding: '14px 20px', borderBottom: i < dueReqs.length - 1 ? '1px solid #f1f5f9' : 'none', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                {r.country_flag
+                  ? <img src={`https://flagcdn.com/w40/${r.country_flag}.png`} alt="" style={{ width: 36, height: 26, borderRadius: 6, objectFit: 'cover', border: '1px solid var(--border)' }} />
+                  : <div style={{ width: 36, height: 26, borderRadius: 6, background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>🌍</div>
+                }
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 'bold', color: 'var(--navy)' }}>{r.company_name}</div>
+                  <div style={{ fontSize: 9, color: 'var(--tm)', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '.06em', marginTop: 1 }}>REQ-{r.id} · {r.job_title} · {r.destination_country}</div>
+                </div>
               </div>
               <div style={{ textAlign: 'right' }}>
-                <div style={{ fontSize: 9, fontWeight: 900, textTransform: 'uppercase', color: '#64748b', letterSpacing: 1 }}>Reference</div>
-                <div style={{ fontSize: 12, fontWeight: 700, color: '#0B1F3A', marginTop: 2 }}>{payRef.trim() || 'SNJ-GENERAL'}</div>
+                <div style={{ fontSize: 18, fontWeight: 900, color: '#b91c1c' }}>${parseFloat(r.due_payment).toFixed(2)}</div>
+                <div style={{ fontSize: 9, color: 'var(--tm)', fontWeight: 'bold', textTransform: 'uppercase' }}>Due</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Payment form */}
+      <div style={{ background: '#fff', border: '1px solid #f1f5f9', borderRadius: 18, padding: 22 }}>
+        <div style={{ fontSize: 10, fontWeight: 900, color: 'var(--navy)', textTransform: 'uppercase', letterSpacing: 2, marginBottom: 20 }}>Make a Payment</div>
+        <div style={{ maxWidth: 520 }}>
+
+          <div style={{ marginBottom: 14 }}>
+            <label style={{ display: 'block', fontSize: 9, fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1.5, color: 'var(--navy)', marginBottom: 6, fontFamily: 'var(--serif)' }}>Payment Amount (USD) *</label>
+            <input type="number" placeholder="e.g. 150" min="1" value={payAmount}
+              onChange={e => { setPayAmount(e.target.value); setAmtError(''); }}
+              style={{ width: '100%', padding: '12px 16px', background: '#f8fafc', border: `1.5px solid ${amtError ? '#ef4444' : '#e2e8f0'}`, borderRadius: 12, fontSize: 13, fontFamily: 'var(--serif)', outline: 'none', boxSizing: 'border-box' }}
+            />
+            {amtError && <div style={{ fontSize: 11, color: '#ef4444', marginTop: 4, fontWeight: 600 }}>{amtError}</div>}
+          </div>
+
+          <div style={{ marginBottom: 14 }}>
+            <label style={{ display: 'block', fontSize: 9, fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1.5, color: 'var(--navy)', marginBottom: 6, fontFamily: 'var(--serif)' }}>Payment Reference</label>
+            <input type="text" placeholder="e.g. SNJ-2024-001" value={payRef}
+              onChange={e => setPayRef(e.target.value)}
+              style={{ width: '100%', padding: '12px 16px', background: '#f8fafc', border: '1.5px solid #e2e8f0', borderRadius: 12, fontSize: 13, fontFamily: 'var(--serif)', outline: 'none', boxSizing: 'border-box' }}
+            />
+          </div>
+
+          {dueReqs.length > 0 && (
+            <div style={{ marginBottom: 14 }}>
+              <label style={{ display: 'block', fontSize: 9, fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1.5, color: 'var(--navy)', marginBottom: 6, fontFamily: 'var(--serif)' }}>Apply to Specific Request (optional)</label>
+              <select value={requestId} onChange={e => setRequestId(e.target.value)}
+                style={{ width: '100%', padding: '12px 16px', background: '#f8fafc', border: '1.5px solid #e2e8f0', borderRadius: 12, fontSize: 13, fontFamily: 'var(--serif)', outline: 'none', boxSizing: 'border-box' }}
+              >
+                <option value="">Auto-distribute across all due requests</option>
+                {dueReqs.map(r => (
+                  <option key={r.id} value={r.id}>REQ-{r.id} — {r.company_name} ({r.destination_country}) — Due: ${parseFloat(r.due_payment).toFixed(2)}</option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {payAmount && parseFloat(payAmount) > 0 && (
+            <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 12, padding: '14px 18px', marginBottom: 14 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <div>
+                  <div style={{ fontSize: 9, fontWeight: 900, textTransform: 'uppercase', color: '#64748b', letterSpacing: 1 }}>You will be charged</div>
+                  <div style={{ fontSize: 22, fontWeight: 900, color: '#15803d', marginTop: 2 }}>${parseFloat(payAmount).toFixed(2)} USD</div>
+                  {hasDue && <div style={{ fontSize: 10, color: '#64748b', marginTop: 4 }}>Due after payment: <b style={{ color: '#15803d' }}>${Math.max(0, totals.due_payment - parseFloat(payAmount)).toFixed(2)}</b></div>}
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontSize: 9, fontWeight: 900, textTransform: 'uppercase', color: '#64748b', letterSpacing: 1 }}>Reference</div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--navy)', marginTop: 2 }}>{payRef.trim() || 'SNJ-GENERAL'}</div>
+                </div>
               </div>
             </div>
           )}
 
-          {/* ── Stripe Box ── */}
-          <div style={{ background: '#0B1F3A', borderRadius: 16, padding: 22, marginTop: 8 }}>
-            <div style={{ color: '#EAB308', fontSize: 9, fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 8 }}>
-              Payment Gateway — Stripe
+          <div style={{ background: 'var(--navy)', borderRadius: 16, padding: 22 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+              <div style={{ width: 32, height: 32, background: 'rgba(234,179,8,.15)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <span style={{ fontSize: 16 }}>🔒</span>
+              </div>
+              <div>
+                <div style={{ color: '#EAB308', fontSize: 9, fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1.5 }}>Stripe Secured Checkout</div>
+                <div style={{ color: '#64748b', fontSize: 9, marginTop: 1 }}>256-bit SSL · PCI DSS Compliant</div>
+              </div>
             </div>
-            <div style={{ color: '#94a3b8', fontSize: 12, lineHeight: 1.5 }}>
-              Enter the amount above, then proceed to Stripe checkout.
+            <div style={{ color: '#94a3b8', fontSize: 12, lineHeight: 1.6, marginBottom: 14 }}>
+              After payment, your outstanding due will be automatically reduced and your account updated in real time.
             </div>
             <button
-              onClick={handlePaymentRedirect}
-              style={{
-                width: '100%', background: '#EAB308', color: '#0B1F3A',
-                border: 'none', padding: 13, borderRadius: 12,
-                fontWeight: 900, textTransform: 'uppercase', fontSize: 12,
-                fontFamily: '"Times New Roman", serif',
-                letterSpacing: 1, cursor: 'pointer', marginTop: 14,
-              }}
+              onClick={handleProceedToPayment}
+              style={{ width: '100%', background: '#EAB308', color: 'var(--navy)', border: 'none', padding: 14, borderRadius: 12, fontWeight: 900, textTransform: 'uppercase', fontSize: 12, fontFamily: 'var(--serif)', letterSpacing: 1, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
             >
-              💳 Proceed to Stripe Payment
+              💳 Proceed to Secure Payment
             </button>
           </div>
 
@@ -1200,7 +1300,7 @@ export default function EmployerDashboard() {
       case 'notifications': return <NotificationsPage  {...p} />;
       case 'requests':      return <RequestsPage       {...p} showSubmit={() => setForm(true)} />;
       case 'progress':      return <ProgressPage       {...p} />;
-      case 'payment':       return <Payment            {...p} />;
+      case 'payment':       return <Payment            employerId={employerId} />;
       case 'whychoose':     return <WhyChoosePage />;
       case 'about':         return <AboutPage />;
       case 'network':       return <NetworkPage />;

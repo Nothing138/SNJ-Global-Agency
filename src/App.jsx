@@ -8,6 +8,7 @@ import NotFound from './pages/NotFound';
 import Register from './pages/Register';
 import GlobalDisclaimer from './pages/User-Side/GlobalDisclaimer';
 import PaymentPage from './pages/PaymentPage.jsx';
+import ServiceAreaCountry from './pages/ServiceAreaCountry.jsx';
 // Admin Pages
 import AdminLogin from './pages/Admin/AdminLogin';
 import DashboardHome from './pages/Admin/DashboardHome';
@@ -34,8 +35,8 @@ import EmployeeList from './pages/Admin/Employee-List';
 import B2BPartner from './pages/Admin/B2BPartnerList';
 import B2BPricing from './pages/Admin/B2BPricing.jsx';
 import AssignTask from './pages/Admin/AssignTask.jsx';
-import WorkerRequest from './pages/Admin/WorkerRequest.jsx';
-import ServiceAreaCountry from './pages/ServiceAreaCountry.jsx';
+import WorkerRequest from './pages/Admin/WorkerRequest.jsx';Applicant_List
+import Applicant_List from './pages/Admin/Applicant_List.jsx';
 
 // User-Side
 import BlogDetail from './pages/User-Side/BlogDetail';
@@ -187,6 +188,7 @@ function App() {
           <Route path="b2b-partners" element={<B2BPartner />} />
           <Route path="b2b/pricing" element={<B2BPricing />} />
           <Route path="b2b/assign-file" element={<AssignTask />} />
+          <Route path="applicant-list" element={<Applicant_List />} />
         </Route>
 
         {/* ── 404 ──────────────────────────────────────────────────────────── */}

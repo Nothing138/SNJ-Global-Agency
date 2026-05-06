@@ -14,10 +14,8 @@ import { toast, Toaster } from 'react-hot-toast';
 
 const BASE_URL = "http://localhost:5000";
 
-// JWT থেকে user id বের করার helper
 const getUserId = (user) => {
     if (user?.id) return user.id;
-    // token থেকে decode করো
     try {
         const token = localStorage.getItem('token');
         if (token) {
@@ -26,6 +24,15 @@ const getUserId = (user) => {
         }
     } catch(e) {}
     return null;
+};
+
+// ─── Tracking Progress Config ──────────────────────────────────────────────────
+const getTrackingStatus = (value) => {
+    if (value === 0 || value === null || value === undefined) return { label: 'Pending',    color: '#94A3B8', bg: 'bg-slate-100',   text: 'text-slate-500',   ring: 'ring-slate-200',   pct: 0   };
+    if (value <= 25)  return { label: 'Accepted',   color: '#3B82F6', bg: 'bg-blue-50',    text: 'text-blue-600',    ring: 'ring-blue-200',    pct: 25  };
+    if (value <= 50)  return { label: 'Processing', color: '#F59E0B', bg: 'bg-amber-50',   text: 'text-amber-600',   ring: 'ring-amber-200',   pct: 50  };
+    if (value <= 75)  return { label: 'Confirmed',  color: '#8B5CF6', bg: 'bg-purple-50',  text: 'text-purple-600',  ring: 'ring-purple-200',  pct: 75  };
+    return             { label: 'Completed',  color: '#10B981', bg: 'bg-emerald-50', text: 'text-emerald-600', ring: 'ring-emerald-200', pct: 100 };
 };
 
 // ─── Status Config ─────────────────────────────────────────────────────────────
@@ -66,7 +73,6 @@ const getStepIndex = (status) => {
     return 0;
 };
 
-// ─── Socket singleton (module-level so it's not recreated on re-render) ────────
 let socket = null;
 const getSocket = () => {
     if (!socket) {
@@ -75,9 +81,121 @@ const getSocket = () => {
     return socket;
 };
 
+// ─── Circular Progress Ring ────────────────────────────────────────────────────
+const CircularProgress = ({ value, color, size = 72 }) => {
+    const radius = (size - 10) / 2;
+    const circumference = 2 * Math.PI * radius;
+    const offset = circumference - (value / 100) * circumference;
+    return (
+        <svg width={size} height={size} className="rotate-[-90deg]">
+            <circle cx={size/2} cy={size/2} r={radius} fill="none" stroke="#E5E7EB" strokeWidth={6} />
+            <circle
+                cx={size/2} cy={size/2} r={radius} fill="none"
+                stroke={color} strokeWidth={6}
+                strokeDasharray={circumference}
+                strokeDashoffset={offset}
+                strokeLinecap="round"
+                style={{ transition: 'stroke-dashoffset 1.2s cubic-bezier(.4,0,.2,1)' }}
+            />
+        </svg>
+    );
+};
+
+// ─── Tracking Card Component ───────────────────────────────────────────────────
+const TrackingCard = ({ icon: Icon, label, value, colorClass }) => {
+    // Only render if value > 0
+    if (!value || value === 0) return null;
+
+    const st = getTrackingStatus(value);
+    const [animated, setAnimated] = useState(0);
+
+    useEffect(() => {
+        const timer = setTimeout(() => setAnimated(value), 100);
+        return () => clearTimeout(timer);
+    }, [value]);
+
+    const stages = [
+        { pct: 0,   label: 'Pending',    active: value >= 0 },
+        { pct: 25,  label: 'Accepted',   active: value >= 25 },
+        { pct: 50,  label: 'Processing', active: value >= 50 },
+        { pct: 75,  label: 'Confirmed',  active: value >= 75 },
+        { pct: 100, label: 'Completed',  active: value >= 100 },
+    ];
+
+    return (
+        <div className="glass border border-white/60 rounded-[2rem] p-6 shadow-sm card-hover overflow-hidden relative">
+            {/* Ambient glow */}
+            <div
+                className="absolute top-0 right-0 w-32 h-32 rounded-full opacity-10 blur-2xl pointer-events-none"
+                style={{ background: st.color }}
+            />
+
+            <div className="flex items-start justify-between mb-5">
+                <div className="flex items-center gap-3">
+                    <div className="w-11 h-11 bg-[#0B1F3A] rounded-xl flex items-center justify-center shadow">
+                        <Icon size={18} className="text-[#EAB308]" />
+                    </div>
+                    <div>
+                        <p className="text-[9px] font-bold text-[#64748B] uppercase tracking-widest font-body">Application</p>
+                        <p className="text-sm font-bold text-[#0B1F3A] font-body">{label}</p>
+                    </div>
+                </div>
+
+                {/* Circular Progress */}
+                <div className="relative flex items-center justify-center">
+                    <CircularProgress value={animated} color={st.color} size={68} />
+                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                        <span className="text-[13px] font-bold text-[#0B1F3A] font-body leading-none">{value}%</span>
+                    </div>
+                </div>
+            </div>
+
+            {/* Status Badge */}
+            <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full ${st.bg} mb-4`}>
+                <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: st.color }} />
+                <span className={`text-[10px] font-bold uppercase tracking-widest ${st.text} font-body`}>{st.label}</span>
+            </div>
+
+            {/* Stage Progress Bar */}
+            <div className="space-y-2">
+                <div className="flex items-center gap-0.5">
+                    {stages.slice(1).map((stage, i) => (
+                        <div key={i} className="flex-1 flex items-center gap-0.5">
+                            <div
+                                className="h-1.5 flex-1 rounded-full transition-all duration-700"
+                                style={{
+                                    background: stage.active ? st.color : '#E5E7EB',
+                                    transitionDelay: `${i * 100}ms`
+                                }}
+                            />
+                        </div>
+                    ))}
+                </div>
+                <div className="flex justify-between">
+                    {stages.map((s, i) => (
+                        <div key={i} className="flex flex-col items-center" style={{ width: i === 0 || i === stages.length - 1 ? 'auto' : '1fr' }}>
+                            <div
+                                className="w-2 h-2 rounded-full mb-1 transition-all duration-500"
+                                style={{ background: s.active ? st.color : '#E5E7EB', transitionDelay: `${i * 80}ms` }}
+                            />
+                            <span
+                                className="text-[8px] font-semibold font-body"
+                                style={{ color: s.active ? st.color : '#CBD5E1' }}
+                            >
+                                {i === 0 ? '0%' : `${s.pct}%`}
+                            </span>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </div>
+    );
+};
+
 // ─── Main Component ─────────────────────────────────────────────────────────────
 const UserProfile = () => {
     const [data, setData]             = useState(null);
+    const [tracking, setTracking]     = useState(null);
     const [loading, setLoading]       = useState(true);
     const [activeTab, setActiveTab]   = useState('overview');
     const [notifications, setNotifications] = useState([]);
@@ -86,14 +204,13 @@ const UserProfile = () => {
     const [unreadCount, setUnreadCount] = useState(0);
 
     const user = JSON.parse(localStorage.getItem('user'));
-    const userId = getUserId(user); // ← এটা দিয়ে সব জায়গায় user.id replace করো
-
+    const userId = getUserId(user);
     const sock = getSocket();
 
     useEffect(() => {
         if (user) {
             fetchProfile();
-            // Join room using user id as room name
+            fetchTracking();
             sock.emit('join_chat', { room: String(user.id) });
 
             sock.on('status_update', (update) => {
@@ -103,6 +220,7 @@ const UserProfile = () => {
                     time: new Date(), read: false,
                 });
                 fetchProfile();
+                fetchTracking();
                 toast.success(`Status Updated: ${update.status}`);
             });
 
@@ -133,6 +251,15 @@ const UserProfile = () => {
         }
     };
 
+    const fetchTracking = async () => {
+        try {
+            const res = await axios.get(`${BASE_URL}/api/users/tracking/${user.id}`);
+            setTracking(res.data || null);
+        } catch (err) {
+            console.error('Error fetching tracking', err);
+        }
+    };
+
     const addNotification = (notif) => {
         setNotifications(prev => [notif, ...prev].slice(0, 20));
         setUnreadCount(prev => prev + 1);
@@ -146,11 +273,10 @@ const UserProfile = () => {
     };
 
     const TABS = [
-        { id: 'overview',     label: 'Command Center', icon: ShieldCheck },
-        //{ id: 'applications', label: 'My Journey',     icon: Activity },
-        { id: 'documents',    label: 'Documents',      icon: FileText },
-        { id: 'chat',         label: 'Direct Support', icon: MessageSquare },
-        { id: 'security',     label: 'Security',       icon: Lock },
+        { id: 'overview',  label: 'Command Center', icon: ShieldCheck },
+        { id: 'documents', label: 'Documents',      icon: FileText },
+        { id: 'chat',      label: 'Direct Support', icon: MessageSquare },
+        { id: 'security',  label: 'Security',       icon: Lock },
     ];
 
     return (
@@ -296,26 +422,34 @@ const UserProfile = () => {
                                 </nav>
                             </div>
 
-                            {/* Quick Stats */}
-                            <div className="glass border border-white/60 p-4 rounded-[1.5rem] shadow-sm font-body">
-                                <p className="text-[9px] font-bold uppercase tracking-widest text-[#64748B] mb-3">Applications</p>
-                                <div className="space-y-2">
-                                    {[
-                                        { icon: Plane,     label: 'Visas',   count: data?.stats?.visas?.length || 0,   color: 'text-blue-500' },
-                                        { icon: Briefcase, label: 'Jobs',    count: data?.stats?.jobs?.length || 0,    color: 'text-purple-500' },
-                                        { icon: Map,       label: 'Tours',   count: data?.stats?.tours?.length || 0,   color: 'text-green-500' },
-                                        { icon: Ticket,    label: 'Flights', count: data?.stats?.flights?.length || 0, color: 'text-amber-500' },
-                                    ].map(s => (
-                                        <div key={s.label} className="flex items-center justify-between">
-                                            <div className="flex items-center gap-2">
-                                                <s.icon size={12} className={s.color} />
-                                                <span className="text-[10px] text-[#64748B]">{s.label}</span>
-                                            </div>
-                                            <span className="text-xs font-bold text-[#0B1F3A]">{s.count}</span>
-                                        </div>
-                                    ))}
+                            {/* Quick Stats — only non-zero */}
+                            {tracking && (
+                                <div className="glass border border-white/60 p-4 rounded-[1.5rem] shadow-sm font-body">
+                                    <p className="text-[9px] font-bold uppercase tracking-widest text-[#64748B] mb-3">Applications</p>
+                                    <div className="space-y-2">
+                                        {[
+                                            { icon: Plane,     label: 'Visas',   value: tracking.visa,   color: 'text-blue-500' },
+                                            { icon: Briefcase, label: 'Jobs',    value: tracking.job,    color: 'text-purple-500' },
+                                            { icon: Map,       label: 'Trips',   value: tracking.trip,   color: 'text-green-500' },
+                                            { icon: Ticket,    label: 'Flights', value: tracking.flight, color: 'text-amber-500' },
+                                        ].filter(s => s.value > 0).map(s => {
+                                            const st = getTrackingStatus(s.value);
+                                            return (
+                                                <div key={s.label} className="flex items-center justify-between">
+                                                    <div className="flex items-center gap-2">
+                                                        <s.icon size={12} className={s.color} />
+                                                        <span className="text-[10px] text-[#64748B]">{s.label}</span>
+                                                    </div>
+                                                    <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${st.bg} ${st.text}`}>{st.label}</span>
+                                                </div>
+                                            );
+                                        })}
+                                        {[tracking.visa, tracking.job, tracking.trip, tracking.flight].every(v => !v || v === 0) && (
+                                            <p className="text-[10px] text-[#94A3B8] text-center py-2">No active applications</p>
+                                        )}
+                                    </div>
                                 </div>
-                            </div>
+                            )}
                         </div>
 
                         {/* ── Main Content ────────────────────────────── */}
@@ -326,15 +460,9 @@ const UserProfile = () => {
                                         <Overview
                                             data={data}
                                             user={user}
+                                            tracking={tracking}
                                             completion={calcCompletion()}
                                             onRefresh={fetchProfile}
-                                        />
-                                    )}
-                                    {activeTab === 'applications' && (
-                                        <Applications
-                                            data={data}
-                                            selectedApp={selectedApp}
-                                            setSelectedApp={setSelectedApp}
                                         />
                                     )}
                                     {activeTab === 'documents' && (
@@ -359,8 +487,8 @@ const UserProfile = () => {
 // ─── Skeleton Loader ────────────────────────────────────────────────────────────
 const SkeletonLoader = () => (
     <div className="space-y-6 fade-up">
-        <div className="grid grid-cols-3 gap-4">
-            {[1, 2, 3].map(i => <div key={i} className="h-28 shimmer skeleton rounded-[1.5rem]" />)}
+        <div className="grid grid-cols-2 gap-4">
+            {[1, 2].map(i => <div key={i} className="h-48 shimmer skeleton rounded-[1.5rem]" />)}
         </div>
         <div className="h-64 shimmer skeleton rounded-[2rem]" />
         <div className="h-48 shimmer skeleton rounded-[2rem]" />
@@ -368,7 +496,7 @@ const SkeletonLoader = () => (
 );
 
 // ─── Overview / Command Center ──────────────────────────────────────────────────
-const Overview = ({ data, user, completion, onRefresh }) => {
+const Overview = ({ data, user, tracking, completion, onRefresh }) => {
     const [editMode, setEditMode] = useState(false);
     const [saving, setSaving]     = useState(false);
     const [form, setForm]         = useState({
@@ -403,6 +531,14 @@ const Overview = ({ data, user, completion, onRefresh }) => {
         }
     };
 
+    // Tracking cards config — only show if value > 0
+    const trackingCards = tracking ? [
+        { icon: Plane,     label: 'Visa Application',   value: tracking.visa,   key: 'visa' },
+        { icon: Briefcase, label: 'Job Application',    value: tracking.job,    key: 'job' },
+        { icon: Map,       label: 'Trip Booking',       value: tracking.trip,   key: 'trip' },
+        { icon: Ticket,    label: 'Flight Booking',     value: tracking.flight, key: 'flight' },
+    ].filter(c => c.value > 0) : [];
+
     const allApps = [
         ...(data?.stats?.visas || []).map(v => ({ ...v, appType: 'Visa',   icon: Plane,     title: v.destination_country, sub: v.visa_type })),
         ...(data?.stats?.jobs  || []).map(j => ({ ...j, appType: 'Job',    icon: Briefcase, title: j.job_title,           sub: j.company_name })),
@@ -410,23 +546,32 @@ const Overview = ({ data, user, completion, onRefresh }) => {
 
     return (
         <div className="space-y-6 fade-up font-body">
-            {/* Stat Cards */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {[
-                    { icon: Plane,     label: 'Visa Apps',  count: data?.stats?.visas?.length || 0,    color: 'from-blue-500 to-blue-600' },
-                    { icon: Briefcase, label: 'Job Phases', count: data?.stats?.jobs?.length || 0,     color: 'from-purple-500 to-purple-600' },
-                    { icon: Map,       label: 'Tour Books', count: data?.stats?.tours?.length || 0,    color: 'from-emerald-500 to-emerald-600' },
-                    { icon: Ticket,    label: 'Flights',    count: data?.stats?.flights?.length || 0,  color: 'from-amber-500 to-amber-600' },
-                ].map(s => (
-                    <div key={s.label} className="glass border border-white/60 p-5 rounded-[1.5rem] shadow-sm card-hover">
-                        <div className={`w-10 h-10 bg-gradient-to-br ${s.color} rounded-xl flex items-center justify-center mb-3`}>
-                            <s.icon size={16} className="text-white" />
+
+            {/* ── Application Tracking Cards (only shown if value > 0) ── */}
+            {trackingCards.length > 0 && (
+                <div>
+                    <div className="flex items-center justify-between mb-4">
+                        <div>
+                            <p className="text-[9px] font-bold text-[#64748B] uppercase tracking-widest">Application Progress</p>
+                            <h3 className="font-display text-xl font-bold text-[#0B1F3A]">Your Journey</h3>
                         </div>
-                        <p className="text-2xl font-bold text-[#0B1F3A]">{s.count}</p>
-                        <p className="text-[9px] font-semibold text-[#64748B] uppercase tracking-widest mt-0.5">{s.label}</p>
+                        <div className="flex items-center gap-1.5 text-[10px] text-[#64748B]">
+                            <RefreshCw size={10} />
+                            <span>Live tracking</span>
+                        </div>
                     </div>
-                ))}
-            </div>
+                    <div className={`grid gap-4 ${trackingCards.length === 1 ? 'grid-cols-1 max-w-sm' : trackingCards.length === 2 ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1 md:grid-cols-2'}`}>
+                        {trackingCards.map((card) => (
+                            <TrackingCard
+                                key={card.key}
+                                icon={card.icon}
+                                label={card.label}
+                                value={card.value}
+                            />
+                        ))}
+                    </div>
+                </div>
+            )}
 
             {/* Recent Applications */}
             {allApps.length > 0 && (
@@ -515,60 +660,11 @@ const Overview = ({ data, user, completion, onRefresh }) => {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Full Name */}
-                    <EditableInfoItem
-                        icon={<UserCircle size={13} />}
-                        label="Legal Full Name"
-                        value={form.full_name}
-                        field="full_name"
-                        editMode={editMode}
-                        onChange={(val) => setForm(p => ({ ...p, full_name: val }))}
-                    />
-
-                    {/* Nationality */}
-                    <EditableInfoItem
-                        icon={<Globe size={13} />}
-                        label="Nationality"
-                        value={form.nationality}
-                        field="nationality"
-                        editMode={editMode}
-                        onChange={(val) => setForm(p => ({ ...p, nationality: val }))}
-                    />
-
-                    {/* Passport */}
-                    <EditableInfoItem
-                        icon={<CreditCard size={13} />}
-                        label="Passport Number"
-                        value={editMode ? form.passport_number : maskPassport(form.passport_number)}
-                        field="passport_number"
-                        editMode={editMode}
-                        secure={!editMode}
-                        onChange={(val) => setForm(p => ({ ...p, passport_number: val }))}
-                    />
-
-                    {/* NID */}
-                    <EditableInfoItem
-                        icon={<Fingerprint size={13} />}
-                        label="National ID"
-                        value={editMode ? form.nid_number : (form.nid_number ? '••••' + form.nid_number.slice(-4) : 'N/A')}
-                        field="nid_number"
-                        editMode={editMode}
-                        secure={!editMode}
-                        onChange={(val) => setForm(p => ({ ...p, nid_number: val }))}
-                    />
-
-                    {/* Phone */}
-                    <EditableInfoItem
-                        icon={<Phone size={13} />}
-                        label="Primary Contact"
-                        value={form.phone_number}
-                        field="phone_number"
-                        editMode={editMode}
-                        placeholder="Add contact number"
-                        onChange={(val) => setForm(p => ({ ...p, phone_number: val }))}
-                    />
-
-                    {/* Email (read-only always) */}
+                    <EditableInfoItem icon={<UserCircle size={13} />} label="Legal Full Name" value={form.full_name} field="full_name" editMode={editMode} onChange={(val) => setForm(p => ({ ...p, full_name: val }))} />
+                    <EditableInfoItem icon={<Globe size={13} />} label="Nationality" value={form.nationality} field="nationality" editMode={editMode} onChange={(val) => setForm(p => ({ ...p, nationality: val }))} />
+                    <EditableInfoItem icon={<CreditCard size={13} />} label="Passport Number" value={editMode ? form.passport_number : maskPassport(form.passport_number)} field="passport_number" editMode={editMode} secure={!editMode} onChange={(val) => setForm(p => ({ ...p, passport_number: val }))} />
+                    <EditableInfoItem icon={<Fingerprint size={13} />} label="National ID" value={editMode ? form.nid_number : (form.nid_number ? '••••' + form.nid_number.slice(-4) : 'N/A')} field="nid_number" editMode={editMode} secure={!editMode} onChange={(val) => setForm(p => ({ ...p, nid_number: val }))} />
+                    <EditableInfoItem icon={<Phone size={13} />} label="Primary Contact" value={form.phone_number} field="phone_number" editMode={editMode} placeholder="Add contact number" onChange={(val) => setForm(p => ({ ...p, phone_number: val }))} />
                     <div>
                         <p className="text-[9px] font-bold text-[#EAB308] uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
                             <Mail size={13} /> Email Identity
@@ -576,18 +672,8 @@ const Overview = ({ data, user, completion, onRefresh }) => {
                         <p className="text-sm font-bold text-[#0F172A]">{data?.profile?.email || 'Not specified'}</p>
                         <p className="text-[9px] text-[#94A3B8] mt-0.5">Email cannot be changed here</p>
                     </div>
-
-                    {/* Address */}
                     <div className="md:col-span-2">
-                        <EditableInfoItem
-                            icon={<MapPin size={13} />}
-                            label="Address"
-                            value={form.address}
-                            field="address"
-                            editMode={editMode}
-                            placeholder="Your address"
-                            onChange={(val) => setForm(p => ({ ...p, address: val }))}
-                        />
+                        <EditableInfoItem icon={<MapPin size={13} />} label="Address" value={form.address} field="address" editMode={editMode} placeholder="Your address" onChange={(val) => setForm(p => ({ ...p, address: val }))} />
                     </div>
                 </div>
 
@@ -629,160 +715,14 @@ const EditableInfoItem = ({ icon, label, value, field, editMode, onChange, secur
     </div>
 );
 
-// ─── Applications / My Journey ──────────────────────────────────────────────────
-/*const Applications = ({ data, selectedApp, setSelectedApp }) => {
-    const [subTab, setSubTab] = useState('visa');
-
-    const tabs = [
-        { id: 'visa',   label: 'Visa',   icon: Plane,     items: data?.stats?.visas || [] },
-        { id: 'job',    label: 'Job',    icon: Briefcase, items: data?.stats?.jobs || [] },
-        { id: 'tour',   label: 'Tour',   icon: Map,       items: data?.stats?.tours || [] },
-        { id: 'flight', label: 'Flight', icon: Ticket,    items: data?.stats?.flights || [] },
-    ];
-
-    const getItems = () => tabs.find(t => t.id === subTab)?.items || [];
-
-    const mapItem = (item) => {
-        switch (subTab) {
-            case 'visa':   return { title: item.destination_country, sub: item.visa_type, status: item.application_status, date: item.submitted_at, note: item.admin_note, icon: Plane, country: item.destination_country, type: 'Visa' };
-            case 'job':    return { title: item.job_title, sub: item.company_name, status: item.status, date: item.applied_at, note: item.admin_note, icon: Briefcase, country: item.country, type: 'Job' };
-            case 'tour':   return { title: item.tour_name || item.title, sub: item.destination, status: item.status, date: item.booked_at, note: item.admin_note, icon: Map, country: item.destination, type: 'Tour' };
-            case 'flight': return { title: `${item.departure_city} → ${item.destination_city}`, sub: `$${item.total_cost || '0'}`, status: item.status, date: item.travel_date, note: item.admin_note, icon: Ticket, country: item.destination_city, type: 'Flight' };
-            default:       return {};
-        }
-    };
-
-    if (selectedApp) {
-        return <ApplicationDetail app={selectedApp} onBack={() => setSelectedApp(null)} />;
-    }
-
-    return (
-        <div className="space-y-5 fade-up font-body">
-            <div className="glass border border-white/60 p-1.5 rounded-[1.5rem] shadow-sm flex gap-1.5">
-                {tabs.map(tab => {
-                    const Icon = tab.icon;
-                    return (
-                        <button
-                            key={tab.id}
-                            onClick={() => setSubTab(tab.id)}
-                            className={`flex-1 py-3 rounded-xl text-[10px] font-semibold uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${
-                                subTab === tab.id ? 'bg-[#0B1F3A] text-[#EAB308] shadow-md' : 'text-[#64748B] hover:bg-[#F0F4F8]'
-                            }`}
-                        >
-                            <Icon size={12} /> {tab.label}
-                            {tab.items.length > 0 && (
-                                <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold ${subTab === tab.id ? 'bg-[#EAB308]/20 text-[#EAB308]' : 'bg-[#E5E7EB] text-[#64748B]'}`}>
-                                    {tab.items.length}
-                                </span>
-                            )}
-                        </button>
-                    );
-                })}
-            </div>
-
-            <div className="space-y-3">
-                {getItems().length === 0 ? (
-                    <div className="glass border border-white/60 rounded-[2rem] p-16 text-center shadow-sm">
-                        <div className="w-16 h-16 bg-[#F0F4F8] rounded-2xl flex items-center justify-center mx-auto mb-4">
-                            <FileText size={24} className="text-[#94A3B8]" />
-                        </div>
-                        <p className="text-sm font-bold text-[#64748B] uppercase tracking-widest">No {subTab} applications found</p>
-                        <p className="text-xs text-[#94A3B8] mt-2">Your applications will appear here once submitted.</p>
-                    </div>
-                ) : getItems().map((item, i) => {
-                    const mapped = mapItem(item);
-                    const st = getStatus(mapped.status);
-                    const stepIdx = getStepIndex(mapped.status);
-                    const Icon = mapped.icon;
-                    return (
-                        <div
-                            key={i}
-                            className="glass border border-white/60 rounded-[1.5rem] shadow-sm card-hover overflow-hidden cursor-pointer"
-                            onClick={() => setSelectedApp({ ...mapped, raw: item })}
-                        >
-                            <div className="p-5">
-                                <div className="flex items-start justify-between mb-4">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 bg-[#0B1F3A] rounded-xl flex items-center justify-center flex-shrink-0">
-                                            <Icon size={16} className="text-[#EAB308]" />
-                                        </div>
-                                        <div>
-                                            <p className="font-bold text-sm text-[#0B1F3A]">{mapped.title}</p>
-                                            <p className="text-[10px] text-[#64748B] font-medium">{mapped.sub}</p>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                        <StatusBadge status={mapped.status} />
-                                        <ChevronRight size={14} className="text-[#94A3B8]" />
-                                    </div>
-                                </div>
-
-                                {/* Timeline Progress 
-                                <div className="relative">
-                                    <div className="flex items-center justify-between relative z-10">
-                                        {TIMELINE_STEPS.map((step, idx) => {
-                                            const StepIcon = step.icon;
-                                            const done    = idx <= stepIdx;
-                                            const current = idx === stepIdx;
-                                            return (
-                                                <div key={idx} className="flex flex-col items-center gap-1 flex-1">
-                                                    <div className={`w-7 h-7 rounded-full flex items-center justify-center border-2 transition-all ${
-                                                        done
-                                                            ? current
-                                                                ? 'bg-[#EAB308] border-[#EAB308] shadow-lg shadow-[#EAB308]/30'
-                                                                : 'bg-[#0B1F3A] border-[#0B1F3A]'
-                                                            : 'bg-white border-[#E2E8F0]'
-                                                    }`}>
-                                                        <StepIcon size={10} className={done ? 'text-white' : 'text-[#CBD5E1]'} />
-                                                    </div>
-                                                    <span className={`text-[8px] font-semibold text-center leading-tight ${done ? 'text-[#0B1F3A]' : 'text-[#CBD5E1]'}`}>
-                                                        {step.label}
-                                                    </span>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                    <div className="absolute top-3.5 left-3.5 right-3.5 h-0.5 bg-[#E2E8F0] -z-0">
-                                        <div
-                                            className="h-full bg-gradient-to-r from-[#0B1F3A] to-[#EAB308] transition-all duration-700"
-                                            style={{ width: `${(stepIdx / (TIMELINE_STEPS.length - 1)) * 100}%` }}
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="flex items-center justify-between mt-4 pt-3 border-t border-[#F0F4F8]">
-                                    <div className="flex items-center gap-1.5 text-[10px] text-[#64748B]">
-                                        <Calendar size={10} />
-                                        {mapped.date ? new Date(mapped.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Date not set'}
-                                    </div>
-                                    {mapped.note && (
-                                        <div className="flex items-center gap-1.5 text-[10px] text-[#0B1F3A] font-semibold">
-                                            <MessageSquare size={10} className="text-[#EAB308]" /> Admin Note
-                                        </div>
-                                    )}
-                                    <div className="flex items-center gap-1 text-[10px] text-[#64748B]">
-                                        <RefreshCw size={9} /> Live
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    );
-                })}
-            </div>
-        </div>
-    );
-};*/
-
 // ─── Application Detail ─────────────────────────────────────────────────────────
 const ApplicationDetail = ({ app, onBack }) => {
     const stepIdx = getStepIndex(app.status);
-
     return (
         <div className="fade-up space-y-5 font-body">
             <button onClick={onBack} className="flex items-center gap-2 text-[11px] font-semibold text-[#64748B] hover:text-[#0B1F3A] transition-colors uppercase tracking-wider">
                 <ChevronRight size={14} className="rotate-180" /> Back to Applications
             </button>
-
             <div className="glass border border-white/60 p-7 rounded-[2rem] shadow-sm">
                 <div className="flex items-start justify-between mb-6">
                     <div>
@@ -792,16 +732,14 @@ const ApplicationDetail = ({ app, onBack }) => {
                     </div>
                     <StatusBadge status={app.status} large />
                 </div>
-
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
-                    <DetailMeta label="Type"        value={app.type} />
-                    <DetailMeta label="Country"     value={app.country || 'N/A'} />
-                    <DetailMeta label="Submitted"   value={app.date ? new Date(app.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : 'N/A'} />
-                    <DetailMeta label="Handled by"  value="SNJ Admin Team" highlight />
+                    <DetailMeta label="Type"         value={app.type} />
+                    <DetailMeta label="Country"      value={app.country || 'N/A'} />
+                    <DetailMeta label="Submitted"    value={app.date ? new Date(app.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : 'N/A'} />
+                    <DetailMeta label="Handled by"   value="SNJ Admin Team" highlight />
                     <DetailMeta label="Last Updated" value={new Date().toLocaleDateString()} />
-                    <DetailMeta label="Next Step"   value={TIMELINE_STEPS[Math.min(stepIdx + 1, TIMELINE_STEPS.length - 1)]?.label || 'Awaiting Decision'} />
+                    <DetailMeta label="Next Step"    value={TIMELINE_STEPS[Math.min(stepIdx + 1, TIMELINE_STEPS.length - 1)]?.label || 'Awaiting Decision'} />
                 </div>
-
                 <div>
                     <p className="text-[10px] font-bold uppercase tracking-widest text-[#64748B] mb-5">Application Timeline</p>
                     <div className="space-y-0">
@@ -813,39 +751,27 @@ const ApplicationDetail = ({ app, onBack }) => {
                             return (
                                 <div key={idx} className="flex gap-4">
                                     <div className="flex flex-col items-center">
-                                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 border-2 ${
-                                            current ? 'bg-[#EAB308] border-[#EAB308] shadow-lg shadow-[#EAB308]/40'
-                                            : done   ? 'bg-[#0B1F3A] border-[#0B1F3A]'
-                                            :          'bg-white border-[#E2E8F0]'
-                                        }`}>
+                                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 border-2 ${current ? 'bg-[#EAB308] border-[#EAB308] shadow-lg shadow-[#EAB308]/40' : done ? 'bg-[#0B1F3A] border-[#0B1F3A]' : 'bg-white border-[#E2E8F0]'}`}>
                                             <StepIcon size={14} className={done ? 'text-white' : 'text-[#CBD5E1]'} />
                                         </div>
                                         {!isLast && <div className={`w-0.5 h-8 mt-1 ${done ? 'bg-[#0B1F3A]' : 'bg-[#E2E8F0]'}`} />}
                                     </div>
                                     <div className="pb-6">
                                         <p className={`text-sm font-bold ${done ? 'text-[#0B1F3A]' : 'text-[#CBD5E1]'}`}>{step.label}</p>
-                                        {current && (
-                                            <p className="text-[10px] text-[#EAB308] font-semibold mt-0.5 flex items-center gap-1">
-                                                <span className="w-1.5 h-1.5 bg-[#EAB308] rounded-full animate-pulse" /> Current Stage
-                                            </p>
-                                        )}
-                                        {done && !current && (
-                                            <p className="text-[10px] text-green-600 font-semibold mt-0.5">Completed</p>
-                                        )}
+                                        {current && <p className="text-[10px] text-[#EAB308] font-semibold mt-0.5 flex items-center gap-1"><span className="w-1.5 h-1.5 bg-[#EAB308] rounded-full animate-pulse" /> Current Stage</p>}
+                                        {done && !current && <p className="text-[10px] text-green-600 font-semibold mt-0.5">Completed</p>}
                                     </div>
                                 </div>
                             );
                         })}
                     </div>
                 </div>
-
                 {app.note && (
                     <div className="mt-4 p-5 bg-[#0B1F3A]/5 border border-[#0B1F3A]/10 rounded-2xl relative gold-line pl-6">
                         <p className="text-[9px] font-bold text-[#EAB308] uppercase tracking-widest mb-1">Admin Note</p>
                         <p className="text-sm text-[#0F172A] font-medium">{app.note}</p>
                     </div>
                 )}
-
                 <div className="mt-5 p-4 bg-blue-50 border border-blue-100 rounded-2xl flex items-center gap-3">
                     <ArrowRight size={16} className="text-blue-500 flex-shrink-0" />
                     <div>
@@ -982,7 +908,6 @@ const DocumentManager = ({ user, data }) => {
                                 <p className="text-[10px] text-[#64748B]">{cat.items.filter(i => getDoc(i.key)).length}/{cat.items.length} uploaded</p>
                             </div>
                         </div>
-
                         <div className="p-6 space-y-4">
                             {cat.meta.length > 0 && (
                                 <div className="flex flex-wrap gap-4 pb-4 border-b border-[#F0F4F8]">
@@ -994,7 +919,6 @@ const DocumentManager = ({ user, data }) => {
                                     ))}
                                 </div>
                             )}
-
                             {cat.items.map((item, ii) => {
                                 const doc = getDoc(item.key);
                                 return (
@@ -1010,22 +934,12 @@ const DocumentManager = ({ user, data }) => {
                                         </div>
                                         <div className="flex items-center gap-2">
                                             {doc && <DocStatusBadge status={doc.status} />}
-                                            <label className={`flex items-center gap-1.5 text-[10px] font-bold uppercase px-3 py-2 rounded-xl cursor-pointer transition-all ${
-                                                uploading[item.key]
-                                                    ? 'bg-[#E5E7EB] text-[#94A3B8] cursor-not-allowed'
-                                                    : 'bg-[#0B1F3A] text-[#EAB308] hover:opacity-90'
-                                            }`}>
+                                            <label className={`flex items-center gap-1.5 text-[10px] font-bold uppercase px-3 py-2 rounded-xl cursor-pointer transition-all ${uploading[item.key] ? 'bg-[#E5E7EB] text-[#94A3B8] cursor-not-allowed' : 'bg-[#0B1F3A] text-[#EAB308] hover:opacity-90'}`}>
                                                 {uploading[item.key]
                                                     ? <><Loader size={11} className="animate-spin" /> Uploading</>
                                                     : <><Upload size={11} /> {doc ? 'Replace' : 'Upload'}</>
                                                 }
-                                                <input
-                                                    type="file"
-                                                    accept={item.accept}
-                                                    className="hidden"
-                                                    onChange={(e) => handleUpload(item.key, e.target.files[0])}
-                                                    disabled={uploading[item.key]}
-                                                />
+                                                <input type="file" accept={item.accept} className="hidden" onChange={(e) => handleUpload(item.key, e.target.files[0])} disabled={uploading[item.key]} />
                                             </label>
                                         </div>
                                     </div>
@@ -1058,7 +972,6 @@ const SupportChat = ({ user, addNotification, socket }) => {
     const ROOM = `chat_${Math.min(user.id, 1)}_${Math.max(user.id, 1)}`;
 
     useEffect(() => {
-        // Fetch message history
         const fetchMessages = async () => {
             try {
                 const res = await axios.get(`${BASE_URL}/api/users/messages/${user.id}`);
@@ -1069,12 +982,10 @@ const SupportChat = ({ user, addNotification, socket }) => {
         };
         fetchMessages();
 
-        // Join the specific chat room
         socket.emit('join_chat', { room: ROOM });
 
         socket.on('receive_message', (incomingData) => {
             setHistory(prev => {
-                // Avoid duplicate if we already added optimistically
                 if (prev.some(m => m.id && m.id === incomingData.id)) return prev;
                 return [...prev, incomingData];
             });
@@ -1109,7 +1020,6 @@ const SupportChat = ({ user, addNotification, socket }) => {
         setMsg('');
         setSending(true);
 
-        // Optimistic update
         const optimistic = { sender_id: user.id, receiver_id: 1, message: msgText, created_at: new Date() };
         setHistory(prev => [...prev, optimistic]);
 
@@ -1141,7 +1051,6 @@ const SupportChat = ({ user, addNotification, socket }) => {
     return (
         <div className="fade-up font-body">
             <div className="glass border border-white/60 rounded-[2rem] h-[620px] flex flex-col overflow-hidden shadow-sm">
-                {/* Header */}
                 <div className="px-6 py-4 bg-[#0B1F3A] flex items-center gap-3 flex-shrink-0">
                     <div className="relative">
                         <div className="w-10 h-10 bg-[#EAB308] text-[#0B1F3A] rounded-full flex items-center justify-center font-bold text-xs">AD</div>
@@ -1157,7 +1066,6 @@ const SupportChat = ({ user, addNotification, socket }) => {
                     </div>
                 </div>
 
-                {/* Messages */}
                 <div className="flex-1 overflow-y-auto p-5 space-y-4 bg-[#F8FAFC]">
                     {history.length === 0 && (
                         <div className="flex flex-col items-center justify-center h-full text-center">
@@ -1184,11 +1092,7 @@ const SupportChat = ({ user, addNotification, socket }) => {
                                             {!isUser && (
                                                 <div className="w-7 h-7 bg-[#EAB308] text-[#0B1F3A] rounded-full flex items-center justify-center font-bold text-[9px] mr-2 flex-shrink-0 self-end mb-1">AD</div>
                                             )}
-                                            <div className={`max-w-[72%] px-4 py-3 rounded-2xl text-xs leading-relaxed ${
-                                                isUser
-                                                    ? 'bg-[#0B1F3A] text-[#EAB308] rounded-tr-none font-semibold'
-                                                    : 'bg-white text-[#0F172A] rounded-tl-none border border-[#E5E7EB] shadow-sm'
-                                            }`}>
+                                            <div className={`max-w-[72%] px-4 py-3 rounded-2xl text-xs leading-relaxed ${isUser ? 'bg-[#0B1F3A] text-[#EAB308] rounded-tr-none font-semibold' : 'bg-white text-[#0F172A] rounded-tl-none border border-[#E5E7EB] shadow-sm'}`}>
                                                 {m.message}
                                                 <div className={`text-[9px] mt-1 ${isUser ? 'text-[#EAB308]/60 text-right' : 'text-[#94A3B8]'}`}>
                                                     {new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -1216,7 +1120,6 @@ const SupportChat = ({ user, addNotification, socket }) => {
                     <div ref={scrollRef} />
                 </div>
 
-                {/* Input */}
                 <div className="p-4 border-t border-[#E5E7EB] flex gap-3 bg-white flex-shrink-0">
                     <input
                         value={msg}
@@ -1240,9 +1143,8 @@ const SupportChat = ({ user, addNotification, socket }) => {
 
 // ─── Security Settings ──────────────────────────────────────────────────────────
 const SecuritySettings = ({ user, data, onRefresh }) => {
-    const [tab, setTab]           = useState('password');
+    const [tab, setTab]             = useState('password');
     const [passwords, setPasswords] = useState({ old: '', new: '', confirm: '' });
-    const [emailForm, setEmailForm] = useState({ newEmail: '', password: '' });
     const [nameForm, setNameForm]   = useState({ full_name: data?.profile?.full_name || '' });
     const [loading, setLoading]     = useState(false);
     const [showPass, setShowPass]   = useState(false);
@@ -1291,35 +1193,31 @@ const SecuritySettings = ({ user, data, onRefresh }) => {
     };
 
     const strengthConfig = [
-        { label: 'Weak',   color: 'bg-red-400',    text: 'text-red-500' },
-        { label: 'Fair',   color: 'bg-orange-400',  text: 'text-orange-500' },
-        { label: 'Good',   color: 'bg-amber-400',   text: 'text-amber-500' },
-        { label: 'Strong', color: 'bg-green-400',   text: 'text-green-500' },
+        { label: 'Weak',   color: 'bg-red-400',   text: 'text-red-500' },
+        { label: 'Fair',   color: 'bg-orange-400', text: 'text-orange-500' },
+        { label: 'Good',   color: 'bg-amber-400',  text: 'text-amber-500' },
+        { label: 'Strong', color: 'bg-green-400',  text: 'text-green-500' },
     ];
 
     const secTabs = [
-        { id: 'password', label: 'Password',   icon: Lock },
+        { id: 'password', label: 'Password',    icon: Lock },
         { id: 'name',     label: 'Update Name', icon: UserCircle },
     ];
 
     return (
         <div className="fade-up font-body space-y-5">
-            {/* Tab Switcher */}
             <div className="glass border border-white/60 p-1.5 rounded-[1.5rem] shadow-sm flex gap-1.5">
                 {secTabs.map(t => {
                     const Icon = t.icon;
                     return (
                         <button key={t.id} onClick={() => setTab(t.id)}
-                            className={`flex-1 py-3 rounded-xl text-[10px] font-semibold uppercase tracking-widest flex items-center justify-center gap-2 transition-all ${
-                                tab === t.id ? 'bg-[#0B1F3A] text-[#EAB308] shadow-md' : 'text-[#64748B] hover:bg-[#F0F4F8]'
-                            }`}>
+                            className={`flex-1 py-3 rounded-xl text-[10px] font-semibold uppercase tracking-widest flex items-center justify-center gap-2 transition-all ${tab === t.id ? 'bg-[#0B1F3A] text-[#EAB308] shadow-md' : 'text-[#64748B] hover:bg-[#F0F4F8]'}`}>
                             <Icon size={12} /> {t.label}
                         </button>
                     );
                 })}
             </div>
 
-            {/* Change Password */}
             {tab === 'password' && (
                 <div className="glass border border-white/60 p-8 rounded-[2rem] shadow-sm">
                     <div className="flex items-center gap-3 mb-7">
@@ -1331,13 +1229,9 @@ const SecuritySettings = ({ user, data, onRefresh }) => {
                             <p className="text-[11px] text-[#64748B]">Keep your account secure</p>
                         </div>
                     </div>
-
                     <form onSubmit={handlePasswordUpdate} className="max-w-md space-y-4">
-                        <PasswordField label="Current Password" value={passwords.old} show={showPass}
-                            onChange={(val) => setPasswords({ ...passwords, old: val })} />
-                        <PasswordField label="New Password" value={passwords.new} show={showPass}
-                            onChange={(val) => { setPasswords({ ...passwords, new: val }); calcStrength(val); }} />
-
+                        <PasswordField label="Current Password" value={passwords.old} show={showPass} onChange={(val) => setPasswords({ ...passwords, old: val })} />
+                        <PasswordField label="New Password" value={passwords.new} show={showPass} onChange={(val) => { setPasswords({ ...passwords, new: val }); calcStrength(val); }} />
                         {passwords.new && (
                             <div>
                                 <div className="flex gap-1 mb-1">
@@ -1345,28 +1239,12 @@ const SecuritySettings = ({ user, data, onRefresh }) => {
                                         <div key={i} className={`h-1 flex-1 rounded-full transition-all ${i <= strength ? strengthConfig[strength - 1]?.color : 'bg-[#E5E7EB]'}`} />
                                     ))}
                                 </div>
-                                {strength > 0 && (
-                                    <p className={`text-[10px] font-semibold ${strengthConfig[strength - 1]?.text}`}>
-                                        Password strength: {strengthConfig[strength - 1]?.label}
-                                    </p>
-                                )}
+                                {strength > 0 && <p className={`text-[10px] font-semibold ${strengthConfig[strength - 1]?.text}`}>Password strength: {strengthConfig[strength - 1]?.label}</p>}
                             </div>
                         )}
-
-                        <PasswordField label="Confirm New Password" value={passwords.confirm} show={showPass}
-                            onChange={(val) => setPasswords({ ...passwords, confirm: val })} />
-
-                        {passwords.confirm && passwords.new !== passwords.confirm && (
-                            <p className="text-[10px] text-red-500 font-semibold flex items-center gap-1">
-                                <XCircle size={11} /> Passwords do not match
-                            </p>
-                        )}
-                        {passwords.confirm && passwords.new === passwords.confirm && passwords.new && (
-                            <p className="text-[10px] text-green-500 font-semibold flex items-center gap-1">
-                                <CheckCircle size={11} /> Passwords match
-                            </p>
-                        )}
-
+                        <PasswordField label="Confirm New Password" value={passwords.confirm} show={showPass} onChange={(val) => setPasswords({ ...passwords, confirm: val })} />
+                        {passwords.confirm && passwords.new !== passwords.confirm && <p className="text-[10px] text-red-500 font-semibold flex items-center gap-1"><XCircle size={11} /> Passwords do not match</p>}
+                        {passwords.confirm && passwords.new === passwords.confirm && passwords.new && <p className="text-[10px] text-green-500 font-semibold flex items-center gap-1"><CheckCircle size={11} /> Passwords match</p>}
                         <div className="flex gap-3 pt-2">
                             <button type="button" onClick={() => setShowPass(!showPass)}
                                 className="p-4 bg-[#F8FAFC] border border-[#E5E7EB] rounded-2xl text-[#0B1F3A] hover:border-[#0B1F3A] transition-colors">
@@ -1381,7 +1259,6 @@ const SecuritySettings = ({ user, data, onRefresh }) => {
                 </div>
             )}
 
-            {/* Update Name */}
             {tab === 'name' && (
                 <div className="glass border border-white/60 p-8 rounded-[2rem] shadow-sm">
                     <div className="flex items-center gap-3 mb-7">
@@ -1393,26 +1270,16 @@ const SecuritySettings = ({ user, data, onRefresh }) => {
                             <p className="text-[11px] text-[#64748B]">Change your display name</p>
                         </div>
                     </div>
-
                     <form onSubmit={handleNameUpdate} className="max-w-md space-y-4">
                         <div>
                             <label className="text-[9px] font-bold text-[#EAB308] uppercase tracking-widest mb-2 block">Full Name</label>
-                            <input
-                                type="text"
-                                value={nameForm.full_name}
-                                onChange={(e) => setNameForm({ full_name: e.target.value })}
-                                required
+                            <input type="text" value={nameForm.full_name} onChange={(e) => setNameForm({ full_name: e.target.value })} required
                                 className="w-full bg-[#F8FAFC] border border-[#E5E7EB] rounded-2xl px-5 py-4 text-sm focus:border-[#0B1F3A] outline-none text-[#0F172A] transition-colors font-body"
-                                placeholder="Your full name"
-                            />
+                                placeholder="Your full name" />
                         </div>
-
                         <div className="p-3 bg-blue-50 border border-blue-100 rounded-xl">
-                            <p className="text-[10px] text-blue-600 font-semibold">
-                                Current name: <span className="text-blue-800">{data?.profile?.full_name || 'Not set'}</span>
-                            </p>
+                            <p className="text-[10px] text-blue-600 font-semibold">Current name: <span className="text-blue-800">{data?.profile?.full_name || 'Not set'}</span></p>
                         </div>
-
                         <button type="submit" disabled={loading}
                             className="w-full bg-[#0B1F3A] text-[#EAB308] py-4 rounded-2xl font-bold uppercase text-[10px] tracking-widest hover:opacity-95 disabled:opacity-60 flex items-center justify-center gap-2">
                             {loading ? <><Loader size={14} className="animate-spin" /> Saving...</> : <><Save size={14} /> Save Name</>}
@@ -1421,7 +1288,6 @@ const SecuritySettings = ({ user, data, onRefresh }) => {
                 </div>
             )}
 
-            {/* Security Tips */}
             <div className="glass border border-white/60 p-6 rounded-[2rem] shadow-sm">
                 <p className="text-[10px] font-bold uppercase tracking-widest text-[#64748B] mb-4">Security Tips</p>
                 <div className="space-y-3">
