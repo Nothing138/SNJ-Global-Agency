@@ -21,7 +21,8 @@ const io = new Server(server, {
 app.use(cors({
     origin: [
         'https://snj-global-agency-3el5.vercel.app',
-        'https://snj-global-agency-backend.onrender.com',
+        'https://snj-global-agency-backend-nhxq.onrender.com',
+        //'https://snj-global-agency-backend.onrender.com',
         'http://localhost:5173',
         'http://localhost:5174'
     ],
