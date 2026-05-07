@@ -246,6 +246,8 @@ const B2BDashboard = () => {
             state: {
                 amount:    parseFloat(payAmount),
                 reference: payRef.trim() || 'SNJ-GENERAL',
+                //partner_id: partnerId,
+                //task_id: taskId,
                 currency:  'usd',
                 label:     'B2B Visa Processing Fee',
             },
