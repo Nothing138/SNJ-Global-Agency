@@ -13,7 +13,7 @@ import Navbar from '../../components/Navbar';
 import io from 'socket.io-client';
 import { toast, Toaster } from 'react-hot-toast';
 
-const BASE_URL = "https://snj-global-agency-backend-nhxq.onrender.com";
+const BASE_URL = "http://localhost:5000";
 
 const getUserId = (user) => {
     if (user?.id) return user.id;
@@ -715,7 +715,7 @@ const Overview = ({ data, user, tracking, activeServices, completion, onRefresh 
                 <div className="glass border border-white/60 rounded-[2rem] p-10 text-center shadow-sm">
                     <div className="text-5xl mb-4">🌍</div>
                     <h3 className="font-display text-2xl font-bold text-[#0B1F3A] mb-2">No Active Services</h3>
-                    <p className="text-sm text-[#64748B]">Your service progress will appear here once activated by admin.</p>
+                    <p className="text-sm text-[#64748B]">Your service progress will appear here once activated by SNJ GLOBAL Routes Agency.</p>
                 </div>
             )}
 

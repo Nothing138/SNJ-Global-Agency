@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 // ─── Config ────────────────────────────────────────────────────────────────────
-const API_BASE = 'https://snj-global-agency-backend-nhxq.onrender.com/api';
+const API_BASE = 'http://localhost:5000/api';
 const REFRESH_INTERVAL = 30000;
 
 // ─── API Helper ────────────────────────────────────────────────────────────────

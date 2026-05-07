@@ -53,7 +53,7 @@ const Apply = () => {
     data.append('candidate_id', user.id);
 
     try {
-      const res = await axios.post('https://snj-global-agency-backend-nhxq.onrender.com/api/user-jobs/apply', data);
+      const res = await axios.post('http://localhost:5000/api/user-jobs/apply', data);
       
       if (res.data.success) {
         Swal.fire({

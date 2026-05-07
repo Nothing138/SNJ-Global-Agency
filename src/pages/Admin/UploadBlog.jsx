@@ -14,7 +14,7 @@ const UploadBlog = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const res = await axios.post('https://snj-global-agency-backend-nhxq.onrender.com/api/blogs', formData, {
+            const res = await axios.post('http://localhost:5000/api/blogs', formData, {
                 headers: { 
                     'admin-secret-key': 'JM_IT_GLOBAL_SECURE_KEY_2024' 
                 }

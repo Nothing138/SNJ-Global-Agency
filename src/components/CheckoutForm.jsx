@@ -27,7 +27,7 @@ const CheckoutForm = ({ amount, reference, userEmail, employerId, requestId, ret
     } else if (result.paymentIntent?.status === 'succeeded') {
       try {
         // ── Email notification (existing) ──
-        await axios.post('https://snj-global-agency-backend-nhxq.onrender.com/api/payment/confirm-notification', {
+        await axios.post('http://localhost:5000/api/payment/confirm-notification', {
           amount,
           reference,
           customerEmail: userEmail || 'Not Provided',
@@ -40,7 +40,7 @@ const CheckoutForm = ({ amount, reference, userEmail, employerId, requestId, ret
       // ── NEW: Record payment → due কমাবে ──
       if (employerId) {
         try {
-          await axios.post('https://snj-global-agency-backend-nhxq.onrender.com/api/employer-payment/record', {
+          await axios.post('http://localhost:5000/api/employer-payment/record', {
             employer_id: employerId,
             amount_paid: amount,
             reference:   reference || 'SNJ-GENERAL',
