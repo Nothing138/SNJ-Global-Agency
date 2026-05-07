@@ -12,7 +12,7 @@ import Navbar from '../../components/Navbar';
 import io from 'socket.io-client';
 import { toast, Toaster } from 'react-hot-toast';
 
-const BASE_URL = "http://localhost:5000";
+const BASE_URL = "https://snj-global-agency-backend-nhxq.onrender.com";
 
 const getUserId = (user) => {
     if (user?.id) return user.id;

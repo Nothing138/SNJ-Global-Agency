@@ -14,7 +14,7 @@ const DashboardHome = () => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/api/admin/dashboard-stats');
+        const res = await axios.get('https://snj-global-agency-backend-nhxq.onrender.com/api/admin/dashboard-stats');
         setStatsData(res.data);
         setLoading(false);
       } catch (err) {

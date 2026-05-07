@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 
 // ─── CONFIG ───────────────────────────────────────────────────
-const API_BASE        = 'http://localhost:5000/api';
+const API_BASE        = 'https://snj-global-agency-backend-nhxq.onrender.com/api';
 const AUTO_REFRESH_MS = 15_000;
 
 // ─── Constants ────────────────────────────────────────────────
