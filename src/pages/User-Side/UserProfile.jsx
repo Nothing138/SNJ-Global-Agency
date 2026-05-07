@@ -6,7 +6,8 @@ import {
     XCircle, Clock, AlertCircle, ChevronRight, Download, Globe,
     CreditCard, RefreshCw, MessageSquare, Star, Shield, Activity,
     MoreHorizontal, EyeOff, Loader, ArrowRight, Info, Calendar,
-    Edit2, Save, X, Mail, MapPin, Hash, Fingerprint
+    Edit2, Save, X, Mail, MapPin, Hash, Fingerprint, GraduationCap,
+    Package, Award, Navigation
 } from 'lucide-react';
 import Navbar from '../../components/Navbar';
 import io from 'socket.io-client';
@@ -26,13 +27,104 @@ const getUserId = (user) => {
     return null;
 };
 
+// ─── NEW: 5 Service Tracking Config ───────────────────────────────────────────
+const SERVICE_COLUMNS = [
+    {
+        key: 'visit_visa',
+        label: 'Visit Visa',
+        icon: Plane,
+        color: '#7c3aed',
+        gradient: 'from-violet-500 to-purple-600',
+        steps: [
+            'Document Submission',
+            'Visa Processing',
+            'Embassy Review',
+            'Approval',
+            'Passport Dispatch',
+        ],
+    },
+    {
+        key: 'student_visa',
+        label: 'Student Visa',
+        icon: GraduationCap,
+        color: '#0369a1',
+        gradient: 'from-sky-500 to-blue-600',
+        steps: [
+            'Profile Assessment',
+            'University Application',
+            'Offer Letter Received',
+            'Tuition Fee Submission',
+            'Visa Application Processing',
+            'Biometric Appointment',
+            'Visa Approval',
+            'Pre-Departure',
+        ],
+    },
+    {
+        key: 'tour_package',
+        label: 'Tour Package',
+        icon: Map,
+        color: '#b45309',
+        gradient: 'from-amber-500 to-orange-500',
+        steps: [
+            'Package Confirmation',
+            'Traveler Info Submitted',
+            'Flight & Hotel Booking',
+            'Visa Support Processing',
+            'Travel Documents Ready',
+            'Ready To Travel',
+        ],
+    },
+    {
+        key: 'citizenship',
+        label: 'Citizenship',
+        icon: Award,
+        color: '#0f766e',
+        gradient: 'from-teal-500 to-emerald-600',
+        steps: [
+            'Eligibility Assessment',
+            'Document Submission',
+            'Application Processing',
+            'Background Verification',
+            'Biometric Appointment',
+            'Interview',
+            'Citizenship Approval',
+            'Certificate Issued',
+            'Passport Application',
+        ],
+    },
+    {
+        key: 'flight_col',
+        label: 'Flight',
+        icon: Navigation,
+        color: '#dc2626',
+        gradient: 'from-red-500 to-rose-600',
+        steps: [
+            'Flight Request Submitted',
+            'Ticket Availability Check',
+            'Booking In Process',
+            'Payment Confirmation',
+            'E-Ticket Issued',
+            'Ready To Fly',
+        ],
+    },
+];
+
+// ─── Step label helper ─────────────────────────────────────────────────────────
+const getStepLabel = (steps, value) => {
+    if (!value || value === 0) return 'Not Started';
+    if (value === 100) return steps[steps.length - 1];
+    const idx = Math.round((value / 100) * steps.length) - 1;
+    return steps[Math.max(0, Math.min(idx, steps.length - 1))];
+};
+
 // ─── Tracking Progress Config ──────────────────────────────────────────────────
 const getTrackingStatus = (value) => {
-    if (value === 0 || value === null || value === undefined) return { label: 'Pending',    color: '#94A3B8', bg: 'bg-slate-100',   text: 'text-slate-500',   ring: 'ring-slate-200',   pct: 0   };
-    if (value <= 25)  return { label: 'Accepted',   color: '#3B82F6', bg: 'bg-blue-50',    text: 'text-blue-600',    ring: 'ring-blue-200',    pct: 25  };
-    if (value <= 50)  return { label: 'Processing', color: '#F59E0B', bg: 'bg-amber-50',   text: 'text-amber-600',   ring: 'ring-amber-200',   pct: 50  };
-    if (value <= 75)  return { label: 'Confirmed',  color: '#8B5CF6', bg: 'bg-purple-50',  text: 'text-purple-600',  ring: 'ring-purple-200',  pct: 75  };
-    return             { label: 'Completed',  color: '#10B981', bg: 'bg-emerald-50', text: 'text-emerald-600', ring: 'ring-emerald-200', pct: 100 };
+    if (!value || value === 0) return { label: 'Pending',    color: '#94A3B8', bg: 'bg-slate-100',   text: 'text-slate-500',   pct: 0   };
+    if (value <= 25)           return { label: 'Accepted',   color: '#3B82F6', bg: 'bg-blue-50',    text: 'text-blue-600',    pct: 25  };
+    if (value <= 50)           return { label: 'Processing', color: '#F59E0B', bg: 'bg-amber-50',   text: 'text-amber-600',   pct: 50  };
+    if (value <= 75)           return { label: 'Confirmed',  color: '#8B5CF6', bg: 'bg-purple-50',  text: 'text-purple-600',  pct: 75  };
+    return                            { label: 'Completed',  color: '#10B981', bg: 'bg-emerald-50', text: 'text-emerald-600', pct: 100 };
 };
 
 // ─── Status Config ─────────────────────────────────────────────────────────────
@@ -51,10 +143,8 @@ const STATUS_CONFIG = {
     documents_verified: { color: 'text-cyan-600',   bg: 'bg-cyan-50',    border: 'border-cyan-200',   dot: 'bg-cyan-400',   label: 'Docs Verified' },
     decision:           { color: 'text-slate-600',  bg: 'bg-slate-50',   border: 'border-slate-200',  dot: 'bg-slate-400',  label: 'Decision' },
 };
-
 const getStatus = (s) => STATUS_CONFIG[s?.toLowerCase()?.replace(/ /g, '_')] || STATUS_CONFIG['requested'];
 
-// ─── Timeline Steps ─────────────────────────────────────────────────────────────
 const TIMELINE_STEPS = [
     { key: 'submitted',      label: 'Submitted',            icon: FileText },
     { key: 'under_review',   label: 'Docs Verified',        icon: CheckCircle },
@@ -75,9 +165,7 @@ const getStepIndex = (status) => {
 
 let socket = null;
 const getSocket = () => {
-    if (!socket) {
-        socket = io(BASE_URL, { transports: ['websocket', 'polling'] });
-    }
+    if (!socket) socket = io(BASE_URL, { transports: ['websocket', 'polling'] });
     return socket;
 };
 
@@ -89,104 +177,102 @@ const CircularProgress = ({ value, color, size = 72 }) => {
     return (
         <svg width={size} height={size} className="rotate-[-90deg]">
             <circle cx={size/2} cy={size/2} r={radius} fill="none" stroke="#E5E7EB" strokeWidth={6} />
-            <circle
-                cx={size/2} cy={size/2} r={radius} fill="none"
-                stroke={color} strokeWidth={6}
-                strokeDasharray={circumference}
-                strokeDashoffset={offset}
-                strokeLinecap="round"
-                style={{ transition: 'stroke-dashoffset 1.2s cubic-bezier(.4,0,.2,1)' }}
-            />
+            <circle cx={size/2} cy={size/2} r={radius} fill="none" stroke={color} strokeWidth={6}
+                strokeDasharray={circumference} strokeDashoffset={offset} strokeLinecap="round"
+                style={{ transition: 'stroke-dashoffset 1.2s cubic-bezier(.4,0,.2,1)' }} />
         </svg>
     );
 };
 
-// ─── Tracking Card Component ───────────────────────────────────────────────────
-const TrackingCard = ({ icon: Icon, label, value, colorClass }) => {
-    // Only render if value > 0
+// ─── NEW: Big Service Tracking Card ────────────────────────────────────────────
+const ServiceTrackingCard = ({ service, value }) => {
     if (!value || value === 0) return null;
 
-    const st = getTrackingStatus(value);
     const [animated, setAnimated] = useState(0);
+    useEffect(() => { const t = setTimeout(() => setAnimated(value), 150); return () => clearTimeout(t); }, [value]);
 
-    useEffect(() => {
-        const timer = setTimeout(() => setAnimated(value), 100);
-        return () => clearTimeout(timer);
-    }, [value]);
+    const st       = getTrackingStatus(value);
+    const Icon     = service.icon;
+    const steps    = service.steps;
+    const curLabel = getStepLabel(steps, value);
 
-    const stages = [
-        { pct: 0,   label: 'Pending',    active: value >= 0 },
-        { pct: 25,  label: 'Accepted',   active: value >= 25 },
-        { pct: 50,  label: 'Processing', active: value >= 50 },
-        { pct: 75,  label: 'Confirmed',  active: value >= 75 },
-        { pct: 100, label: 'Completed',  active: value >= 100 },
-    ];
+    // Which step index is active?
+    const totalSteps = steps.length;
+    const activeIdx  = value === 100 ? totalSteps - 1 : Math.round((value / 100) * totalSteps) - 1;
 
     return (
-        <div className="glass border border-white/60 rounded-[2rem] p-6 shadow-sm card-hover overflow-hidden relative">
+        <div className="glass border border-white/60 rounded-[2rem] p-7 shadow-sm card-hover overflow-hidden relative">
             {/* Ambient glow */}
-            <div
-                className="absolute top-0 right-0 w-32 h-32 rounded-full opacity-10 blur-2xl pointer-events-none"
-                style={{ background: st.color }}
-            />
+            <div className="absolute -top-8 -right-8 w-40 h-40 rounded-full opacity-10 blur-3xl pointer-events-none"
+                style={{ background: service.color }} />
 
-            <div className="flex items-start justify-between mb-5">
+            {/* Header */}
+            <div className="flex items-start justify-between mb-6">
                 <div className="flex items-center gap-3">
-                    <div className="w-11 h-11 bg-[#0B1F3A] rounded-xl flex items-center justify-center shadow">
-                        <Icon size={18} className="text-[#EAB308]" />
+                    <div className="w-12 h-12 bg-[#0B1F3A] rounded-2xl flex items-center justify-center shadow-lg">
+                        <Icon size={20} style={{ color: '#EAB308' }} />
                     </div>
                     <div>
-                        <p className="text-[9px] font-bold text-[#64748B] uppercase tracking-widest font-body">Application</p>
-                        <p className="text-sm font-bold text-[#0B1F3A] font-body">{label}</p>
+                        <p className="text-[9px] font-bold text-[#64748B] uppercase tracking-widest font-body">Service Progress</p>
+                        <p className="text-base font-bold text-[#0B1F3A] font-body">{service.label}</p>
                     </div>
                 </div>
-
-                {/* Circular Progress */}
+                {/* Big circle */}
                 <div className="relative flex items-center justify-center">
-                    <CircularProgress value={animated} color={st.color} size={68} />
+                    <CircularProgress value={animated} color={service.color} size={80} />
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
-                        <span className="text-[13px] font-bold text-[#0B1F3A] font-body leading-none">{value}%</span>
+                        <span className="text-[15px] font-bold text-[#0B1F3A] font-body leading-none">{value}%</span>
                     </div>
                 </div>
             </div>
 
-            {/* Status Badge */}
-            <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full ${st.bg} mb-4`}>
-                <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: st.color }} />
-                <span className={`text-[10px] font-bold uppercase tracking-widest ${st.text} font-body`}>{st.label}</span>
+            {/* Status badge + current step */}
+            <div className="flex items-center gap-2 mb-5">
+                <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full ${st.bg}`}>
+                    <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: st.color }} />
+                    <span className={`text-[10px] font-bold uppercase tracking-widest ${st.text} font-body`}>{st.label}</span>
+                </div>
+                <span className="text-[10px] text-[#64748B] font-body font-semibold">→</span>
+                <span className="text-[11px] font-bold font-body" style={{ color: service.color }}>{curLabel}</span>
             </div>
 
-            {/* Stage Progress Bar */}
-            <div className="space-y-2">
-                <div className="flex items-center gap-0.5">
-                    {stages.slice(1).map((stage, i) => (
-                        <div key={i} className="flex-1 flex items-center gap-0.5">
-                            <div
-                                className="h-1.5 flex-1 rounded-full transition-all duration-700"
-                                style={{
-                                    background: stage.active ? st.color : '#E5E7EB',
-                                    transitionDelay: `${i * 100}ms`
-                                }}
-                            />
+            {/* Step-by-step timeline */}
+            <div className="space-y-0">
+                {steps.map((step, idx) => {
+                    const done    = idx <= activeIdx;
+                    const current = idx === activeIdx;
+                    const isLast  = idx === steps.length - 1;
+                    return (
+                        <div key={idx} className="flex gap-3">
+                            <div className="flex flex-col items-center">
+                                <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 border-2 transition-all duration-500"
+                                    style={{
+                                        background: current ? service.color : done ? service.color : 'white',
+                                        borderColor: done ? service.color : '#E5E7EB',
+                                        transitionDelay: `${idx * 60}ms`
+                                    }}>
+                                    {done && <CheckCircle size={12} color="white" />}
+                                </div>
+                                {!isLast && (
+                                    <div className="w-0.5 h-5 transition-all duration-500"
+                                        style={{ background: done ? service.color : '#E5E7EB', transitionDelay: `${idx * 60}ms` }} />
+                                )}
+                            </div>
+                            <div className="pb-4">
+                                <p className={`text-[11px] font-semibold font-body transition-colors ${done ? 'text-[#0B1F3A]' : 'text-[#CBD5E1]'}`}>
+                                    {step}
+                                </p>
+                                {current && (
+                                    <p className="text-[9px] font-bold font-body flex items-center gap-1 mt-0.5"
+                                        style={{ color: service.color }}>
+                                        <span className="w-1 h-1 rounded-full animate-pulse" style={{ background: service.color }} />
+                                        Current Stage
+                                    </p>
+                                )}
+                            </div>
                         </div>
-                    ))}
-                </div>
-                <div className="flex justify-between">
-                    {stages.map((s, i) => (
-                        <div key={i} className="flex flex-col items-center" style={{ width: i === 0 || i === stages.length - 1 ? 'auto' : '1fr' }}>
-                            <div
-                                className="w-2 h-2 rounded-full mb-1 transition-all duration-500"
-                                style={{ background: s.active ? st.color : '#E5E7EB', transitionDelay: `${i * 80}ms` }}
-                            />
-                            <span
-                                className="text-[8px] font-semibold font-body"
-                                style={{ color: s.active ? st.color : '#CBD5E1' }}
-                            >
-                                {i === 0 ? '0%' : `${s.pct}%`}
-                            </span>
-                        </div>
-                    ))}
-                </div>
+                    );
+                })}
             </div>
         </div>
     );
@@ -194,48 +280,91 @@ const TrackingCard = ({ icon: Icon, label, value, colorClass }) => {
 
 // ─── Main Component ─────────────────────────────────────────────────────────────
 const UserProfile = () => {
-    const [data, setData]             = useState(null);
-    const [tracking, setTracking]     = useState(null);
-    const [loading, setLoading]       = useState(true);
-    const [activeTab, setActiveTab]   = useState('overview');
+    const [data,          setData]          = useState(null);
+    const [tracking,      setTracking]      = useState(null);
+    const [loading,       setLoading]       = useState(true);
+    const [activeTab,     setActiveTab]     = useState('overview');
     const [notifications, setNotifications] = useState([]);
-    const [showNotifs, setShowNotifs] = useState(false);
-    const [selectedApp, setSelectedApp] = useState(null);
-    const [unreadCount, setUnreadCount] = useState(0);
+    const [showNotifs,    setShowNotifs]    = useState(false);
+    const [unreadCount,   setUnreadCount]   = useState(0);
+    const notifRef = useRef(null);
 
-    const user = JSON.parse(localStorage.getItem('user'));
+    const user   = JSON.parse(localStorage.getItem('user'));
     const userId = getUserId(user);
-    const sock = getSocket();
+    const sock   = getSocket();
+
+    // Close notif panel on outside click
+    useEffect(() => {
+        const h = (e) => { if (notifRef.current && !notifRef.current.contains(e.target)) setShowNotifs(false); };
+        document.addEventListener('mousedown', h);
+        return () => document.removeEventListener('mousedown', h);
+    }, []);
 
     useEffect(() => {
-        if (user) {
+        if (!user) return;
+        fetchProfile();
+        fetchTracking();
+
+        sock.emit('join_chat', { room: String(user.id) });
+
+        // ── Tracking change from admin ────────────────────
+        sock.on('tracking_update', (update) => {
+            addNotification({
+                id: Date.now(), type: 'tracking',
+                title: 'Progress Updated',
+                message: `Your ${update.service || 'application'} progress has been updated`,
+                time: new Date(), read: false,
+            });
+            fetchTracking();
+            toast.success(`Progress Updated!`, { icon: '📊' });
+        });
+
+        // ── Status change from admin ──────────────────────
+        sock.on('status_update', (update) => {
+            addNotification({
+                id: Date.now(), type: 'status',
+                title: 'Status Changed',
+                message: `Your ${update.type || 'application'} status: "${update.status}"`,
+                time: new Date(), read: false,
+            });
             fetchProfile();
             fetchTracking();
-            sock.emit('join_chat', { room: String(user.id) });
+            toast.success(`Status: ${update.status}`, { icon: '🔔' });
+        });
 
-            sock.on('status_update', (update) => {
+        // ── Document verified / rejected by admin ─────────
+        sock.on('document_update', (update) => {
+            addNotification({
+                id: Date.now(), type: 'document',
+                title: 'Document Updated',
+                message: `Your document "${update.name || update.doc_type}" was ${update.status}`,
+                time: new Date(), read: false,
+            });
+            fetchProfile();
+            toast(
+                update.status === 'verified' ? `Document Verified ✓` : `Document Rejected ✗`,
+                { icon: update.status === 'verified' ? '✅' : '❌' }
+            );
+        });
+
+        // ── New message from admin ─────────────────────────
+        sock.on('receive_message', (msg) => {
+            if (msg.sender_id !== user.id && msg.sender_id !== String(user.id)) {
                 addNotification({
-                    id: Date.now(), type: 'status',
-                    message: `Your ${update.type} application status updated to "${update.status}"`,
+                    id: Date.now(), type: 'message',
+                    title: 'New Message',
+                    message: 'Admin Support sent you a message',
                     time: new Date(), read: false,
                 });
-                fetchProfile();
-                fetchTracking();
-                toast.success(`Status Updated: ${update.status}`);
-            });
+                toast('New message from Admin Support', { icon: '💬' });
+            }
+        });
 
-            sock.on('document_update', (update) => {
-                addNotification({
-                    id: Date.now(), type: 'document',
-                    message: `Document "${update.name}" was ${update.status}`,
-                    time: new Date(), read: false,
-                });
-                fetchProfile();
-            });
-        }
         return () => {
+            sock.off('tracking_update');
             sock.off('status_update');
             sock.off('document_update');
+            sock.off('receive_message');
         };
     }, []);
 
@@ -244,33 +373,34 @@ const UserProfile = () => {
             const res = await axios.get(`${BASE_URL}/api/users/profile/${user.id}`);
             setData(res.data);
         } catch (err) {
-            console.error('Error fetching profile', err);
             toast.error('Failed to load profile');
-        } finally {
-            setLoading(false);
-        }
+        } finally { setLoading(false); }
     };
 
     const fetchTracking = async () => {
         try {
             const res = await axios.get(`${BASE_URL}/api/users/tracking/${user.id}`);
             setTracking(res.data || null);
-        } catch (err) {
-            console.error('Error fetching tracking', err);
-        }
+        } catch (err) { console.error(err); }
     };
 
     const addNotification = (notif) => {
-        setNotifications(prev => [notif, ...prev].slice(0, 20));
+        setNotifications(prev => [notif, ...prev].slice(0, 30));
         setUnreadCount(prev => prev + 1);
     };
+
+    const markAllRead = () => { setUnreadCount(0); };
 
     const calcCompletion = () => {
         if (!data?.profile) return 0;
         const fields = ['full_name', 'email', 'phone_number', 'passport_number', 'nid_number', 'nationality', 'address'];
-        const filled = fields.filter(f => data.profile[f]).length;
-        return Math.round((filled / fields.length) * 100);
+        return Math.round(fields.filter(f => data.profile[f]).length / fields.length * 100);
     };
+
+    // Active services (value > 0)
+    const activeServices = tracking
+        ? SERVICE_COLUMNS.filter(s => tracking[s.key] > 0)
+        : [];
 
     const TABS = [
         { id: 'overview',  label: 'Command Center', icon: ShieldCheck },
@@ -278,6 +408,8 @@ const UserProfile = () => {
         { id: 'chat',      label: 'Direct Support', icon: MessageSquare },
         { id: 'security',  label: 'Security',       icon: Lock },
     ];
+
+    const NOTIF_ICONS = { tracking: '📊', status: '🔔', document: '📄', message: '💬' };
 
     return (
         <div className="flex flex-col min-h-screen bg-[#F0F4F8] text-[#0F172A] font-['Georgia',_serif]">
@@ -289,8 +421,6 @@ const UserProfile = () => {
                 .gold-line::before { content:''; position:absolute; left:0; top:0; bottom:0; width:3px; background: linear-gradient(180deg,#EAB308,#F59E0B); border-radius:999px; }
                 .shimmer { background: linear-gradient(90deg,#f0f4f8 25%,#e2e8f0 50%,#f0f4f8 75%); background-size:200% 100%; animation: shimmer 1.5s infinite; }
                 @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
-                .notif-dot { animation: pulse 2s infinite; }
-                @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
                 .card-hover { transition: all 0.3s cubic-bezier(.4,0,.2,1); }
                 .card-hover:hover { transform: translateY(-2px); box-shadow: 0 20px 40px rgba(11,31,58,0.1); }
                 .progress-bar { transition: width 1s cubic-bezier(.4,0,.2,1); }
@@ -299,7 +429,10 @@ const UserProfile = () => {
                 .skeleton { border-radius:8px; }
                 .edit-input { width:100%; background:#F8FAFC; border:1.5px solid #E5E7EB; border-radius:12px; padding:8px 14px; font-size:13px; outline:none; color:#0F172A; transition:border-color 0.2s; font-family:'Inter',sans-serif; }
                 .edit-input:focus { border-color:#0B1F3A; }
+                .notif-badge { animation: notifPulse 2s infinite; }
+                @keyframes notifPulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.15)} }
             `}</style>
+
             <Toaster position="top-right" reverseOrder={false} toastOptions={{
                 style: { fontFamily: 'Inter,sans-serif', fontSize: '13px', background: '#0B1F3A', color: '#EAB308' }
             }} />
@@ -317,37 +450,68 @@ const UserProfile = () => {
                             </h1>
                         </div>
                         <div className="flex items-center gap-3">
-                            <div className="relative">
+                            {/* ── Notification Bell ── */}
+                            <div className="relative" ref={notifRef}>
                                 <button
-                                    onClick={() => { setShowNotifs(!showNotifs); setUnreadCount(0); }}
-                                    className="relative w-11 h-11 bg-white border border-[#E5E7EB] rounded-2xl flex items-center justify-center hover:border-[#0B1F3A] transition-colors shadow-sm"
+                                    onClick={() => { setShowNotifs(s => !s); if (!showNotifs) markAllRead(); }}
+                                    className="relative w-11 h-11 bg-white border border-[#E5E7EB] rounded-2xl flex items-center justify-center hover:border-[#EAB308] transition-colors shadow-sm"
                                 >
                                     <Bell size={18} className="text-[#0B1F3A]" />
                                     {unreadCount > 0 && (
-                                        <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center notif-dot">
-                                            {unreadCount}
+                                        <span className="absolute -top-1.5 -right-1.5 min-w-[20px] h-5 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center px-1 notif-badge">
+                                            {unreadCount > 99 ? '99+' : unreadCount}
                                         </span>
                                     )}
                                 </button>
+
                                 {showNotifs && (
-                                    <div className="absolute right-0 top-14 w-80 bg-white rounded-3xl border border-[#E5E7EB] shadow-2xl z-50 overflow-hidden">
-                                        <div className="p-5 border-b border-[#F0F4F8] flex items-center justify-between">
-                                            <p className="text-xs font-bold uppercase tracking-widest text-[#0B1F3A]">Notifications</p>
-                                            <span className="text-[10px] text-[#64748B]">{notifications.length} total</span>
+                                    <div className="absolute right-0 top-14 w-96 bg-white rounded-3xl border border-[#E5E7EB] shadow-2xl z-50 overflow-hidden fade-up">
+                                        <div className="p-5 bg-[#0B1F3A] flex items-center justify-between">
+                                            <div>
+                                                <p className="text-sm font-bold text-white font-body">Notifications</p>
+                                                <p className="text-[10px] text-[#EAB308] font-body">{notifications.length} total updates</p>
+                                            </div>
+                                            <button onClick={() => setShowNotifs(false)}
+                                                className="w-7 h-7 bg-white/10 rounded-lg flex items-center justify-center text-white hover:bg-white/20 transition-colors">
+                                                <X size={14} />
+                                            </button>
                                         </div>
-                                        <div className="max-h-72 overflow-y-auto">
+
+                                        <div className="max-h-80 overflow-y-auto">
                                             {notifications.length === 0 ? (
-                                                <div className="p-8 text-center text-[#64748B] text-xs font-body">All clear — no new updates</div>
+                                                <div className="p-10 text-center">
+                                                    <div className="text-4xl mb-3">🔕</div>
+                                                    <p className="text-sm font-bold text-[#64748B]">All clear!</p>
+                                                    <p className="text-[11px] text-[#94A3B8] mt-1">No new notifications</p>
+                                                </div>
                                             ) : notifications.map(n => (
-                                                <div key={n.id} className="p-4 border-b border-[#F8FAFC] hover:bg-[#F8FAFC] font-body">
-                                                    <p className="text-xs text-[#0F172A] font-semibold">{n.message}</p>
-                                                    <p className="text-[10px] text-[#64748B] mt-1">{new Date(n.time).toLocaleTimeString()}</p>
+                                                <div key={n.id} className="px-5 py-4 border-b border-[#F8FAFC] hover:bg-[#F8FAFC] transition-colors">
+                                                    <div className="flex items-start gap-3">
+                                                        <span className="text-xl flex-shrink-0 mt-0.5">{NOTIF_ICONS[n.type] || '🔔'}</span>
+                                                        <div className="flex-1 min-w-0">
+                                                            <p className="text-xs font-bold text-[#0B1F3A] font-body">{n.title}</p>
+                                                            <p className="text-[11px] text-[#64748B] font-body mt-0.5 leading-relaxed">{n.message}</p>
+                                                            <p className="text-[9px] text-[#94A3B8] font-body mt-1">
+                                                                {new Date(n.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                            </p>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             ))}
                                         </div>
+
+                                        {notifications.length > 0 && (
+                                            <div className="p-3 border-t border-[#F0F4F8] text-center">
+                                                <button onClick={() => { setNotifications([]); setUnreadCount(0); }}
+                                                    className="text-[10px] font-bold text-[#64748B] hover:text-red-500 uppercase tracking-widest transition-colors font-body">
+                                                    Clear All
+                                                </button>
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                             </div>
+
                             <div className="w-11 h-11 bg-[#0B1F3A] rounded-2xl flex items-center justify-center">
                                 <User size={18} className="text-[#EAB308]" />
                             </div>
@@ -363,7 +527,7 @@ const UserProfile = () => {
                                     <div className="w-full h-full bg-gradient-to-br from-[#0B1F3A] to-[#1a3a6b] rounded-[1.5rem] flex items-center justify-center shadow-xl">
                                         <User size={40} className="text-[#EAB308]" />
                                     </div>
-                                    <div className="absolute -bottom-1 -right-1 w-7 h-7 bg-green-500 border-3 border-white rounded-full flex items-center justify-center">
+                                    <div className="absolute -bottom-1 -right-1 w-7 h-7 bg-green-500 border-2 border-white rounded-full flex items-center justify-center">
                                         <div className="w-2 h-2 bg-white rounded-full" />
                                     </div>
                                 </div>
@@ -394,10 +558,8 @@ const UserProfile = () => {
                                         <span className="text-[10px] font-body font-bold text-[#0B1F3A]">{calcCompletion()}%</span>
                                     </div>
                                     <div className="w-full h-1.5 bg-[#E5E7EB] rounded-full overflow-hidden">
-                                        <div
-                                            className="h-full bg-gradient-to-r from-[#EAB308] to-[#F59E0B] rounded-full progress-bar"
-                                            style={{ width: `${calcCompletion()}%` }}
-                                        />
+                                        <div className="h-full bg-gradient-to-r from-[#EAB308] to-[#F59E0B] rounded-full progress-bar"
+                                            style={{ width: `${calcCompletion()}%` }} />
                                     </div>
                                 </div>
 
@@ -405,48 +567,38 @@ const UserProfile = () => {
                                     {TABS.map(tab => {
                                         const Icon = tab.icon;
                                         return (
-                                            <button
-                                                key={tab.id}
-                                                onClick={() => setActiveTab(tab.id)}
+                                            <button key={tab.id} onClick={() => setActiveTab(tab.id)}
                                                 className={`w-full py-3 px-4 rounded-xl text-[10px] font-body font-semibold uppercase tracking-widest transition-all flex items-center gap-3 ${
                                                     activeTab === tab.id
                                                         ? 'bg-[#0B1F3A] text-[#EAB308] shadow-lg'
                                                         : 'text-[#64748B] hover:bg-[#F0F4F8] hover:text-[#0B1F3A]'
-                                                }`}
-                                            >
-                                                <Icon size={13} />
-                                                {tab.label}
+                                                }`}>
+                                                <Icon size={13} />{tab.label}
                                             </button>
                                         );
                                     })}
                                 </nav>
                             </div>
 
-                            {/* Quick Stats — only non-zero */}
-                            {tracking && (
+                            {/* Sidebar Quick Stats */}
+                            {tracking && activeServices.length > 0 && (
                                 <div className="glass border border-white/60 p-4 rounded-[1.5rem] shadow-sm font-body">
-                                    <p className="text-[9px] font-bold uppercase tracking-widest text-[#64748B] mb-3">Applications</p>
-                                    <div className="space-y-2">
-                                        {[
-                                            { icon: Plane,     label: 'Visas',   value: tracking.visa,   color: 'text-blue-500' },
-                                            { icon: Briefcase, label: 'Jobs',    value: tracking.job,    color: 'text-purple-500' },
-                                            { icon: Map,       label: 'Trips',   value: tracking.trip,   color: 'text-green-500' },
-                                            { icon: Ticket,    label: 'Flights', value: tracking.flight, color: 'text-amber-500' },
-                                        ].filter(s => s.value > 0).map(s => {
-                                            const st = getTrackingStatus(s.value);
+                                    <p className="text-[9px] font-bold uppercase tracking-widest text-[#64748B] mb-3">Active Services</p>
+                                    <div className="space-y-2.5">
+                                        {activeServices.map(s => {
+                                            const val = tracking[s.key];
+                                            const st  = getTrackingStatus(val);
+                                            const Icon = s.icon;
                                             return (
-                                                <div key={s.label} className="flex items-center justify-between">
+                                                <div key={s.key} className="flex items-center justify-between">
                                                     <div className="flex items-center gap-2">
-                                                        <s.icon size={12} className={s.color} />
+                                                        <Icon size={12} style={{ color: s.color }} />
                                                         <span className="text-[10px] text-[#64748B]">{s.label}</span>
                                                     </div>
-                                                    <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${st.bg} ${st.text}`}>{st.label}</span>
+                                                    <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${st.bg} ${st.text}`}>{val}%</span>
                                                 </div>
                                             );
                                         })}
-                                        {[tracking.visa, tracking.job, tracking.trip, tracking.flight].every(v => !v || v === 0) && (
-                                            <p className="text-[10px] text-[#94A3B8] text-center py-2">No active applications</p>
-                                        )}
                                     </div>
                                 </div>
                             )}
@@ -461,19 +613,14 @@ const UserProfile = () => {
                                             data={data}
                                             user={user}
                                             tracking={tracking}
+                                            activeServices={activeServices}
                                             completion={calcCompletion()}
                                             onRefresh={fetchProfile}
                                         />
                                     )}
-                                    {activeTab === 'documents' && (
-                                        <DocumentManager user={user} data={data} />
-                                    )}
-                                    {activeTab === 'chat' && (
-                                        <SupportChat user={user} addNotification={addNotification} socket={sock} />
-                                    )}
-                                    {activeTab === 'security' && (
-                                        <SecuritySettings user={user} data={data} onRefresh={fetchProfile} />
-                                    )}
+                                    {activeTab === 'documents' && <DocumentManager user={user} data={data} />}
+                                    {activeTab === 'chat' && <SupportChat user={user} addNotification={addNotification} socket={sock} />}
+                                    {activeTab === 'security' && <SecuritySettings user={user} data={data} onRefresh={fetchProfile} />}
                                 </>
                             )}
                         </div>
@@ -496,10 +643,10 @@ const SkeletonLoader = () => (
 );
 
 // ─── Overview / Command Center ──────────────────────────────────────────────────
-const Overview = ({ data, user, tracking, completion, onRefresh }) => {
+const Overview = ({ data, user, tracking, activeServices, completion, onRefresh }) => {
     const [editMode, setEditMode] = useState(false);
-    const [saving, setSaving]     = useState(false);
-    const [form, setForm]         = useState({
+    const [saving,   setSaving]   = useState(false);
+    const [form, setForm] = useState({
         full_name:       data?.profile?.full_name || '',
         phone_number:    data?.profile?.phone_number || '',
         nationality:     data?.profile?.nationality || '',
@@ -517,27 +664,15 @@ const Overview = ({ data, user, tracking, completion, onRefresh }) => {
         setSaving(true);
         try {
             await axios.put(`${BASE_URL}/api/users/profile/update`, {
-                userId: user.id,
-                ...form,
-                contact_number: form.phone_number,
+                userId: user.id, ...form, contact_number: form.phone_number,
             });
             toast.success('Profile updated successfully!');
             setEditMode(false);
             onRefresh();
         } catch (err) {
-            toast.error(err.response?.data?.message || 'Failed to update profile');
-        } finally {
-            setSaving(false);
-        }
+            toast.error(err.response?.data?.message || 'Failed to update');
+        } finally { setSaving(false); }
     };
-
-    // Tracking cards config — only show if value > 0
-    const trackingCards = tracking ? [
-        { icon: Plane,     label: 'Visa Application',   value: tracking.visa,   key: 'visa' },
-        { icon: Briefcase, label: 'Job Application',    value: tracking.job,    key: 'job' },
-        { icon: Map,       label: 'Trip Booking',       value: tracking.trip,   key: 'trip' },
-        { icon: Ticket,    label: 'Flight Booking',     value: tracking.flight, key: 'flight' },
-    ].filter(c => c.value > 0) : [];
 
     const allApps = [
         ...(data?.stats?.visas || []).map(v => ({ ...v, appType: 'Visa',   icon: Plane,     title: v.destination_country, sub: v.visa_type })),
@@ -547,29 +682,40 @@ const Overview = ({ data, user, tracking, completion, onRefresh }) => {
     return (
         <div className="space-y-6 fade-up font-body">
 
-            {/* ── Application Tracking Cards (only shown if value > 0) ── */}
-            {trackingCards.length > 0 && (
+            {/* ── NEW: Big Service Tracking Cards ── */}
+            {activeServices.length > 0 && (
                 <div>
                     <div className="flex items-center justify-between mb-4">
                         <div>
                             <p className="text-[9px] font-bold text-[#64748B] uppercase tracking-widest">Application Progress</p>
-                            <h3 className="font-display text-xl font-bold text-[#0B1F3A]">Your Journey</h3>
+                            <h3 className="font-display text-xl font-bold text-[#0B1F3A]">Your Services</h3>
                         </div>
                         <div className="flex items-center gap-1.5 text-[10px] text-[#64748B]">
-                            <RefreshCw size={10} />
-                            <span>Live tracking</span>
+                            <RefreshCw size={10} /><span>Live tracking</span>
                         </div>
                     </div>
-                    <div className={`grid gap-4 ${trackingCards.length === 1 ? 'grid-cols-1 max-w-sm' : trackingCards.length === 2 ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1 md:grid-cols-2'}`}>
-                        {trackingCards.map((card) => (
-                            <TrackingCard
-                                key={card.key}
-                                icon={card.icon}
-                                label={card.label}
-                                value={card.value}
+                    <div className={`grid gap-5 ${
+                        activeServices.length === 1 ? 'grid-cols-1 max-w-md' :
+                        activeServices.length === 2 ? 'grid-cols-1 md:grid-cols-2' :
+                        'grid-cols-1 md:grid-cols-2'
+                    }`}>
+                        {activeServices.map(service => (
+                            <ServiceTrackingCard
+                                key={service.key}
+                                service={service}
+                                value={tracking[service.key]}
                             />
                         ))}
                     </div>
+                </div>
+            )}
+
+            {/* No active services notice */}
+            {(!tracking || activeServices.length === 0) && (
+                <div className="glass border border-white/60 rounded-[2rem] p-10 text-center shadow-sm">
+                    <div className="text-5xl mb-4">🌍</div>
+                    <h3 className="font-display text-2xl font-bold text-[#0B1F3A] mb-2">No Active Services</h3>
+                    <p className="text-sm text-[#64748B]">Your service progress will appear here once activated by admin.</p>
                 </div>
             )}
 
@@ -581,7 +727,7 @@ const Overview = ({ data, user, tracking, completion, onRefresh }) => {
                         <span className="text-[9px] font-semibold text-[#EAB308] uppercase tracking-widest">Live Status</span>
                     </div>
                     {allApps.map((app, i) => {
-                        const st = getStatus(app.application_status || app.status);
+                        const st   = getStatus(app.application_status || app.status);
                         const Icon = app.icon;
                         return (
                             <div key={i} className="px-6 py-4 border-b border-[#F8FAFC] last:border-0 hover:bg-[#F8FAFC] transition-colors">
@@ -603,7 +749,7 @@ const Overview = ({ data, user, tracking, completion, onRefresh }) => {
                                 <div className="mt-3 flex items-center gap-1">
                                     {TIMELINE_STEPS.map((step, idx) => {
                                         const current = getStepIndex(app.application_status || app.status);
-                                        const done = idx <= current;
+                                        const done    = idx <= current;
                                         return (
                                             <div key={idx} className="flex items-center gap-1 flex-1">
                                                 <div className={`w-2 h-2 rounded-full flex-shrink-0 ${done ? 'bg-[#EAB308]' : 'bg-[#E2E8F0]'}`} />
@@ -620,7 +766,7 @@ const Overview = ({ data, user, tracking, completion, onRefresh }) => {
                 </div>
             )}
 
-            {/* Personnel Identity (Editable) */}
+            {/* Personnel Identity */}
             <div className="glass border border-white/60 p-8 rounded-[2rem] shadow-sm">
                 <div className="flex items-center justify-between mb-6">
                     <h3 className="font-display text-2xl font-bold text-[#0B1F3A] flex items-center gap-3">
@@ -632,25 +778,18 @@ const Overview = ({ data, user, tracking, completion, onRefresh }) => {
                             <span className="text-[10px] font-semibold text-green-600 uppercase tracking-widest">Verified</span>
                         </div>
                         {!editMode ? (
-                            <button
-                                onClick={() => setEditMode(true)}
-                                className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-[#0B1F3A] bg-[#F0F4F8] hover:bg-[#EAB308]/10 border border-[#E5E7EB] hover:border-[#EAB308] px-3 py-2 rounded-xl transition-all"
-                            >
+                            <button onClick={() => setEditMode(true)}
+                                className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-[#0B1F3A] bg-[#F0F4F8] hover:bg-[#EAB308]/10 border border-[#E5E7EB] hover:border-[#EAB308] px-3 py-2 rounded-xl transition-all">
                                 <Edit2 size={12} /> Edit
                             </button>
                         ) : (
                             <div className="flex items-center gap-2">
-                                <button
-                                    onClick={() => setEditMode(false)}
-                                    className="flex items-center gap-1.5 text-[10px] font-bold uppercase px-3 py-2 rounded-xl bg-[#F0F4F8] text-[#64748B] hover:bg-red-50 hover:text-red-600 border border-[#E5E7EB] transition-all"
-                                >
+                                <button onClick={() => setEditMode(false)}
+                                    className="flex items-center gap-1.5 text-[10px] font-bold uppercase px-3 py-2 rounded-xl bg-[#F0F4F8] text-[#64748B] hover:bg-red-50 hover:text-red-600 border border-[#E5E7EB] transition-all">
                                     <X size={12} /> Cancel
                                 </button>
-                                <button
-                                    onClick={handleSave}
-                                    disabled={saving}
-                                    className="flex items-center gap-1.5 text-[10px] font-bold uppercase px-4 py-2 rounded-xl bg-[#0B1F3A] text-[#EAB308] hover:opacity-90 transition-all disabled:opacity-60"
-                                >
+                                <button onClick={handleSave} disabled={saving}
+                                    className="flex items-center gap-1.5 text-[10px] font-bold uppercase px-4 py-2 rounded-xl bg-[#0B1F3A] text-[#EAB308] hover:opacity-90 transition-all disabled:opacity-60">
                                     {saving ? <Loader size={12} className="animate-spin" /> : <Save size={12} />}
                                     {saving ? 'Saving...' : 'Save'}
                                 </button>
@@ -660,11 +799,11 @@ const Overview = ({ data, user, tracking, completion, onRefresh }) => {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <EditableInfoItem icon={<UserCircle size={13} />} label="Legal Full Name" value={form.full_name} field="full_name" editMode={editMode} onChange={(val) => setForm(p => ({ ...p, full_name: val }))} />
-                    <EditableInfoItem icon={<Globe size={13} />} label="Nationality" value={form.nationality} field="nationality" editMode={editMode} onChange={(val) => setForm(p => ({ ...p, nationality: val }))} />
-                    <EditableInfoItem icon={<CreditCard size={13} />} label="Passport Number" value={editMode ? form.passport_number : maskPassport(form.passport_number)} field="passport_number" editMode={editMode} secure={!editMode} onChange={(val) => setForm(p => ({ ...p, passport_number: val }))} />
-                    <EditableInfoItem icon={<Fingerprint size={13} />} label="National ID" value={editMode ? form.nid_number : (form.nid_number ? '••••' + form.nid_number.slice(-4) : 'N/A')} field="nid_number" editMode={editMode} secure={!editMode} onChange={(val) => setForm(p => ({ ...p, nid_number: val }))} />
-                    <EditableInfoItem icon={<Phone size={13} />} label="Primary Contact" value={form.phone_number} field="phone_number" editMode={editMode} placeholder="Add contact number" onChange={(val) => setForm(p => ({ ...p, phone_number: val }))} />
+                    <EditableInfoItem icon={<UserCircle size={13} />} label="Legal Full Name"   value={form.full_name}       editMode={editMode} onChange={v => setForm(p => ({ ...p, full_name: v }))} />
+                    <EditableInfoItem icon={<Globe size={13} />}      label="Nationality"       value={form.nationality}     editMode={editMode} onChange={v => setForm(p => ({ ...p, nationality: v }))} />
+                    <EditableInfoItem icon={<CreditCard size={13} />} label="Passport Number"  value={editMode ? form.passport_number : maskPassport(form.passport_number)} editMode={editMode} secure={!editMode} onChange={v => setForm(p => ({ ...p, passport_number: v }))} />
+                    <EditableInfoItem icon={<Fingerprint size={13} />} label="National ID"     value={editMode ? form.nid_number : (form.nid_number ? '••••' + form.nid_number.slice(-4) : 'N/A')} editMode={editMode} secure={!editMode} onChange={v => setForm(p => ({ ...p, nid_number: v }))} />
+                    <EditableInfoItem icon={<Phone size={13} />}      label="Primary Contact"  value={form.phone_number}    editMode={editMode} placeholder="Add contact" onChange={v => setForm(p => ({ ...p, phone_number: v }))} />
                     <div>
                         <p className="text-[9px] font-bold text-[#EAB308] uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
                             <Mail size={13} /> Email Identity
@@ -673,7 +812,7 @@ const Overview = ({ data, user, tracking, completion, onRefresh }) => {
                         <p className="text-[9px] text-[#94A3B8] mt-0.5">Email cannot be changed here</p>
                     </div>
                     <div className="md:col-span-2">
-                        <EditableInfoItem icon={<MapPin size={13} />} label="Address" value={form.address} field="address" editMode={editMode} placeholder="Your address" onChange={(val) => setForm(p => ({ ...p, address: val }))} />
+                        <EditableInfoItem icon={<MapPin size={13} />} label="Address" value={form.address} editMode={editMode} placeholder="Your address" onChange={v => setForm(p => ({ ...p, address: v }))} />
                     </div>
                 </div>
 
@@ -683,7 +822,7 @@ const Overview = ({ data, user, tracking, completion, onRefresh }) => {
                         <div>
                             <p className="text-xs font-bold text-amber-700">Complete Your Profile</p>
                             <p className="text-[11px] text-amber-600 mt-0.5">
-                                A complete profile speeds up application processing. {100 - completion}% remaining.{' '}
+                                {100 - completion}% remaining.{' '}
                                 <button onClick={() => setEditMode(true)} className="underline font-bold">Edit now</button>
                             </p>
                         </div>
@@ -695,18 +834,14 @@ const Overview = ({ data, user, tracking, completion, onRefresh }) => {
 };
 
 // ─── Editable Info Item ─────────────────────────────────────────────────────────
-const EditableInfoItem = ({ icon, label, value, field, editMode, onChange, secure, placeholder }) => (
+const EditableInfoItem = ({ icon, label, value, editMode, onChange, secure, placeholder }) => (
     <div>
         <p className="text-[9px] font-bold text-[#EAB308] uppercase tracking-widest mb-1.5 flex items-center gap-1.5 font-body">
             {icon} {label}
         </p>
         {editMode ? (
-            <input
-                className="edit-input"
-                value={value || ''}
-                onChange={(e) => onChange(e.target.value)}
-                placeholder={placeholder || `Enter ${label.toLowerCase()}`}
-            />
+            <input className="edit-input" value={value || ''} onChange={e => onChange(e.target.value)}
+                placeholder={placeholder || `Enter ${label.toLowerCase()}`} />
         ) : (
             <p className={`text-sm font-bold text-[#0F172A] font-body ${secure ? 'font-mono tracking-wider' : ''}`}>
                 {value || 'Not specified'}
@@ -715,84 +850,11 @@ const EditableInfoItem = ({ icon, label, value, field, editMode, onChange, secur
     </div>
 );
 
-// ─── Application Detail ─────────────────────────────────────────────────────────
-const ApplicationDetail = ({ app, onBack }) => {
-    const stepIdx = getStepIndex(app.status);
-    return (
-        <div className="fade-up space-y-5 font-body">
-            <button onClick={onBack} className="flex items-center gap-2 text-[11px] font-semibold text-[#64748B] hover:text-[#0B1F3A] transition-colors uppercase tracking-wider">
-                <ChevronRight size={14} className="rotate-180" /> Back to Applications
-            </button>
-            <div className="glass border border-white/60 p-7 rounded-[2rem] shadow-sm">
-                <div className="flex items-start justify-between mb-6">
-                    <div>
-                        <p className="text-[9px] font-bold text-[#EAB308] uppercase tracking-widest mb-1">{app.type} Application</p>
-                        <h2 className="font-display text-3xl font-bold text-[#0B1F3A]">{app.title}</h2>
-                        <p className="text-sm text-[#64748B] mt-1">{app.sub}</p>
-                    </div>
-                    <StatusBadge status={app.status} large />
-                </div>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
-                    <DetailMeta label="Type"         value={app.type} />
-                    <DetailMeta label="Country"      value={app.country || 'N/A'} />
-                    <DetailMeta label="Submitted"    value={app.date ? new Date(app.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : 'N/A'} />
-                    <DetailMeta label="Handled by"   value="SNJ Admin Team" highlight />
-                    <DetailMeta label="Last Updated" value={new Date().toLocaleDateString()} />
-                    <DetailMeta label="Next Step"    value={TIMELINE_STEPS[Math.min(stepIdx + 1, TIMELINE_STEPS.length - 1)]?.label || 'Awaiting Decision'} />
-                </div>
-                <div>
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-[#64748B] mb-5">Application Timeline</p>
-                    <div className="space-y-0">
-                        {TIMELINE_STEPS.map((step, idx) => {
-                            const StepIcon = step.icon;
-                            const done    = idx <= stepIdx;
-                            const current = idx === stepIdx;
-                            const isLast  = idx === TIMELINE_STEPS.length - 1;
-                            return (
-                                <div key={idx} className="flex gap-4">
-                                    <div className="flex flex-col items-center">
-                                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 border-2 ${current ? 'bg-[#EAB308] border-[#EAB308] shadow-lg shadow-[#EAB308]/40' : done ? 'bg-[#0B1F3A] border-[#0B1F3A]' : 'bg-white border-[#E2E8F0]'}`}>
-                                            <StepIcon size={14} className={done ? 'text-white' : 'text-[#CBD5E1]'} />
-                                        </div>
-                                        {!isLast && <div className={`w-0.5 h-8 mt-1 ${done ? 'bg-[#0B1F3A]' : 'bg-[#E2E8F0]'}`} />}
-                                    </div>
-                                    <div className="pb-6">
-                                        <p className={`text-sm font-bold ${done ? 'text-[#0B1F3A]' : 'text-[#CBD5E1]'}`}>{step.label}</p>
-                                        {current && <p className="text-[10px] text-[#EAB308] font-semibold mt-0.5 flex items-center gap-1"><span className="w-1.5 h-1.5 bg-[#EAB308] rounded-full animate-pulse" /> Current Stage</p>}
-                                        {done && !current && <p className="text-[10px] text-green-600 font-semibold mt-0.5">Completed</p>}
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
-                </div>
-                {app.note && (
-                    <div className="mt-4 p-5 bg-[#0B1F3A]/5 border border-[#0B1F3A]/10 rounded-2xl relative gold-line pl-6">
-                        <p className="text-[9px] font-bold text-[#EAB308] uppercase tracking-widest mb-1">Admin Note</p>
-                        <p className="text-sm text-[#0F172A] font-medium">{app.note}</p>
-                    </div>
-                )}
-                <div className="mt-5 p-4 bg-blue-50 border border-blue-100 rounded-2xl flex items-center gap-3">
-                    <ArrowRight size={16} className="text-blue-500 flex-shrink-0" />
-                    <div>
-                        <p className="text-xs font-bold text-blue-700">Next Step</p>
-                        <p className="text-[11px] text-blue-600 mt-0.5">
-                            {stepIdx < TIMELINE_STEPS.length - 1
-                                ? `Awaiting: ${TIMELINE_STEPS[stepIdx + 1]?.label}. You will be notified when your status updates.`
-                                : 'Your application has reached its final stage. Please contact support for further assistance.'}
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-};
-
 // ─── Document Manager ───────────────────────────────────────────────────────────
 const DocumentManager = ({ user, data }) => {
-    const [uploading, setUploading] = useState({});
-    const [docs, setDocs]           = useState([]);
-    const [loadingDocs, setLoadingDocs] = useState(true);
+    const [uploading,    setUploading]    = useState({});
+    const [docs,         setDocs]         = useState([]);
+    const [loadingDocs,  setLoadingDocs]  = useState(true);
 
     useEffect(() => { fetchDocuments(); }, []);
 
@@ -801,11 +863,8 @@ const DocumentManager = ({ user, data }) => {
         try {
             const res = await axios.get(`${BASE_URL}/api/users/documents/${user.id}`);
             setDocs(res.data || []);
-        } catch (err) {
-            // endpoint may not exist yet
-        } finally {
-            setLoadingDocs(false);
-        }
+        } catch(err) {}
+        finally { setLoadingDocs(false); }
     };
 
     const handleUpload = async (docType, file) => {
@@ -823,19 +882,15 @@ const DocumentManager = ({ user, data }) => {
             await axios.post(`${BASE_URL}/api/users/documents/upload`, formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
-            toast.success(`${docType} uploaded successfully!`);
+            toast.success(`${docType} uploaded!`);
             fetchDocuments();
-        } catch (err) {
-            toast.error('Upload failed. Please try again.');
-        } finally {
-            setUploading(prev => ({ ...prev, [docType]: false }));
-        }
+        } catch(err) { toast.error('Upload failed.'); }
+        finally { setUploading(prev => ({ ...prev, [docType]: false })); }
     };
 
     const DOC_CATEGORIES = [
         {
-            title: 'Passport',
-            icon: Globe,
+            title: 'Passport', icon: Globe,
             items: [
                 { key: 'passport_main', label: 'Passport Scan (Main Page)', accept: '.jpg,.jpeg,.png,.pdf' },
                 { key: 'passport_bio',  label: 'Bio Data Page',             accept: '.jpg,.jpeg,.png,.pdf' },
@@ -846,19 +901,15 @@ const DocumentManager = ({ user, data }) => {
             ]
         },
         {
-            title: 'National ID (NID)',
-            icon: CreditCard,
+            title: 'National ID (NID)', icon: CreditCard,
             items: [
                 { key: 'nid_front', label: 'NID Front Side', accept: '.jpg,.jpeg,.png' },
                 { key: 'nid_back',  label: 'NID Back Side',  accept: '.jpg,.jpeg,.png' },
             ],
-            meta: [
-                { label: 'ID Number', value: data?.profile?.nid_number ? '••••' + data.profile.nid_number.slice(-4) : 'N/A' },
-            ]
+            meta: [{ label: 'ID Number', value: data?.profile?.nid_number ? '••••' + data.profile.nid_number.slice(-4) : 'N/A' }]
         },
         {
-            title: 'Supporting Documents',
-            icon: FileText,
+            title: 'Supporting Documents', icon: FileText,
             items: [
                 { key: 'cv',             label: 'CV / Resume',            accept: '.pdf,.doc,.docx' },
                 { key: 'bank_statement', label: 'Bank Statement',         accept: '.pdf' },
@@ -890,9 +941,7 @@ const DocumentManager = ({ user, data }) => {
         <div className="space-y-5 fade-up font-body">
             <div className="flex items-center justify-between">
                 <h2 className="font-display text-2xl font-bold text-[#0B1F3A]">Identity & Documents</h2>
-                <div className="flex items-center gap-1.5 text-[10px] text-[#64748B]">
-                    <Shield size={11} /> Secure Storage
-                </div>
+                <div className="flex items-center gap-1.5 text-[10px] text-[#64748B]"><Shield size={11} /> Secure Storage</div>
             </div>
 
             {DOC_CATEGORIES.map((cat, ci) => {
@@ -935,11 +984,10 @@ const DocumentManager = ({ user, data }) => {
                                         <div className="flex items-center gap-2">
                                             {doc && <DocStatusBadge status={doc.status} />}
                                             <label className={`flex items-center gap-1.5 text-[10px] font-bold uppercase px-3 py-2 rounded-xl cursor-pointer transition-all ${uploading[item.key] ? 'bg-[#E5E7EB] text-[#94A3B8] cursor-not-allowed' : 'bg-[#0B1F3A] text-[#EAB308] hover:opacity-90'}`}>
-                                                {uploading[item.key]
-                                                    ? <><Loader size={11} className="animate-spin" /> Uploading</>
-                                                    : <><Upload size={11} /> {doc ? 'Replace' : 'Upload'}</>
-                                                }
-                                                <input type="file" accept={item.accept} className="hidden" onChange={(e) => handleUpload(item.key, e.target.files[0])} disabled={uploading[item.key]} />
+                                                {uploading[item.key] ? <><Loader size={11} className="animate-spin" /> Uploading</> : <><Upload size={11} /> {doc ? 'Replace' : 'Upload'}</>}
+                                                <input type="file" accept={item.accept} className="hidden"
+                                                    onChange={e => handleUpload(item.key, e.target.files[0])}
+                                                    disabled={uploading[item.key]} />
                                             </label>
                                         </div>
                                     </div>
@@ -953,8 +1001,8 @@ const DocumentManager = ({ user, data }) => {
             <div className="p-4 bg-[#0B1F3A]/5 border border-[#0B1F3A]/10 rounded-2xl flex items-center gap-3">
                 <AlertCircle size={14} className="text-[#0B1F3A] flex-shrink-0" />
                 <p className="text-[11px] text-[#0B1F3A] font-medium">
-                    Documents are reviewed by admin. Rejected documents will show a note explaining the issue.
-                    Verified documents are securely stored and used for your applications.
+                    Documents are reviewed by admin. Rejected documents will include a note explaining the issue.
+                    Verified documents are securely stored for your applications.
                 </p>
             </div>
         </div>
@@ -963,10 +1011,10 @@ const DocumentManager = ({ user, data }) => {
 
 // ─── Support Chat ───────────────────────────────────────────────────────────────
 const SupportChat = ({ user, addNotification, socket }) => {
-    const [msg, setMsg]           = useState('');
-    const [history, setHistory]   = useState([]);
+    const [msg,     setMsg]     = useState('');
+    const [history, setHistory] = useState([]);
     const [isTyping, setIsTyping] = useState(false);
-    const [sending, setSending]   = useState(false);
+    const [sending, setSending] = useState(false);
     const scrollRef = useRef();
 
     const ROOM = `chat_${Math.min(user.id, 1)}_${Math.max(user.id, 1)}`;
@@ -976,9 +1024,7 @@ const SupportChat = ({ user, addNotification, socket }) => {
             try {
                 const res = await axios.get(`${BASE_URL}/api/users/messages/${user.id}`);
                 setHistory(res.data || []);
-            } catch (err) {
-                console.error('Could not load messages', err);
-            }
+            } catch(err) { console.error(err); }
         };
         fetchMessages();
 
@@ -990,56 +1036,40 @@ const SupportChat = ({ user, addNotification, socket }) => {
                 return [...prev, incomingData];
             });
             setIsTyping(false);
-            if (incomingData.sender_id !== user.id) {
+            if (incomingData.sender_id !== user.id && incomingData.sender_id !== String(user.id)) {
                 addNotification?.({
                     id: Date.now(), type: 'message',
-                    message: 'New message from Admin Support',
+                    title: 'New Message',
+                    message: 'Admin Support sent you a message',
                     time: new Date(), read: false,
                 });
             }
         });
 
-        socket.on('admin_typing', () => {
-            setIsTyping(true);
-            setTimeout(() => setIsTyping(false), 3000);
-        });
+        socket.on('admin_typing', () => { setIsTyping(true); setTimeout(() => setIsTyping(false), 3000); });
 
-        return () => {
-            socket.off('receive_message');
-            socket.off('admin_typing');
-        };
+        return () => { socket.off('receive_message'); socket.off('admin_typing'); };
     }, []);
 
-    useEffect(() => {
-        scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, [history, isTyping]);
+    useEffect(() => { scrollRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [history, isTyping]);
 
     const handleSend = async () => {
         if (!msg.trim() || sending) return;
         const msgText = msg.trim();
-        setMsg('');
-        setSending(true);
-
+        setMsg(''); setSending(true);
         const optimistic = { sender_id: user.id, receiver_id: 1, message: msgText, created_at: new Date() };
         setHistory(prev => [...prev, optimistic]);
-
         try {
-            await axios.post(`${BASE_URL}/api/users/messages/send`, {
-                sender_id: user.id, receiver_id: 1, message: msgText
-            });
+            await axios.post(`${BASE_URL}/api/users/messages/send`, { sender_id: user.id, receiver_id: 1, message: msgText });
             socket.emit('send_message', { room: ROOM, sender_id: user.id, receiver_id: 1, message: msgText });
-        } catch (err) {
+        } catch(err) {
             toast.error('Message failed to send');
             setHistory(prev => prev.filter(m => m !== optimistic));
             setMsg(msgText);
-        } finally {
-            setSending(false);
-        }
+        } finally { setSending(false); }
     };
 
-    const handleKeyDown = (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
-    };
+    const handleKeyDown = (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } };
 
     const groupedHistory = history.reduce((acc, m) => {
         const date = new Date(m.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
@@ -1073,7 +1103,7 @@ const SupportChat = ({ user, addNotification, socket }) => {
                                 <MessageSquare size={22} className="text-[#0B1F3A]" />
                             </div>
                             <p className="text-sm font-bold text-[#64748B]">Start a conversation</p>
-                            <p className="text-xs text-[#94A3B8] mt-1">Our support team typically replies within minutes</p>
+                            <p className="text-xs text-[#94A3B8] mt-1">Our team typically replies within minutes</p>
                         </div>
                     )}
 
@@ -1110,8 +1140,9 @@ const SupportChat = ({ user, addNotification, socket }) => {
                             <div className="w-7 h-7 bg-[#EAB308] text-[#0B1F3A] rounded-full flex items-center justify-center font-bold text-[9px] flex-shrink-0">AD</div>
                             <div className="bg-white border border-[#E5E7EB] px-5 py-3 rounded-2xl rounded-tl-none shadow-sm">
                                 <div className="flex gap-1 items-center">
-                                    {[0, 1, 2].map(i => (
-                                        <span key={i} className="w-1.5 h-1.5 bg-[#94A3B8] rounded-full animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
+                                    {[0,1,2].map(i => (
+                                        <span key={i} className="w-1.5 h-1.5 bg-[#94A3B8] rounded-full animate-bounce"
+                                            style={{ animationDelay: `${i * 0.15}s` }} />
                                     ))}
                                 </div>
                             </div>
@@ -1121,18 +1152,11 @@ const SupportChat = ({ user, addNotification, socket }) => {
                 </div>
 
                 <div className="p-4 border-t border-[#E5E7EB] flex gap-3 bg-white flex-shrink-0">
-                    <input
-                        value={msg}
-                        onChange={e => setMsg(e.target.value)}
-                        onKeyDown={handleKeyDown}
+                    <input value={msg} onChange={e => setMsg(e.target.value)} onKeyDown={handleKeyDown}
                         className="flex-1 bg-[#F8FAFC] border border-[#E5E7EB] rounded-full px-5 py-3 text-xs text-[#0F172A] outline-none focus:border-[#0B1F3A] transition-colors"
-                        placeholder="Type a message... (Enter to send)"
-                    />
-                    <button
-                        onClick={handleSend}
-                        disabled={!msg.trim() || sending}
-                        className="bg-[#0B1F3A] text-[#EAB308] p-3.5 rounded-full hover:opacity-90 disabled:opacity-40 transition-all"
-                    >
+                        placeholder="Type a message... (Enter to send)" />
+                    <button onClick={handleSend} disabled={!msg.trim() || sending}
+                        className="bg-[#0B1F3A] text-[#EAB308] p-3.5 rounded-full hover:opacity-90 disabled:opacity-40 transition-all">
                         {sending ? <Loader size={16} className="animate-spin" /> : <Send size={16} />}
                     </button>
                 </div>
@@ -1143,18 +1167,18 @@ const SupportChat = ({ user, addNotification, socket }) => {
 
 // ─── Security Settings ──────────────────────────────────────────────────────────
 const SecuritySettings = ({ user, data, onRefresh }) => {
-    const [tab, setTab]             = useState('password');
+    const [tab,       setTab]       = useState('password');
     const [passwords, setPasswords] = useState({ old: '', new: '', confirm: '' });
-    const [nameForm, setNameForm]   = useState({ full_name: data?.profile?.full_name || '' });
-    const [loading, setLoading]     = useState(false);
-    const [showPass, setShowPass]   = useState(false);
-    const [strength, setStrength]   = useState(0);
+    const [nameForm,  setNameForm]  = useState({ full_name: data?.profile?.full_name || '' });
+    const [loading,   setLoading]   = useState(false);
+    const [showPass,  setShowPass]  = useState(false);
+    const [strength,  setStrength]  = useState(0);
 
     const calcStrength = (pw) => {
         let score = 0;
-        if (pw.length >= 8) score++;
-        if (/[A-Z]/.test(pw)) score++;
-        if (/[0-9]/.test(pw)) score++;
+        if (pw.length >= 8)          score++;
+        if (/[A-Z]/.test(pw))        score++;
+        if (/[0-9]/.test(pw))        score++;
         if (/[^A-Za-z0-9]/.test(pw)) score++;
         setStrength(score);
     };
@@ -1162,18 +1186,17 @@ const SecuritySettings = ({ user, data, onRefresh }) => {
     const handlePasswordUpdate = async (e) => {
         e.preventDefault();
         if (passwords.new !== passwords.confirm) return toast.error('Passwords do not match!');
-        if (passwords.new.length < 6) return toast.error('Password must be at least 6 characters');
+        if (passwords.new.length < 6) return toast.error('Min 6 characters');
         setLoading(true);
         try {
             await axios.put(`${BASE_URL}/api/users/change-password`, {
                 userId: user.id, oldPassword: passwords.old, newPassword: passwords.new
             });
-            toast.success('Password updated successfully!');
+            toast.success('Password updated!');
             setPasswords({ old: '', new: '', confirm: '' });
             setStrength(0);
-        } catch (err) {
-            toast.error(err.response?.data?.message || 'Update failed');
-        } finally { setLoading(false); }
+        } catch(err) { toast.error(err.response?.data?.message || 'Update failed'); }
+        finally { setLoading(false); }
     };
 
     const handleNameUpdate = async (e) => {
@@ -1181,20 +1204,16 @@ const SecuritySettings = ({ user, data, onRefresh }) => {
         if (!nameForm.full_name.trim()) return toast.error('Name cannot be empty');
         setLoading(true);
         try {
-            await axios.put(`${BASE_URL}/api/users/profile/update`, {
-                userId: user.id,
-                full_name: nameForm.full_name,
-            });
+            await axios.put(`${BASE_URL}/api/users/profile/update`, { userId: user.id, full_name: nameForm.full_name });
             toast.success('Name updated!');
             onRefresh();
-        } catch (err) {
-            toast.error('Failed to update name');
-        } finally { setLoading(false); }
+        } catch(err) { toast.error('Failed'); }
+        finally { setLoading(false); }
     };
 
     const strengthConfig = [
-        { label: 'Weak',   color: 'bg-red-400',   text: 'text-red-500' },
-        { label: 'Fair',   color: 'bg-orange-400', text: 'text-orange-500' },
+        { label: 'Weak',   color: 'bg-red-400',   text: 'text-red-500'   },
+        { label: 'Fair',   color: 'bg-orange-400', text: 'text-orange-500'},
         { label: 'Good',   color: 'bg-amber-400',  text: 'text-amber-500' },
         { label: 'Strong', color: 'bg-green-400',  text: 'text-green-500' },
     ];
@@ -1230,19 +1249,19 @@ const SecuritySettings = ({ user, data, onRefresh }) => {
                         </div>
                     </div>
                     <form onSubmit={handlePasswordUpdate} className="max-w-md space-y-4">
-                        <PasswordField label="Current Password" value={passwords.old} show={showPass} onChange={(val) => setPasswords({ ...passwords, old: val })} />
-                        <PasswordField label="New Password" value={passwords.new} show={showPass} onChange={(val) => { setPasswords({ ...passwords, new: val }); calcStrength(val); }} />
+                        <PasswordField label="Current Password"  value={passwords.old}     show={showPass} onChange={v => setPasswords({ ...passwords, old: v })} />
+                        <PasswordField label="New Password"      value={passwords.new}     show={showPass} onChange={v => { setPasswords({ ...passwords, new: v }); calcStrength(v); }} />
                         {passwords.new && (
                             <div>
                                 <div className="flex gap-1 mb-1">
-                                    {[1, 2, 3, 4].map(i => (
-                                        <div key={i} className={`h-1 flex-1 rounded-full transition-all ${i <= strength ? strengthConfig[strength - 1]?.color : 'bg-[#E5E7EB]'}`} />
+                                    {[1,2,3,4].map(i => (
+                                        <div key={i} className={`h-1 flex-1 rounded-full transition-all ${i <= strength ? strengthConfig[strength-1]?.color : 'bg-[#E5E7EB]'}`} />
                                     ))}
                                 </div>
-                                {strength > 0 && <p className={`text-[10px] font-semibold ${strengthConfig[strength - 1]?.text}`}>Password strength: {strengthConfig[strength - 1]?.label}</p>}
+                                {strength > 0 && <p className={`text-[10px] font-semibold ${strengthConfig[strength-1]?.text}`}>Password strength: {strengthConfig[strength-1]?.label}</p>}
                             </div>
                         )}
-                        <PasswordField label="Confirm New Password" value={passwords.confirm} show={showPass} onChange={(val) => setPasswords({ ...passwords, confirm: val })} />
+                        <PasswordField label="Confirm New Password" value={passwords.confirm} show={showPass} onChange={v => setPasswords({ ...passwords, confirm: v })} />
                         {passwords.confirm && passwords.new !== passwords.confirm && <p className="text-[10px] text-red-500 font-semibold flex items-center gap-1"><XCircle size={11} /> Passwords do not match</p>}
                         {passwords.confirm && passwords.new === passwords.confirm && passwords.new && <p className="text-[10px] text-green-500 font-semibold flex items-center gap-1"><CheckCircle size={11} /> Passwords match</p>}
                         <div className="flex gap-3 pt-2">
@@ -1273,12 +1292,12 @@ const SecuritySettings = ({ user, data, onRefresh }) => {
                     <form onSubmit={handleNameUpdate} className="max-w-md space-y-4">
                         <div>
                             <label className="text-[9px] font-bold text-[#EAB308] uppercase tracking-widest mb-2 block">Full Name</label>
-                            <input type="text" value={nameForm.full_name} onChange={(e) => setNameForm({ full_name: e.target.value })} required
+                            <input type="text" value={nameForm.full_name} onChange={e => setNameForm({ full_name: e.target.value })} required
                                 className="w-full bg-[#F8FAFC] border border-[#E5E7EB] rounded-2xl px-5 py-4 text-sm focus:border-[#0B1F3A] outline-none text-[#0F172A] transition-colors font-body"
                                 placeholder="Your full name" />
                         </div>
                         <div className="p-3 bg-blue-50 border border-blue-100 rounded-xl">
-                            <p className="text-[10px] text-blue-600 font-semibold">Current name: <span className="text-blue-800">{data?.profile?.full_name || 'Not set'}</span></p>
+                            <p className="text-[10px] text-blue-600 font-semibold">Current: <span className="text-blue-800">{data?.profile?.full_name || 'Not set'}</span></p>
                         </div>
                         <button type="submit" disabled={loading}
                             className="w-full bg-[#0B1F3A] text-[#EAB308] py-4 rounded-2xl font-bold uppercase text-[10px] tracking-widest hover:opacity-95 disabled:opacity-60 flex items-center justify-center gap-2">
@@ -1310,13 +1329,12 @@ const SecuritySettings = ({ user, data, onRefresh }) => {
     );
 };
 
-// ─── Reusable UI Components ─────────────────────────────────────────────────────
+// ─── Reusable UI ────────────────────────────────────────────────────────────────
 const StatusBadge = ({ status, large }) => {
     const st = getStatus(status);
     return (
         <span className={`inline-flex items-center gap-1.5 font-body font-bold uppercase border rounded-full ${large ? 'px-4 py-2 text-[11px]' : 'px-3 py-1 text-[9px]'} ${st.color} ${st.bg} ${st.border}`}>
-            <span className={`w-1.5 h-1.5 rounded-full ${st.dot}`} />
-            {st.label}
+            <span className={`w-1.5 h-1.5 rounded-full ${st.dot}`} />{st.label}
         </span>
     );
 };
@@ -1331,13 +1349,8 @@ const DetailMeta = ({ label, value, highlight }) => (
 const PasswordField = ({ label, value, onChange, show }) => (
     <div className="font-body">
         <label className="text-[9px] font-bold text-[#EAB308] uppercase tracking-widest mb-2 block">{label}</label>
-        <input
-            type={show ? 'text' : 'password'}
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            required
-            className="w-full bg-[#F8FAFC] border border-[#E5E7EB] rounded-2xl px-5 py-4 text-sm focus:border-[#0B1F3A] outline-none text-[#0F172A] transition-colors"
-        />
+        <input type={show ? 'text' : 'password'} value={value} onChange={e => onChange(e.target.value)} required
+            className="w-full bg-[#F8FAFC] border border-[#E5E7EB] rounded-2xl px-5 py-4 text-sm focus:border-[#0B1F3A] outline-none text-[#0F172A] transition-colors" />
     </div>
 );
 

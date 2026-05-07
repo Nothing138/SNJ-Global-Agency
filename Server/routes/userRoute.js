@@ -82,16 +82,17 @@ router.get('/profile/:id', async (req, res) => {
 });
 
 // ─── 2. Get Applicant Tracking ─────────────────────────────────────────────────
-// Returns { visa, job, flight, trip } values (0–100) from applicant_tracking table
 router.get('/tracking/:userId', async (req, res) => {
     try {
         const userId = req.params.userId;
         const [rows] = await db.query(
-            `SELECT visa, job, flight, trip FROM applicant_tracking WHERE user_id = ?`,
+            `SELECT visa, job, flight, trip,
+                    visit_visa, student_visa, tour_package, citizenship, flight_col
+             FROM applicant_tracking WHERE user_id = ?`,
             [userId]
         );
         if (rows.length === 0) {
-            return res.json({ visa: 0, job: 0, flight: 0, trip: 0 });
+            return res.json({ visa: 0, job: 0, flight: 0, trip: 0, visit_visa: 0, student_visa: 0, tour_package: 0, citizenship: 0, flight_col: 0 });
         }
         res.json(rows[0]);
     } catch (err) {

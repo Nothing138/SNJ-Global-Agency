@@ -5,20 +5,69 @@ const db = require('../config/db');
 const VALID_PROGRESS = [0, 25, 50, 75, 100];
 const VALID_STATUS   = ['pending', 'approved', 'suspended'];
 
+// ── Step labels per service ──────────────────────────────────
+const STEP_LABELS = {
+  visit_visa: [
+    'Document Submission',
+    'Visa Processing',
+    'Embassy Review',
+    'Approval',
+    'Passport Dispatch',
+  ],
+  student_visa: [
+    'Profile Assessment',
+    'University Application',
+    'Offer Letter Received',
+    'Tuition Fee Submission',
+    'Visa Application Processing',
+    'Biometric Appointment',
+    'Visa Approval',
+    'Pre-Departure',
+  ],
+  tour_package: [
+    'Package Confirmation',
+    'Traveler Information Submitted',
+    'Flight & Hotel Booking',
+    'Visa Support Processing',
+    'Travel Documents Ready',
+    'Ready To Travel',
+  ],
+  citizenship: [
+    'Eligibility Assessment',
+    'Document Submission',
+    'Application Processing',
+    'Background Verification',
+    'Biometric Appointment',
+    'Interview',
+    'Citizenship Approval',
+    'Certificate Issued',
+    'Passport Application',
+  ],
+  flight_col: [
+    'Flight Request Submitted',
+    'Ticket Availability Check',
+    'Booking In Process',
+    'Payment Confirmation',
+    'E-Ticket Issued',
+    'Ready To Fly',
+  ],
+};
+
 // GET /api/applicants
 const getAllApplicants = async (req, res) => {
   try {
     const [rows] = await db.query(
       `SELECT
          u.id, u.full_name, u.email,
-         u.status     AS account_status,
-         u.created_at AS joined_at,
-         COALESCE(t.visa,   0)  AS visa,
-         COALESCE(t.job,    0)  AS job,
-         COALESCE(t.flight, 0)  AS flight,
-         COALESCE(t.trip,   0)  AS trip,
-         COALESCE(t.notes, '')  AS notes,
-         t.updated_at           AS last_updated
+         u.status          AS account_status,
+         u.created_at      AS joined_at,
+         COALESCE(t.visit_visa,   0) AS visit_visa,
+         COALESCE(t.student_visa, 0) AS student_visa,
+         COALESCE(t.tour_package, 0) AS tour_package,
+         COALESCE(t.citizenship,  0) AS citizenship,
+         COALESCE(t.flight_col,   0) AS flight_col,
+         COALESCE(t.notes, '')       AS notes,
+         t.updated_at                AS last_updated
        FROM users u
        LEFT JOIN applicant_tracking t ON t.user_id = u.id
        WHERE u.role = 'candidate'
@@ -38,14 +87,15 @@ const getApplicantById = async (req, res) => {
     const [rows] = await db.query(
       `SELECT
          u.id, u.full_name, u.email,
-         u.status     AS account_status,
-         u.created_at AS joined_at,
-         COALESCE(t.visa,   0)  AS visa,
-         COALESCE(t.job,    0)  AS job,
-         COALESCE(t.flight, 0)  AS flight,
-         COALESCE(t.trip,   0)  AS trip,
-         COALESCE(t.notes, '')  AS notes,
-         t.updated_at           AS last_updated
+         u.status          AS account_status,
+         u.created_at      AS joined_at,
+         COALESCE(t.visit_visa,   0) AS visit_visa,
+         COALESCE(t.student_visa, 0) AS student_visa,
+         COALESCE(t.tour_package, 0) AS tour_package,
+         COALESCE(t.citizenship,  0) AS citizenship,
+         COALESCE(t.flight_col,   0) AS flight_col,
+         COALESCE(t.notes, '')       AS notes,
+         t.updated_at                AS last_updated
        FROM users u
        LEFT JOIN applicant_tracking t ON t.user_id = u.id
        WHERE u.id = ? AND u.role = 'candidate'`, [id]
@@ -62,10 +112,10 @@ const getApplicantById = async (req, res) => {
 // PATCH /api/applicants/:id/tracking
 const updateTracking = async (req, res) => {
   const { id } = req.params;
-  const { visa, job, flight, trip, notes, updated_by } = req.body;
+  const { visit_visa, student_visa, tour_package, citizenship, flight_col, notes, updated_by } = req.body;
 
   const updates = {};
-  for (const [key, val] of Object.entries({ visa, job, flight, trip })) {
+  for (const [key, val] of Object.entries({ visit_visa, student_visa, tour_package, citizenship, flight_col })) {
     if (val !== undefined && val !== null && val !== '') {
       const num = parseInt(val, 10);
       if (!VALID_PROGRESS.includes(num))
@@ -97,9 +147,13 @@ const updateTracking = async (req, res) => {
 
     const [rows] = await db.query(
       `SELECT u.id, u.full_name, u.email, u.status AS account_status,
-         COALESCE(t.visa,0) AS visa, COALESCE(t.job,0) AS job,
-         COALESCE(t.flight,0) AS flight, COALESCE(t.trip,0) AS trip,
-         COALESCE(t.notes,'') AS notes, t.updated_at AS last_updated
+         COALESCE(t.visit_visa,0)   AS visit_visa,
+         COALESCE(t.student_visa,0) AS student_visa,
+         COALESCE(t.tour_package,0) AS tour_package,
+         COALESCE(t.citizenship,0)  AS citizenship,
+         COALESCE(t.flight_col,0)   AS flight_col,
+         COALESCE(t.notes,'')       AS notes,
+         t.updated_at               AS last_updated
        FROM users u LEFT JOIN applicant_tracking t ON t.user_id = u.id
        WHERE u.id = ?`, [id]
     );
@@ -110,7 +164,7 @@ const updateTracking = async (req, res) => {
   }
 };
 
-// ✅ PATCH /api/applicants/:id/status  — update users.status
+// PATCH /api/applicants/:id/status
 const updateAccountStatus = async (req, res) => {
   const { id }     = req.params;
   const { status } = req.body;
@@ -141,6 +195,44 @@ const updateAccountStatus = async (req, res) => {
   }
 };
 
+// GET /api/applicants/:id/documents
+const getApplicantDocuments = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const [rows] = await db.query(
+      `SELECT id, doc_type, file_path, original_name, status, admin_note, uploaded_at, updated_at
+       FROM user_documents
+       WHERE user_id = ?
+       ORDER BY uploaded_at DESC`, [id]
+    );
+    return res.json({ success: true, data: rows });
+  } catch (err) {
+    console.error('[getApplicantDocuments]', err);
+    return res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+// PATCH /api/applicants/documents/:docId/status
+const updateDocumentStatus = async (req, res) => {
+  const { docId }              = req.params;
+  const { status, admin_note } = req.body;
+  const VALID_DOC_STATUS       = ['uploaded', 'verified', 'rejected'];
+
+  if (!status || !VALID_DOC_STATUS.includes(status))
+    return res.status(400).json({ success: false, message: 'Invalid doc status' });
+
+  try {
+    await db.query(
+      `UPDATE user_documents SET status = ?, admin_note = ? WHERE id = ?`,
+      [status, admin_note || null, docId]
+    );
+    return res.json({ success: true, message: 'Document status updated' });
+  } catch (err) {
+    console.error('[updateDocumentStatus]', err);
+    return res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
 // POST /api/applicants/bulk-update
 const bulkUpdateTracking = async (req, res) => {
   const { updates } = req.body;
@@ -149,10 +241,10 @@ const bulkUpdateTracking = async (req, res) => {
 
   try {
     for (const item of updates) {
-      const { user_id, visa, job, flight, trip, notes, updated_by } = item;
+      const { user_id, visit_visa, student_visa, tour_package, citizenship, flight_col, notes, updated_by } = item;
       if (!user_id) continue;
       const rowUpdates = {};
-      for (const [key, val] of Object.entries({ visa, job, flight, trip })) {
+      for (const [key, val] of Object.entries({ visit_visa, student_visa, tour_package, citizenship, flight_col })) {
         if (val !== undefined && val !== null) {
           const num = parseInt(val, 10);
           if (VALID_PROGRESS.includes(num)) rowUpdates[key] = num;
@@ -184,5 +276,7 @@ module.exports = {
   getApplicantById,
   updateTracking,
   updateAccountStatus,
+  getApplicantDocuments,
+  updateDocumentStatus,
   bulkUpdateTracking,
 };

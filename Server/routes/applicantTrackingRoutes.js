@@ -8,22 +8,17 @@ const {
   getApplicantById,
   updateTracking,
   updateAccountStatus,
+  getApplicantDocuments,
+  updateDocumentStatus,
   bulkUpdateTracking,
 } = require('../controllers/applicantTrackingController');
 
-// GET  /api/applicants
-router.get('/', getAllApplicants);
-
-// GET  /api/applicants/:id
-router.get('/:id', getApplicantById);
-
-// PATCH /api/applicants/:id/tracking  → visa/job/flight/trip
-router.patch('/:id/tracking', updateTracking);
-
-// ✅ PATCH /api/applicants/:id/status  → pending/approved/suspended
-router.patch('/:id/status', updateAccountStatus);
-
-// POST /api/applicants/bulk-update
-router.post('/bulk-update', bulkUpdateTracking);
+router.get('/',                              getAllApplicants);
+router.get('/:id',                           getApplicantById);
+router.patch('/:id/tracking',                updateTracking);
+router.patch('/:id/status',                  updateAccountStatus);
+router.get('/:id/documents',                 getApplicantDocuments);
+router.patch('/documents/:docId/status',     updateDocumentStatus);
+router.post('/bulk-update',                  bulkUpdateTracking);
 
 module.exports = router;
