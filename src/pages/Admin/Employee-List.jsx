@@ -33,7 +33,7 @@ const EmployeeList = () => {
     const fetchEmployees = async () => {
         setLoading(true);
         try {
-            const res = await axios.get(`http://localhost:5000/api/employer/list`, {
+            const res = await axios.get(`https://snj-global-agency-backend-nhxq.onrender.com/api/employer/list`, {
                 params: { page, limit, search: searchTerm, status: statusFilter }
             });
             setEmployees(res.data.data || []);
@@ -57,7 +57,7 @@ const EmployeeList = () => {
         });
         if (result.isConfirmed) {
             try {
-                await axios.put(`http://localhost:5000/api/employer/status/${id}`, { status: newStatus });
+                await axios.put(`https://snj-global-agency-backend-nhxq.onrender.com/api/employer/status/${id}`, { status: newStatus });
                 Swal.fire('Updated!', 'Employer status changed.', 'success');
                 fetchEmployees();
             } catch {
@@ -77,7 +77,7 @@ const EmployeeList = () => {
         });
         if (result.isConfirmed) {
             try {
-                await axios.delete(`http://localhost:5000/api/employer/${id}`);
+                await axios.delete(`https://snj-global-agency-backend-nhxq.onrender.com/api/employer/${id}`);
                 Swal.fire('Deleted!', 'Employer record removed.', 'success');
                 fetchEmployees();
             } catch {

@@ -19,7 +19,7 @@ const Inbox = () => {
 
     useEffect(() => {
         const fetchChatList = async () => {
-            const res = await axios.get("http://localhost:5000/api/messages/chat-list");
+            const res = await axios.get("https://snj-global-agency-backend-nhxq.onrender.com/api/messages/chat-list");
             setUsers(res.data.users);
         };
         fetchChatList();
@@ -31,7 +31,7 @@ const Inbox = () => {
             socket.emit("join_chat", { room });
 
             const fetchHistory = async () => {
-                const res = await axios.get(`http://localhost:5000/api/messages/history/${adminId}/${selectedUser.id}`);
+                const res = await axios.get(`https://snj-global-agency-backend-nhxq.onrender.com/api/messages/history/${adminId}/${selectedUser.id}`);
                 setMessages(res.data.messages);
             };
             fetchHistory();
@@ -63,7 +63,7 @@ const Inbox = () => {
         };
 
         socket.emit("send_message", messageData);
-        await axios.post("http://localhost:5000/api/messages/send", messageData);
+        await axios.post("https://snj-global-agency-backend-nhxq.onrender.com/api/messages/send", messageData);
 
         setNewMessage("");
         setShowEmoji(false);

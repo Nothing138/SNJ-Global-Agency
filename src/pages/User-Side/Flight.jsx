@@ -13,7 +13,7 @@ import Navbar from '../../components/Navbar';
 import planePhoto from '../../assets/planephoto.jpg';
 import FloatingButton from './FloatingButton';
 
-const API_BASE = 'http://localhost:5000/api';
+const API_BASE = 'https://snj-global-agency-backend-nhxq.onrender.com/api';
 
 const TRIP_TABS = [
     { key: 'oneway', label: 'One Way', icon: Plane },
