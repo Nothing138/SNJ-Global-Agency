@@ -12,7 +12,7 @@ const ALLOWED_ORIGINS = [
     'https://snj-global-agency-3el5.vercel.app',
     'https://snj-global-agency-backend-5uzc.onrender.com',
     'https://snj-global-agency-jflm.vercel.app/',
-    process.env.FRONTEND_URL,       // extra frontend URL (optional)
+    'https://snj-global-agency.vercel.app/',
     'http://localhost:5173',
     'http://localhost:5174',
 ].filter(Boolean);
