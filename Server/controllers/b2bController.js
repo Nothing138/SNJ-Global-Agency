@@ -83,34 +83,49 @@ exports.registerB2B = async (req, res) => {
 
 exports.getAllB2B = async (req, res) => {
     try {
-        let { page = 1, limit = 10, search = '', status = '', sortBy = 'id', sortOrder = 'desc' } = req.query;
+        let { 
+            page = 1, 
+            limit = 10, 
+            search = '', 
+            status = '', 
+            sortBy = 'id', 
+            sortOrder = 'desc' 
+        } = req.query;
 
-        // SQL injection থেকে বাঁচাতে whitelist করো
+        // Whitelist - SQL injection protection
         const allowedSortFields = ['id', 'company_name', 'country', 'created_at'];
         const allowedSortOrders = ['asc', 'desc'];
-
         if (!allowedSortFields.includes(sortBy)) sortBy = 'id';
         if (!allowedSortOrders.includes(sortOrder.toLowerCase())) sortOrder = 'desc';
 
-        const offset = (parseInt(page) - 1) * parseInt(limit);
+        page  = parseInt(page);
+        limit = parseInt(limit);
+        const offset = (page - 1) * limit;
 
-        let query = `SELECT * FROM b2b_partners WHERE (company_name LIKE ? OR full_name LIKE ? OR email LIKE ?)`;
-        let params = [`%${search}%`, `%${search}%`, `%${search}%`];
+        // ⚠️ LIMIT & OFFSET must be numbers, NOT strings
+        // mysql2 এ string হলে crash করে
+        const dataParams = [`%${search}%`, `%${search}%`, `%${search}%`];
+        let dataQuery = `
+            SELECT * FROM b2b_partners 
+            WHERE (company_name LIKE ? OR full_name LIKE ? OR email LIKE ?)
+        `;
 
         if (status) {
-            query += ` AND status = ?`;
-            params.push(status);
+            dataQuery += ` AND status = ?`;
+            dataParams.push(status);
         }
 
-        // ✅ sortBy + sortOrder দুটোই ব্যবহার হচ্ছে এখন
-        query += ` ORDER BY ${sortBy} ${sortOrder.toUpperCase()} LIMIT ? OFFSET ?`;
-        params.push(parseInt(limit), parseInt(offset));
+        // ✅ Template literal এ column/order, ? শুধু values এর জন্য
+        dataQuery += ` ORDER BY \`${sortBy}\` ${sortOrder.toUpperCase()} LIMIT ${limit} OFFSET ${offset}`;
 
-        const [rows] = await db.execute(query, params);
+        const [rows] = await db.execute(dataQuery, dataParams);
 
-        // ✅ Total count ও filter অনুযায়ী হওয়া উচিত
-        let countQuery = `SELECT COUNT(*) as count FROM b2b_partners WHERE (company_name LIKE ? OR full_name LIKE ? OR email LIKE ?)`;
-        let countParams = [`%${search}%`, `%${search}%`, `%${search}%`];
+        // Count query আলাদা
+        const countParams = [`%${search}%`, `%${search}%`, `%${search}%`];
+        let countQuery = `
+            SELECT COUNT(*) as count FROM b2b_partners 
+            WHERE (company_name LIKE ? OR full_name LIKE ? OR email LIKE ?)
+        `;
 
         if (status) {
             countQuery += ` AND status = ?`;
@@ -118,17 +133,21 @@ exports.getAllB2B = async (req, res) => {
         }
 
         const [total] = await db.execute(countQuery, countParams);
+        const totalCount = total[0].count;
 
         res.json({
             success: true,
             data: rows,
             pagination: {
-                total: total[0].count,
-                currentPage: parseInt(page),
-                totalPages: Math.ceil(total[0].count / parseInt(limit))
+                total: totalCount,
+                currentPage: page,
+                totalPages: Math.ceil(totalCount / limit)
             }
         });
+
     } catch (error) {
+        // ✅ এটা add করো — exact error দেখতে পাবে
+        console.error("getAllB2B Error:", error);
         res.status(500).json({ success: false, message: error.message });
     }
 };
