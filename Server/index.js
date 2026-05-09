@@ -44,7 +44,7 @@ const io = new Server(server, {
 
 // ─── Middleware ────────────────────────────────────────────────────────────────
 app.use(cors(corsOptions));
-app.options('*', cors(corsOptions)); // ← preflight requests handle করবে
+app.options(/(.*)/, cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
