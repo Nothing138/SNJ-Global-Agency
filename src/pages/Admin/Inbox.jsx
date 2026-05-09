@@ -5,7 +5,7 @@ import EmojiPicker from 'emoji-picker-react';
 import { motion } from 'framer-motion';
 import { Send, Smile, User, Search, MoreVertical, CheckCheck } from 'lucide-react';
 
-const socket = io("https://snj-global-agency-backend.onrender.com");
+const socket = io("https://localhost:5173");
 
 const Inbox = () => {
     const [users, setUsers] = useState([]);

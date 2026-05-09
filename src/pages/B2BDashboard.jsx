@@ -223,75 +223,115 @@ const B2BDashboard = () => {
     const [selectedFile, setSelectedFile] = useState(null);
     const [updatingId,   setUpdatingId]   = useState(null);
 
-    // ── ✅ Payment form state ─────────────────────────────────────────────────
-    const [payAmount, setPayAmount] = useState('');
-    const [payRef,    setPayRef]    = useState('');
-    const [amtError,  setAmtError]  = useState('');
-
-    const [paymentSummary, setPaymentSummary] = useState({
-        total_paid: 0, pending_payment: 0, credit_balance: 0,
-    });
+    // ── Payment state ─────────────────────────────────────────────────────────
+    const [payAmount,      setPayAmount]      = useState('');
+    const [payRef,         setPayRef]         = useState('');
+    const [amtError,       setAmtError]       = useState('');
+    const [paymentSummary, setPaymentSummary] = useState({ total_paid: 0, pending_payment: 0, credit_balance: 0 });
+    const [payHistory,     setPayHistory]     = useState([]);
+    const [payHistLoading, setPayHistLoading] = useState(false);
+    const [paySuccessMsg,  setPaySuccessMsg]  = useState('');
 
     const navigate    = useNavigate();
     const intervalRef = useRef(null);
 
-    // ── ✅ Dynamic payment redirect ───────────────────────────────────────────
+    // ── Payment redirect handler ──────────────────────────────────────────────
     const handlePaymentRedirect = () => {
         if (!payAmount || parseFloat(payAmount) <= 0) {
             setAmtError('Please enter a valid amount greater than 0');
             return;
         }
         setAmtError('');
+
+        const partnerEmail = partner?.email || null;
+
         navigate('/payment', {
             state: {
-                amount:    parseFloat(payAmount),
-                reference: payRef.trim() || 'SNJ-GENERAL',
-                //partner_id: partnerId,
-                //task_id: taskId,
-                currency:  'usd',
-                label:     'B2B Visa Processing Fee',
+                amount:     parseFloat(payAmount),
+                reference:  payRef.trim() || 'SNJ-GENERAL',
+                partner_id: partner?.id   || null,
+                currency:   'usd',
+                label:      'B2B Visa Processing Fee',
+                userEmail:  partnerEmail,
+                returnTo:   'b2b',
             },
         });
     };
 
-    // ── Fetch all dashboard data ───────────────────────────────────────────────
+    // ── Fetch all dashboard data ──────────────────────────────────────────────
     const fetchAll = async (isBackground = false) => {
         const token = localStorage.getItem('token');
         if (!token) { navigate('/login', { replace: true }); return; }
+
         if (isBackground) setRefreshing(true);
         else              setLoading(true);
+
         const headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
+
         try {
-            const [profileRes, pricingRes, filesRes, paymentRes] = await Promise.all([
+            const [profileRes, pricingRes, filesRes, paymentRes, histRes] = await Promise.all([
                 fetch(`${API_BASE}/api/b2b/dashboard/profile`,         { headers }).then(r => r.json()),
-                fetch(`${API_BASE}/api/b2b/dashboard/pricing`,          { headers }).then(r => r.json()),
-                fetch(`${API_BASE}/api/b2b/dashboard/files`,            { headers }).then(r => r.json()),
-                fetch(`${API_BASE}/api/b2b/dashboard/payment-summary`,  { headers }).then(r => r.json()),
+                fetch(`${API_BASE}/api/b2b/dashboard/pricing`,         { headers }).then(r => r.json()),
+                fetch(`${API_BASE}/api/b2b/dashboard/files`,           { headers }).then(r => r.json()),
+                fetch(`${API_BASE}/api/b2b/dashboard/payment-summary`, { headers }).then(r => r.json()),
+                fetch(`${API_BASE}/api/b2b/dashboard/payment-history`, { headers }).then(r => r.json()),
             ]);
+
             if (profileRes.success && profileRes.data) {
-                setPartner(profileRes.data); setError(null);
+                setPartner(profileRes.data);
+                setError(null);
             } else {
                 if (profileRes.message?.toLowerCase().includes('token')) {
                     localStorage.removeItem('token');
-                    navigate('/login', { replace: true }); return;
+                    navigate('/login', { replace: true });
+                    return;
                 }
                 setError(profileRes.message || 'Failed to load profile');
             }
-            if (pricingRes.success && Array.isArray(pricingRes.data))  setPricingData(pricingRes.data.map(mapPricingRow));
-            if (filesRes.success   && Array.isArray(filesRes.data))    setClientFiles(filesRes.data);
-            if (paymentRes.success && paymentRes.data)                 setPaymentSummary(paymentRes.data);
+
+            if (pricingRes.success && Array.isArray(pricingRes.data))
+                setPricingData(pricingRes.data.map(mapPricingRow));
+
+            if (filesRes.success && Array.isArray(filesRes.data))
+                setClientFiles(filesRes.data);
+
+            if (paymentRes.success && paymentRes.data)
+                setPaymentSummary(paymentRes.data);
+
+            if (histRes.success && Array.isArray(histRes.data))
+                setPayHistory(histRes.data);
+
             setLastUpdated(new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }));
         } catch (err) {
             if (!isBackground) setError(err.message || 'Network error');
         } finally {
-            setLoading(false); setRefreshing(false);
+            setLoading(false);
+            setRefreshing(false);
+            setPayHistLoading(false);
         }
     };
 
-    useEffect(() => { fetchAll(false); }, []);
+    // ── Initial load ──────────────────────────────────────────────────────────
+    useEffect(() => {
+        fetchAll(false);
+    }, []);
+
+    // ── Auto refresh ──────────────────────────────────────────────────────────
     useEffect(() => {
         intervalRef.current = setInterval(() => fetchAll(true), AUTO_REFRESH_MS);
         return () => clearInterval(intervalRef.current);
+    }, []);
+
+    // ── Payment success redirect handler ──────────────────────────────────────
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('payment_success') === '1') {
+            window.history.replaceState({}, '', window.location.pathname);
+            setPaySuccessMsg('✅ Payment successful! Your credit balance has been updated.');
+            setActiveTab('payment');
+            fetchAll(true);
+            setTimeout(() => setPaySuccessMsg(''), 6000);
+        }
     }, []);
 
     const handleRefresh = () => fetchAll(true);
@@ -329,7 +369,7 @@ const B2BDashboard = () => {
     };
 
     // ── Pricing filter ────────────────────────────────────────────────────────
-    const regions        = ['All', 'Asia', 'Europe', 'Oceania', 'Americas', 'Africa'];
+    const regions         = ['All', 'Asia', 'Europe', 'Oceania', 'Americas', 'Africa'];
     const filteredPricing = pricingData.filter(p =>
         (filterRegion === 'All' || p.region === filterRegion) &&
         (p.country.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -477,9 +517,9 @@ const B2BDashboard = () => {
                                 <div style={{ fontSize: 10, fontWeight: 900, color: '#0B1F3A', textTransform: 'uppercase', letterSpacing: 2, marginBottom: 14 }}>Why Partners Trust SNJ</div>
                                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12 }}>
                                     {[
-                                        { icon: '💰', title: 'Exclusive B2B Rates', sub: 'Up to 30% savings'    },
-                                        { icon: '⚡', title: 'Priority Processing',  sub: 'Front of the queue'  },
-                                        { icon: '🛡', title: '99% Success Rate',     sub: 'Expert handling'     },
+                                        { icon: '💰', title: 'Exclusive B2B Rates', sub: 'Up to 30% savings'     },
+                                        { icon: '⚡', title: 'Priority Processing',  sub: 'Front of the queue'   },
+                                        { icon: '🛡', title: '99% Success Rate',     sub: 'Expert handling'      },
                                         { icon: '👤', title: 'Dedicated Support',    sub: 'Your account manager' },
                                     ].map((item, i) => (
                                         <div key={i} style={{ background: '#fff', border: '1px solid #f1f5f9', borderRadius: 16, padding: 16 }}>
@@ -759,16 +799,24 @@ const B2BDashboard = () => {
                         </div>
                     )}
 
-                    {/* ── ✅ PAYMENT — Dynamic amount & reference ───────────── */}
+                    {/* ── PAYMENT ──────────────────────────────────────────── */}
                     {activeTab === 'payment' && (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+
+                            {/* Payment Success Toast */}
+                            {paySuccessMsg && (
+                                <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 14, padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 10 }}>
+                                    <span style={{ fontSize: 18 }}>✅</span>
+                                    <span style={{ fontSize: 13, fontWeight: 700, color: '#15803d' }}>{paySuccessMsg}</span>
+                                </div>
+                            )}
 
                             {/* Summary Cards */}
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12 }}>
                                 {[
-                                    { label: 'Total Paid',      value: `$${paymentSummary.total_paid.toFixed(2)}`,       sub: 'Completed files total', bg: '#f0fdf4', border: '#bbf7d0', color: '#15803d', icon: '✅' },
-                                    { label: 'Pending Payment', value: `$${paymentSummary.pending_payment.toFixed(2)}`,  sub: 'Active files total',    bg: '#fffbeb', border: '#fde68a', color: '#b45309', icon: '⏳' },
-                                    { label: 'Credit Balance',  value: `$${paymentSummary.credit_balance.toFixed(2)}`,   sub: 'Available credit',      bg: '#eff6ff', border: '#bfdbfe', color: '#1d4ed8', icon: '💳' },
+                                    { label: 'Total Paid',      value: `$${paymentSummary.total_paid.toFixed(2)}`,      sub: 'Completed payments total', bg: '#f0fdf4', border: '#bbf7d0', color: '#15803d', icon: '✅' },
+                                    { label: 'Pending Payment', value: `$${paymentSummary.pending_payment.toFixed(2)}`, sub: 'Active files total',       bg: '#fffbeb', border: '#fde68a', color: '#b45309', icon: '⏳' },
+                                    { label: 'Credit Balance',  value: `$${paymentSummary.credit_balance.toFixed(2)}`,  sub: 'Available credit',         bg: '#eff6ff', border: '#bfdbfe', color: '#1d4ed8', icon: '💳' },
                                 ].map((st, i) => (
                                     <div key={i} style={{ background: st.bg, border: `1px solid ${st.border}`, borderRadius: 16, padding: 20 }}>
                                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
@@ -783,7 +831,9 @@ const B2BDashboard = () => {
 
                             {/* Payment Form */}
                             <div style={{ background: '#fff', border: '1px solid #f1f5f9', borderRadius: 18, padding: 22 }}>
-                                <div style={{ fontSize: 10, fontWeight: 900, color: '#0B1F3A', textTransform: 'uppercase', letterSpacing: 2, marginBottom: 20 }}>Make a Payment</div>
+                                <div style={{ fontSize: 10, fontWeight: 900, color: '#0B1F3A', textTransform: 'uppercase', letterSpacing: 2, marginBottom: 20 }}>
+                                    Make a Payment
+                                </div>
                                 <div style={{ maxWidth: 520 }}>
 
                                     {/* Amount */}
@@ -797,7 +847,7 @@ const B2BDashboard = () => {
                                             min="1"
                                             value={payAmount}
                                             onChange={e => { setPayAmount(e.target.value); setAmtError(''); }}
-                                            style={{ width: '100%', padding: '12px 16px', background: '#f8fafc', border: `1px solid ${amtError ? '#ef4444' : '#e2e8f0'}`, borderRadius: 12, fontSize: 13, fontFamily: '"Times New Roman", serif', outline: 'none', boxSizing: 'border-box' }}
+                                            style={{ width: '100%', padding: '12px 16px', background: '#f8fafc', border: `1.5px solid ${amtError ? '#ef4444' : '#e2e8f0'}`, borderRadius: 12, fontSize: 13, fontFamily: '"Times New Roman", serif', outline: 'none', boxSizing: 'border-box' }}
                                         />
                                         {amtError && <div style={{ fontSize: 11, color: '#ef4444', marginTop: 4, fontWeight: 600 }}>{amtError}</div>}
                                     </div>
@@ -809,10 +859,10 @@ const B2BDashboard = () => {
                                         </label>
                                         <input
                                             type="text"
-                                            placeholder="e.g. SNJ-2024-001"
+                                            placeholder="e.g. SNJ-2026-001"
                                             value={payRef}
                                             onChange={e => setPayRef(e.target.value)}
-                                            style={{ width: '100%', padding: '12px 16px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 12, fontSize: 13, fontFamily: '"Times New Roman", serif', outline: 'none', boxSizing: 'border-box' }}
+                                            style={{ width: '100%', padding: '12px 16px', background: '#f8fafc', border: '1.5px solid #e2e8f0', borderRadius: 12, fontSize: 13, fontFamily: '"Times New Roman", serif', outline: 'none', boxSizing: 'border-box' }}
                                         />
                                     </div>
 
@@ -830,18 +880,60 @@ const B2BDashboard = () => {
                                         </div>
                                     )}
 
-                                    {/* Stripe Box */}
-                                    <div style={{ background: '#0B1F3A', borderRadius: 16, padding: 22, marginTop: 8 }}>
-                                        <div style={{ color: '#EAB308', fontSize: 9, fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 8 }}>Payment Gateway — Stripe</div>
-                                        <div style={{ color: '#94a3b8', fontSize: 12, lineHeight: 1.5 }}>Enter the amount above, then proceed to Stripe checkout.</div>
-                                        <button onClick={handlePaymentRedirect}
-                                            style={{ width: '100%', background: '#EAB308', color: '#0B1F3A', border: 'none', padding: 13, borderRadius: 12, fontWeight: 900, textTransform: 'uppercase', fontSize: 12, fontFamily: '"Times New Roman", serif', letterSpacing: 1, cursor: 'pointer', marginTop: 14 }}>
+                                    {/* Stripe CTA */}
+                                    <div style={{ background: '#0B1F3A', borderRadius: 16, padding: 22 }}>
+                                        <div style={{ color: '#EAB308', fontSize: 9, fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 6 }}>
+                                            Payment Gateway — Stripe Secured
+                                        </div>
+                                        <div style={{ color: '#94a3b8', fontSize: 12, lineHeight: 1.6, marginBottom: 14 }}>
+                                            After payment, your credit balance will be updated and a confirmation email will be sent to you and our admin team.
+                                        </div>
+                                        <button
+                                            onClick={handlePaymentRedirect}
+                                            style={{ width: '100%', background: '#EAB308', color: '#0B1F3A', border: 'none', padding: 13, borderRadius: 12, fontWeight: 900, textTransform: 'uppercase', fontSize: 12, fontFamily: '"Times New Roman", serif', letterSpacing: 1, cursor: 'pointer' }}
+                                        >
                                             💳 Proceed to Stripe Payment
                                         </button>
                                     </div>
 
                                 </div>
                             </div>
+
+                            {/* Payment History */}
+                            {payHistLoading ? (
+                                <LoadingSpinner />
+                            ) : payHistory && payHistory.length > 0 ? (
+                                <div style={{ background: '#fff', border: '1px solid #f1f5f9', borderRadius: 18, overflow: 'hidden' }}>
+                                    <div style={{ padding: '14px 22px', borderBottom: '1px solid #f1f5f9', background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                        <div style={{ fontSize: 10, fontWeight: 900, color: '#0B1F3A', textTransform: 'uppercase', letterSpacing: 2 }}>Payment History</div>
+                                        <div style={{ fontSize: 9, color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1 }}>{payHistory.length} transaction{payHistory.length !== 1 ? 's' : ''}</div>
+                                    </div>
+                                    {payHistory.slice(0, 10).map((p, i) => (
+                                        <div key={p.id || i} style={{ padding: '13px 22px', borderBottom: i < Math.min(payHistory.length, 10) - 1 ? '1px solid #f8fafc' : 'none', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                            <div>
+                                                <div style={{ fontSize: 13, fontWeight: 700, color: '#0B1F3A' }}>{p.reference || 'SNJ-GENERAL'}</div>
+                                                <div style={{ fontSize: 9, color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase', marginTop: 2 }}>
+                                                    {p.paid_at
+                                                        ? new Date(p.paid_at).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' })
+                                                        : '—'}
+                                                    {p.task_id ? ` · TASK-${p.task_id}` : ''}
+                                                </div>
+                                            </div>
+                                            <div style={{ textAlign: 'right' }}>
+                                                <div style={{ fontSize: 16, fontWeight: 900, color: '#15803d' }}>${parseFloat(p.amount).toFixed(2)}</div>
+                                                <div style={{ fontSize: 9, color: '#22c55e', fontWeight: 900, textTransform: 'uppercase' }}>✓ Paid</div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div style={{ background: '#fff', border: '1px solid #f1f5f9', borderRadius: 18, padding: '32px 22px', textAlign: 'center' }}>
+                                    <div style={{ fontSize: 28, marginBottom: 8 }}>💳</div>
+                                    <div style={{ fontSize: 13, fontWeight: 700, color: '#0B1F3A', marginBottom: 4 }}>No payment history yet</div>
+                                    <div style={{ fontSize: 11, color: '#94a3b8' }}>Your completed payments will appear here.</div>
+                                </div>
+                            )}
+
                             <Footer />
                         </div>
                     )}
@@ -881,9 +973,9 @@ const B2BDashboard = () => {
                                 <div style={{ background: '#fff', border: '1px solid #f1f5f9', borderRadius: 18, padding: 22 }}>
                                     <div style={{ fontSize: 10, fontWeight: 900, color: '#0B1F3A', textTransform: 'uppercase', letterSpacing: 2, marginBottom: 18 }}>Direct Contact</div>
                                     {[
-                                        { href: 'https://wa.me/8801348992268',    icon: '📱', label: 'WhatsApp — Instant Support', bg: '#f0fdf4', border: '#bbf7d0', color: '#15803d' },
-                                        { href: 'tel:+8801348992268',              icon: '📞', label: '+880 1348-992268',           bg: 'rgba(11,31,58,0.05)', border: 'rgba(11,31,58,0.1)', color: '#0B1F3A' },
-                                        { href: 'mailto:partners@snjglobal.com',   icon: '✉️', label: 'partners@snjglobal.com',   bg: '#eff6ff', border: '#bfdbfe', color: '#1d4ed8' },
+                                        { href: 'https://wa.me/8801348992268',  icon: '📱', label: 'WhatsApp — Instant Support', bg: '#f0fdf4', border: '#bbf7d0', color: '#15803d' },
+                                        { href: 'tel:+8801348992268',            icon: '📞', label: '+880 1348-992268',           bg: 'rgba(11,31,58,0.05)', border: 'rgba(11,31,58,0.1)', color: '#0B1F3A' },
+                                        { href: 'mailto:partners@snjglobal.com', icon: '✉️', label: 'partners@snjglobal.com',   bg: '#eff6ff', border: '#bfdbfe', color: '#1d4ed8' },
                                     ].map((c, i) => (
                                         <a key={i} href={c.href} target={c.href.startsWith('https') ? '_blank' : undefined} rel="noreferrer"
                                             style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 14, borderRadius: 12, fontWeight: 700, fontSize: 13, textDecoration: 'none', marginBottom: 8, background: c.bg, border: `1px solid ${c.border}`, color: c.color, fontFamily: '"Times New Roman", serif' }}>

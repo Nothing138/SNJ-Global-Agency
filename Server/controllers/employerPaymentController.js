@@ -1,3 +1,6 @@
+// controllers/employerPaymentController.js — FULL UPDATED FILE
+// এই পুরো file টা তোমার existing employerPaymentController.js replace করো
+
 const Stripe = require('stripe');
 const db     = require('../config/db');
 
@@ -33,15 +36,14 @@ exports.createCheckoutSession = async (req, res) => {
             return res.status(400).json({ success: false, message: 'employer_id and amount are required' });
         }
 
-        const amountCents = Math.round(parseFloat(amount) * 100); // Stripe uses cents
+        const amountCents = Math.round(parseFloat(amount) * 100);
 
-        // Get employer info for metadata
         const emps = await query('SELECT company_name, email FROM employers WHERE id = ?', [parseInt(employer_id)]);
         if (!emps.length) {
             return res.status(404).json({ success: false, message: 'Employer not found' });
         }
 
-        const frontendUrl = process.env.FRONTEND_URL || 'https://snj-global-agency-3el5.vercel.app';
+        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
 
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ['card'],
@@ -49,10 +51,10 @@ exports.createCheckoutSession = async (req, res) => {
             customer_email: emps[0].email,
             line_items: [{
                 price_data: {
-                    currency: 'usd',
-                    unit_amount: amountCents,
+                    currency:     'usd',
+                    unit_amount:  amountCents,
                     product_data: {
-                        name: 'SNJ GlobalRoutes — Worker Placement Service Fee',
+                        name:        'SNJ GlobalRoutes — Worker Placement Service Fee',
                         description: reference || 'Employer Payment',
                     },
                 },
@@ -64,7 +66,6 @@ exports.createCheckoutSession = async (req, res) => {
                 reference:   reference || 'SNJ-GENERAL',
                 amount:      String(amount),
             },
-            // ─── Success এ employer dashboard payment tab-এ ফিরে আসবে ─────────
             success_url: `${frontendUrl}/employer-dashboard?tab=payment&payment_success=1&amount=${amount}&reference=${encodeURIComponent(reference || 'SNJ-GENERAL')}&request_id=${request_id || ''}&employer_id=${employer_id}`,
             cancel_url:  `${frontendUrl}/employer-dashboard?tab=payment&payment_cancelled=1`,
         });
@@ -112,11 +113,17 @@ exports.recordPayment = async (req, res) => {
                 [new_due, new_paid, parseInt(request_id)]
             );
 
+            // Log to employer_payments
+            await query(
+                `INSERT INTO employer_payments (employer_id, request_id, amount, reference, status)
+                 VALUES (?, ?, ?, ?, 'succeeded')`,
+                [parseInt(employer_id), parseInt(request_id), paid, reference || 'SNJ-GENERAL']
+            );
+
             await notify(
                 parseInt(employer_id),
                 'Payment Recorded ✓',
-                `$${paid.toFixed(2)} payment recorded for REQ-${request_id}. ` +
-                `Remaining due: $${new_due.toFixed(2)}. Ref: ${reference || 'N/A'}.`
+                `$${paid.toFixed(2)} recorded for REQ-${request_id}. Remaining due: $${new_due.toFixed(2)}. Ref: ${reference || 'N/A'}.`
             );
 
             return res.json({
@@ -128,14 +135,11 @@ exports.recordPayment = async (req, res) => {
 
         // ── Auto-distribute across all pending dues (oldest first) ───────────
         const pending = await query(
-            `SELECT * FROM worker_requests
-             WHERE employer_id = ? AND due_payment > 0
-             ORDER BY created_at ASC`,
+            `SELECT * FROM worker_requests WHERE employer_id = ? AND due_payment > 0 ORDER BY created_at ASC`,
             [parseInt(employer_id)]
         );
 
         if (!pending.length) {
-            // No dues — credit to most recent request
             const latest = await query(
                 'SELECT * FROM worker_requests WHERE employer_id = ? ORDER BY created_at DESC LIMIT 1',
                 [parseInt(employer_id)]
@@ -143,6 +147,11 @@ exports.recordPayment = async (req, res) => {
             if (latest.length) {
                 const new_paid = parseFloat((parseFloat(latest[0].total_paid || 0) + paid).toFixed(2));
                 await query('UPDATE worker_requests SET total_paid = ? WHERE id = ?', [new_paid, latest[0].id]);
+                await query(
+                    `INSERT INTO employer_payments (employer_id, request_id, amount, reference, status)
+                     VALUES (?, ?, ?, ?, 'succeeded')`,
+                    [parseInt(employer_id), latest[0].id, paid, reference || 'SNJ-GENERAL']
+                );
             }
             await notify(parseInt(employer_id), 'Payment Received ✓',
                 `$${paid.toFixed(2)} received. No pending dues. Ref: ${reference || 'N/A'}.`);
@@ -150,8 +159,8 @@ exports.recordPayment = async (req, res) => {
             return res.json({ success: true, message: 'Payment recorded. No dues to reduce.', data: { amount_paid: paid } });
         }
 
-        let remaining   = paid;
-        const updates   = [];
+        let remaining = paid;
+        const updates = [];
 
         for (const row of pending) {
             if (remaining <= 0) break;
@@ -164,12 +173,19 @@ exports.recordPayment = async (req, res) => {
                 'UPDATE worker_requests SET due_payment = ?, total_paid = ? WHERE id = ?',
                 [new_due, new_paid, row.id]
             );
+            // Log each distribution
+            await query(
+                `INSERT INTO employer_payments (employer_id, request_id, amount, reference, status)
+                 VALUES (?, ?, ?, ?, 'succeeded')`,
+                [parseInt(employer_id), row.id, deduct, reference || 'SNJ-GENERAL']
+            );
             updates.push({ request_id: row.id, deducted: deduct, new_due });
             remaining = parseFloat((remaining - deduct).toFixed(2));
         }
 
+        const newTotalDue = updates.reduce((s, u) => s + u.new_due, 0);
         await notify(parseInt(employer_id), 'Payment Distributed ✓',
-            `$${paid.toFixed(2)} distributed across ${updates.length} request(s). Ref: ${reference || 'N/A'}.`);
+            `$${paid.toFixed(2)} distributed across ${updates.length} request(s). Remaining due: $${newTotalDue.toFixed(2)}. Ref: ${reference || 'N/A'}.`);
 
         return res.json({
             success: true,
@@ -183,10 +199,36 @@ exports.recordPayment = async (req, res) => {
     }
 };
 
-// ─── 3. Stripe Webhook (optional but recommended for production) ──────────────
+// ─── 3. Get Payment History ───────────────────────────────────────────────────
+// GET /api/employer-payment/history?employer_id=X
+exports.getPaymentHistory = async (req, res) => {
+    try {
+        const { employer_id, limit = 20 } = req.query;
+        if (!employer_id) {
+            return res.status(400).json({ success: false, message: 'employer_id is required' });
+        }
+
+        const rows = await query(
+            `SELECT ep.*, wr.job_title, wr.destination_country, wr.company_name AS request_company
+             FROM employer_payments ep
+             LEFT JOIN worker_requests wr ON wr.id = ep.request_id
+             WHERE ep.employer_id = ?
+             ORDER BY ep.paid_at DESC
+             LIMIT ?`,
+            [parseInt(employer_id), parseInt(limit)]
+        );
+
+        return res.json({ success: true, data: rows });
+    } catch (err) {
+        console.error('getPaymentHistory error:', err);
+        return res.status(500).json({ success: false, message: err.message });
+    }
+};
+
+// ─── 4. Stripe Webhook (production) ──────────────────────────────────────────
 exports.handleWebhook = async (req, res) => {
-    const sig     = req.headers['stripe-signature'];
-    const secret  = process.env.STRIPE_WEBHOOK_SECRET;
+    const sig    = req.headers['stripe-signature'];
+    const secret = process.env.STRIPE_WEBHOOK_SECRET;
 
     let event;
     try {
@@ -200,12 +242,8 @@ exports.handleWebhook = async (req, res) => {
         const { employer_id, request_id, reference, amount } = session.metadata || {};
 
         if (employer_id && amount) {
-            // Reuse our record logic
             const fakeReq = { body: { employer_id, amount_paid: amount, reference, request_id } };
-            const fakeRes = {
-                status: () => ({ json: () => {} }),
-                json:   () => {}
-            };
+            const fakeRes = { status: () => ({ json: () => {} }), json: () => {} };
             await exports.recordPayment(fakeReq, fakeRes);
         }
     }

@@ -194,7 +194,7 @@ const CountryList = () => {
 
                         <div className="h-64 w-full relative overflow-hidden shrink-0">
                             {country.image_url ? (
-                                <img src={`https://snj-global-agency-backend.onrender.com${country.image_url}`} className="w-full h-full object-cover grayscale-[40%] group-hover:grayscale-0 transition-all duration-1000 group-hover:scale-105" alt={country.country_name} />
+                                <img src={`https://localhost:5173${country.image_url}`} className="w-full h-full object-cover grayscale-[40%] group-hover:grayscale-0 transition-all duration-1000 group-hover:scale-105" alt={country.country_name} />
                             ) : (
                                 <div className="w-full h-full bg-[#0B1F3A] flex items-center justify-center text-white italic opacity-20 text-xl tracking-widest">NO ASSET</div>
                             )}

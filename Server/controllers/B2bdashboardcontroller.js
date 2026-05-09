@@ -261,3 +261,25 @@ exports.getPaymentSummary = async (req, res) => {
         return res.status(500).json({ success: false, message: 'Server error', error: err.message });
     }
 };
+
+// GET /api/b2b/dashboard/payment-history
+exports.getPaymentHistory = async (req, res) => {
+    try {
+        const { limit = 20 } = req.query;
+ 
+        const rows = await query(
+            `SELECT bp.*, at.service_type, at.user_name AS client_name
+             FROM b2b_payments bp
+             LEFT JOIN assigned_tasks at ON at.id = bp.task_id
+             WHERE bp.partner_id = ?
+             ORDER BY bp.paid_at DESC
+             LIMIT ?`,
+            [req.partnerId, parseInt(limit)]
+        );
+ 
+        return res.json({ success: true, data: rows });
+    } catch (err) {
+        console.error('[getPaymentHistory] Error:', err.message);
+        return res.status(500).json({ success: false, message: 'Server error', error: err.message });
+    }
+};

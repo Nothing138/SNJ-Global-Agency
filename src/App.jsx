@@ -136,7 +136,6 @@ function App() {
           <Route path="/apply-visa/:visaId" element={<ApplyVisa />} />
           <Route path="/apply-tours/:pkgId" element={<ApplyTours />} />
           <Route path="/employer" element={<EmployerPage />} />
-          <Route path="/employer" element={<EmployerPage />} /> 
 
           <Route path="/destinations/:countryId" element={<ServiceAreaCountry />} />
 

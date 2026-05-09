@@ -183,7 +183,7 @@ const AppliedCandidates = () => {
 
                         {/* Action Buttons */}
                         <div className="flex items-center gap-2 w-full lg:w-auto justify-end">
-                            <a href={`https://snj-global-agency-backend.onrender.com${app.resume_url}`} target="_blank" rel="noreferrer" 
+                            <a href={`https://localhost:5173${app.resume_url}`} target="_blank" rel="noreferrer" 
                                className="p-3 text-slate-400 hover:text-[#0B1F3A] hover:bg-slate-50 transition-all" title="View Dossier">
                                 <FileText size={20}/>
                             </a>

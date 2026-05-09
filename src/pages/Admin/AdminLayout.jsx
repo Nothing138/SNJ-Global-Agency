@@ -76,7 +76,7 @@ const AdminLayout = () => {
         <nav className="flex-1 overflow-y-auto py-8 px-4 space-y-2 custom-scrollbar">
           <SidebarItem to="/admin/dashboard" icon={<LayoutDashboard size={22}/>} label="Executive Panel" isOpen={isSidebarOpen} currentPath={location.pathname} />
           
-          <SidebarItem to="/admin/analytics" icon={<BarChart3 size={22}/>} label="Strategic Insights" isOpen={isSidebarOpen} currentPath={location.pathname} />
+          {/*<SidebarItem to="/admin/analytics" icon={<BarChart3 size={22}/>} label="Strategic Insights" isOpen={isSidebarOpen} currentPath={location.pathname} />*/}
           
           {/* Global Mobility 
           <SidebarDropdown 

@@ -6,7 +6,7 @@ import { X, Copy, CheckCircle2 } from 'lucide-react';
 const BinanceSticker = () => {
   const [showQR, setShowQR] = useState(false);
   const [copied, setCopied] = useState(false);
-  const binanceID = "868302111";
+  const binanceID = "458197230";
 
   const handleCopy = () => {
     navigator.clipboard.writeText(binanceID);

@@ -10,6 +10,7 @@ const {
     getFiles,
     updateFileStatus,
     getPaymentSummary,
+    getPaymentHistory,
 } = require('../controllers/B2bdashboardcontroller'); // adjust path if needed
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -50,11 +51,12 @@ const authMiddleware = (req, res, next) => {
 //  GET   /api/b2b/dashboard/files          → partner's assigned tasks (files)
 //  PATCH /api/b2b/dashboard/files/status   → update a file's status
 // ─────────────────────────────────────────────────────────────────────────────
-router.get  ('/profile',       authMiddleware, getProfile);
-router.get  ('/pricing',       authMiddleware, getPricing);
-router.get  ('/files',         authMiddleware, getFiles);
-router.patch('/files/status',  authMiddleware, updateFileStatus);
-router.get  ('/payment-summary', authMiddleware, getPaymentSummary);
+router.get  ('/profile',            authMiddleware, getProfile);
+router.get  ('/pricing',            authMiddleware, getPricing);
+router.get  ('/files',              authMiddleware, getFiles);
+router.patch('/files/status',       authMiddleware, updateFileStatus);
+router.get  ('/payment-summary',    authMiddleware, getPaymentSummary);
+router.get('/payment-history',      authMiddleware, getPaymentHistory);
 
 module.exports = router;
 

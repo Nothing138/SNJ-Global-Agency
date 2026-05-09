@@ -7,7 +7,7 @@ import {
   Image as ImageIcon, CheckCircle, Plus
 } from 'lucide-react';
 
-const API_BASE = "https://snj-global-agency-backend.onrender.com";
+const API_BASE = "https://localhost:5173";
 
 const TestimonyManagement = () => {
   // --- States ---

@@ -12,7 +12,6 @@ const pool = mysql.createPool({
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
-  // Production (Railway) তে SSL লাগবে, local এ লাগবে না
   ssl: isProduction ? { rejectUnauthorized: false } : false,
 });
 
@@ -20,20 +19,20 @@ const pool = mysql.createPool({
 (async () => {
   try {
     const connection = await pool.getConnection();
-    if (isProduction) {
-      console.log('✅ Connected to Railway MySQL successfully.');
-    } else {
-      console.log('✅ Connected to XAMPP MySQL (phpMyAdmin) successfully.');
-    }
+    console.log(
+      isProduction
+        ? '✅ Connected to Railway MySQL successfully.'
+        : '✅ Connected to XAMPP MySQL (phpMyAdmin) successfully.'
+    );
     connection.release();
   } catch (err) {
     console.error('❌ Database connection failed!');
     console.error('Error Details:', err.message);
-    if (!isProduction) {
-      console.log('\nTroubleshooting: Make sure XAMPP MySQL is started and "game_routes" database exists.');
-    } else {
-      console.log('\nTroubleshooting: Check Railway MySQL credentials in environment variables.');
-    }
+    console.log(
+      isProduction
+        ? '\nTroubleshooting: Check Railway MySQL credentials in Render environment variables.'
+        : '\nTroubleshooting: Make sure XAMPP MySQL is running and "game_routes" database exists.'
+    );
   }
 })();
 
