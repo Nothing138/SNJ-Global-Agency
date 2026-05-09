@@ -42,14 +42,14 @@ const B2BPartnerList = () => {
                     limit,
                     search: searchTerm,
                     status: statusFilter,
-                    sortBy,
-                    sortOrder
+                    sort: sortBy,
+                    //sortOrder
                 }
             });
             if (res.data.success) {
                 setPartners(res.data.data);
                 setTotalPages(res.data.pagination.totalPages);
-                setTotalCount(res.data.pagination.total || res.data.data.length);
+                setTotalCount(res.data.pagination.total );
             }
         } catch (err) {
             console.error("Fetch Error:", err);
@@ -57,7 +57,7 @@ const B2BPartnerList = () => {
         } finally {
             setLoading(false);
         }
-    }, [page, limit, statusFilter, searchTerm, sortBy, sortOrder]);
+    }, [page, limit, statusFilter, searchTerm, sortBy]);
 
     useEffect(() => {
         const delay = setTimeout(() => {
