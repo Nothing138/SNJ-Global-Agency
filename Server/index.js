@@ -10,6 +10,7 @@ const server = http.createServer(app);
 
 const ALLOWED_ORIGINS = [
     'https://snj-global-agency-3el5.vercel.app',
+    'https://snj-global-agency-backend-5uzc.onrender.com',
     process.env.FRONTEND_URL,       // extra frontend URL (optional)
     'http://localhost:5173',
     'http://localhost:5174',

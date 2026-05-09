@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 // ─── Config ────────────────────────────────────────────────────────────────────
-const API_BASE = 'http://localhost:5000/api';
+const API_BASE = 'https://snj-global-agency-backend-5uzc.onrender.com/api';
 const REFRESH_INTERVAL = 30000;
 
 // ─── API Helper ────────────────────────────────────────────────────────────────
@@ -1025,8 +1025,8 @@ const Payment = ({ employerId }) => {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12 }}>
                 {[
                     { label: 'Total Paid',   value: fmt(totals.total_paid),  sub: 'Cumulative payments received',  bg: '#f0fdf4', border: '#bbf7d0', color: '#15803d', icon: '✅' },
-                    { label: 'Pending Due',  value: fmt(totals.due_payment), sub: 'Amount still outstanding',      bg: hasDue ? '#fef2f2' : '#f0fdf4', border: hasDue ? '#fca5a5' : '#bbf7d0', color: hasDue ? '#b91c1c' : '#15803d', icon: hasDue ? '⏳' : '✅' },
-                    { label: 'Balance',      value: fmt(totals.balance),     sub: 'total_paid − due_payment',      bg: totals.balance >= 0 ? '#f0fdf4' : '#fef2f2', border: totals.balance >= 0 ? '#bbf7d0' : '#fca5a5', color: totals.balance >= 0 ? '#15803d' : '#b91c1c', icon: totals.balance >= 0 ? '💰' : '⚠️' },
+                    //{ label: 'Balance',  value: fmt(totals.due_payment), sub: 'Amount still outstanding',      bg: hasDue ? '#fef2f2' : '#f0fdf4', border: hasDue ? '#fca5a5' : '#bbf7d0', color: hasDue ? '#b91c1c' : '#15803d', icon: hasDue ? '⏳' : '✅' },
+                    { label: 'Pending Due',      value: fmt(totals.balance),     sub: 'total_paid − due_payment',      bg: totals.balance >= 0 ? '#f0fdf4' : '#fef2f2', border: totals.balance >= 0 ? '#bbf7d0' : '#fca5a5', color: totals.balance >= 0 ? '#15803d' : '#b91c1c', icon: totals.balance >= 0 ? '💰' : '⚠️' },
                 ].map((st, i) => (
                     <div key={i} style={{ background: st.bg, border: `1px solid ${st.border}`, borderRadius: 16, padding: 20 }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>

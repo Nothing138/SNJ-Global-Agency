@@ -6,7 +6,7 @@ import { Elements }            from '@stripe/react-stripe-js';
 import axios                   from 'axios';
 import CheckoutForm            from '../components/CheckoutForm';
 
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:5000';
+const API_BASE = import.meta.env.VITE_API_BASE || 'https://snj-global-agency-backend-5uzc.onrender.com';
 
 const STRIPE_KEY = 'pk_test_51TQA4ZRrnzZzxpLmM8Fr1RbGPQ1YoayVeYwqBSpSHsJMaS7TN0YECAYncrRTSTMHk6mTEvYyV9qgnk0Ww4dVn3n900E2baUZoJ';
 

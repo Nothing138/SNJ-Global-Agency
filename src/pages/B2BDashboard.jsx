@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 // ─── API CONFIG ───────────────────────────────────────────────────────────────
-const API_BASE        = 'http://localhost:5000';
+const API_BASE        = 'https://snj-global-agency-backend-5uzc.onrender.com';
 const AUTO_REFRESH_MS = 10_000;
 
 // ─── REGION MAPPER ────────────────────────────────────────────────────────────
@@ -816,7 +816,7 @@ const B2BDashboard = () => {
                                 {[
                                     { label: 'Total Paid',      value: `$${paymentSummary.total_paid.toFixed(2)}`,      sub: 'Completed payments total', bg: '#f0fdf4', border: '#bbf7d0', color: '#15803d', icon: '✅' },
                                     { label: 'Pending Payment', value: `$${paymentSummary.pending_payment.toFixed(2)}`, sub: 'Active files total',       bg: '#fffbeb', border: '#fde68a', color: '#b45309', icon: '⏳' },
-                                    { label: 'Credit Balance',  value: `$${paymentSummary.credit_balance.toFixed(2)}`,  sub: 'Available credit',         bg: '#eff6ff', border: '#bfdbfe', color: '#1d4ed8', icon: '💳' },
+                                    //{ label: 'Credit Balance',  value: `$${paymentSummary.credit_balance.toFixed(2)}`,  sub: 'Available credit',         bg: '#eff6ff', border: '#bfdbfe', color: '#1d4ed8', icon: '💳' },
                                 ].map((st, i) => (
                                     <div key={i} style={{ background: st.bg, border: `1px solid ${st.border}`, borderRadius: 16, padding: 20 }}>
                                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>

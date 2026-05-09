@@ -12,7 +12,7 @@ const BlogDetail = () => {
     useEffect(() => {
         const fetchBlogDetails = async () => {
             try {
-                const res = await axios.get(`http://localhost:5000/api/admin/blogs/${slug}`);
+                const res = await axios.get(`https://snj-global-agency-backend-5uzc.onrender.com/api/admin/blogs/${slug}`);
                 setBlog(res.data);
                 setLoading(false);
             } catch (err) {

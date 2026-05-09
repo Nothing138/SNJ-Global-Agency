@@ -18,7 +18,7 @@ const BlogPage = () => {
     useEffect(() => {
         const fetchBlogs = async () => {
             try {
-                const res = await axios.get('http://localhost:5000/api/admin/blogs');
+                const res = await axios.get('https://snj-global-agency-backend-5uzc.onrender.com/api/admin/blogs');
                 setBlogs(res.data);
                 setLoading(false);
             } catch (err) {
