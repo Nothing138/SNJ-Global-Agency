@@ -222,8 +222,9 @@ exports.getAllEmployers = async (req, res) => {
         const offset    = (page - 1) * limit;
         const search    = (req.query.search || '').trim();
         const status    = req.query.status || '';
-        const sortBy    = ['company_name', 'email', 'country', 'industry', 'status', 'created_at'].includes(req.query.sort)
-                          ? req.query.sort : 'created_at';
+
+        const validSortFields = ['company_name', 'email', 'country', 'industry', 'status', 'created_at'];
+        const sortBy    = validSortFields.includes(req.query.sort) ? req.query.sort : 'created_at';
         const sortOrder = req.query.order === 'asc' ? 'ASC' : 'DESC';
 
         const conditions = [];
@@ -247,7 +248,7 @@ exports.getAllEmployers = async (req, res) => {
             `SELECT id, company_name, industry, country, hiring_capacity, email, phone,
                     trade_license, business_reg, owner_id, status, is_email_verified, created_at
              FROM employers ${where}
-             ORDER BY \`${sortBy}\` ${sortOrder}
+             ORDER BY ${sortBy} ${sortOrder}
              LIMIT ? OFFSET ?`,
             [...params, limit, offset]
         );
