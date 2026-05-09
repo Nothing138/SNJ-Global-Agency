@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import axios from 'axios';
 import Swal from 'sweetalert2';
 import {
@@ -6,21 +6,21 @@ import {
 } from 'lucide-react';
 
 const EmployeeList = () => {
-    const [employees, setEmployees]           = useState([]);
-    const [loading, setLoading]               = useState(true);
-    const [searchTerm, setSearchTerm]         = useState('');
-    const [statusFilter, setStatusFilter]     = useState('');
-    const [page, setPage]                     = useState(1);
-    const [limit, setLimit]                   = useState(10);
-    const [totalPages, setTotalPages]         = useState(1);
+    const [employees, setEmployees]               = useState([]);
+    const [loading, setLoading]                   = useState(true);
+    const [searchTerm, setSearchTerm]             = useState('');
+    const [statusFilter, setStatusFilter]         = useState('');
+    const [page, setPage]                         = useState(1);
+    const [limit, setLimit]                       = useState(10);
+    const [totalPages, setTotalPages]             = useState(1);
     const [selectedEmployee, setSelectedEmployee] = useState(null);
-    const [openDropdown, setOpenDropdown]     = useState(null); // which row's dropdown is open
+    const [openDropdown, setOpenDropdown]         = useState(null);
     const dropdownRef = useRef(null);
 
-    // ── Close dropdown when clicking outside ──────────────────────────────
+    // ── FIX 1: Outside click — data-dropdown attribute দিয়ে detect করা ──────
     useEffect(() => {
         const handleClick = (e) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+            if (!e.target.closest('[data-dropdown]')) {
                 setOpenDropdown(null);
             }
         };
@@ -28,21 +28,23 @@ const EmployeeList = () => {
         return () => document.removeEventListener('mousedown', handleClick);
     }, []);
 
-    useEffect(() => { fetchEmployees(); }, [page, limit, statusFilter]);
-
-    const fetchEmployees = async () => {
+    // ── FIX 2: useCallback + সব dependency যোগ করা ─────────────────────────
+    const fetchEmployees = useCallback(async () => {
         setLoading(true);
         try {
-            const res = await axios.get(`https://snj-global-agency-backend-5uzc.onrender.com/api/employer/list`, {
-                params: { page, limit, search: searchTerm, status: statusFilter }
-            });
+            const res = await axios.get(
+                `https://snj-global-agency-backend-5uzc.onrender.com/api/employer/list`,
+                { params: { page, limit, search: searchTerm, status: statusFilter } }
+            );
             setEmployees(res.data.data || []);
             setTotalPages(res.data.pagination?.totalPages || 1);
         } catch (err) {
-            console.error("Error fetching employers:", err);
+            console.error('Error fetching employers:', err);
         }
         setLoading(false);
-    };
+    }, [page, limit, searchTerm, statusFilter]);
+
+    useEffect(() => { fetchEmployees(); }, [fetchEmployees]);
 
     const handleStatusChange = async (id, newStatus) => {
         setOpenDropdown(null);
@@ -57,7 +59,10 @@ const EmployeeList = () => {
         });
         if (result.isConfirmed) {
             try {
-                await axios.put(`https://snj-global-agency-backend-5uzc.onrender.com/api/employer/status/${id}`, { status: newStatus });
+                await axios.put(
+                    `https://snj-global-agency-backend-5uzc.onrender.com/api/employer/status/${id}`,
+                    { status: newStatus }
+                );
                 Swal.fire('Updated!', 'Employer status changed.', 'success');
                 fetchEmployees();
             } catch {
@@ -69,7 +74,7 @@ const EmployeeList = () => {
     const handleDelete = async (id) => {
         const result = await Swal.fire({
             title: 'Permanent Delete?',
-            text: "This cannot be undone!",
+            text: 'This cannot be undone!',
             icon: 'error',
             showCancelButton: true,
             confirmButtonText: 'Delete Now',
@@ -77,7 +82,9 @@ const EmployeeList = () => {
         });
         if (result.isConfirmed) {
             try {
-                await axios.delete(`https://snj-global-agency-backend-5uzc.onrender.com/api/employer/${id}`);
+                await axios.delete(
+                    `https://snj-global-agency-backend-5uzc.onrender.com/api/employer/${id}`
+                );
                 Swal.fire('Deleted!', 'Employer record removed.', 'success');
                 fetchEmployees();
             } catch {
@@ -90,9 +97,9 @@ const EmployeeList = () => {
     const StatusBadge = ({ status }) => {
         const map = {
             approved: 'bg-green-100 text-green-700',
-            pending:  'bg-amber-100  text-amber-700',
-            rejected: 'bg-red-100   text-red-600',
-            blocked:  'bg-gray-100  text-gray-600',
+            pending:  'bg-amber-100 text-amber-700',
+            rejected: 'bg-red-100 text-red-600',
+            blocked:  'bg-gray-100 text-gray-600',
         };
         return (
             <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${map[status] || 'bg-gray-100 text-gray-500'}`}>
@@ -169,6 +176,7 @@ const EmployeeList = () => {
                             <tbody className="divide-y divide-slate-100 dark:divide-white/5">
                                 {employees.map((emp, i) => (
                                     <tr key={emp.id} className="hover:bg-slate-50/60 dark:hover:bg-white/5 transition-colors">
+
                                         {/* # */}
                                         <td className="px-6 py-5">
                                             <span className="text-xs font-bold text-slate-400">
@@ -220,8 +228,14 @@ const EmployeeList = () => {
                                                     <Eye size={15} />
                                                 </button>
 
-                                                {/* Status dropdown — click-based, not hover */}
-                                                <div className="relative" ref={openDropdown === emp.id ? dropdownRef : null}>
+                                                {/* ── FIX 3: conditional ref → callback ref + data-dropdown ── */}
+                                                <div
+                                                    className="relative"
+                                                    data-dropdown
+                                                    ref={(el) => {
+                                                        if (openDropdown === emp.id) dropdownRef.current = el;
+                                                    }}
+                                                >
                                                     <button
                                                         onClick={() => setOpenDropdown(openDropdown === emp.id ? null : emp.id)}
                                                         className="flex items-center gap-1 px-3 py-2.5 bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-white rounded-xl text-xs font-bold hover:bg-[#0B1F3A] hover:text-[#EAB308] transition-all"
@@ -324,8 +338,8 @@ const EmployeeList = () => {
                             ${selectedEmployee.status === 'approved' ? 'bg-green-100 text-green-700' :
                               selectedEmployee.status === 'pending'  ? 'bg-amber-100 text-amber-700' :
                               selectedEmployee.status === 'rejected' ? 'bg-red-100 text-red-700' :
-                              'bg-gray-100 text-gray-600'}`
-                        }>
+                              'bg-gray-100 text-gray-600'}`}
+                        >
                             Account Status: {selectedEmployee.status}
                         </div>
 
@@ -367,7 +381,10 @@ const EmployeeList = () => {
                                 Close
                             </button>
                             <button
-                                onClick={() => { handleStatusChange(selectedEmployee.id, 'approved'); setSelectedEmployee(null); }}
+                                onClick={() => {
+                                    handleStatusChange(selectedEmployee.id, 'approved');
+                                    setSelectedEmployee(null);
+                                }}
                                 className="px-6 py-2.5 rounded-xl bg-[#0B1F3A] text-[#EAB308] text-sm font-black hover:opacity-90 transition-all"
                             >
                                 Approve Employer
@@ -380,7 +397,7 @@ const EmployeeList = () => {
     );
 };
 
-// ── Reusable detail row ────────────────────────────────────────────────────────
+// ── Reusable detail row ───────────────────────────────────────────────────────
 const DetailItem = ({ label, value }) => (
     <div className="flex flex-col gap-1">
         <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{label}</span>
