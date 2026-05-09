@@ -199,7 +199,7 @@ const Hero = () => {
                   color: 'transparent',
                   WebkitTextStroke: '2px rgba(11,31,58,0.22)',
                 }}>
-                Opportunities.
+                <span className="text-4xl md:text-6xl opacity-90">Opportunities.</span>.
               </h1>
             </motion.div>
 

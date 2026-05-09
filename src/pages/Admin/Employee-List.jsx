@@ -28,15 +28,7 @@ const EmployeeList = () => {
         return () => document.removeEventListener('mousedown', handleClick);
     }, []);
 
-    useEffect(() => {
-    const delay = setTimeout(() => {
-        setPage(1);
-        fetchEmployees();
-    }, 400);
-    return () => clearTimeout(delay);
-}, [searchTerm, statusFilter]);
-
-    useEffect(() => { fetchEmployees(); }, [page, limit]);
+    useEffect(() => { fetchEmployees(); }, [page, limit, statusFilter]);
 
     const fetchEmployees = async () => {
         setLoading(true);
@@ -122,7 +114,7 @@ const EmployeeList = () => {
                         className="w-full pl-12 pr-4 py-3 bg-slate-50 dark:bg-white/5 rounded-2xl outline-none focus:ring-2 ring-[#EAB308]/50 transition-all dark:text-white"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        //onKeyDown={(e) => e.key === 'Enter' && fetchEmployees()}
+                        onKeyDown={(e) => e.key === 'Enter' && fetchEmployees()}
                     />
                 </div>
 
