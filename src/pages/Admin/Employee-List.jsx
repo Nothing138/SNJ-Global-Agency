@@ -33,7 +33,7 @@ const EmployeeList = () => {
     const fetchEmployees = async () => {
         setLoading(true);
         try {
-            const res = await axios.get(`https://snj-global-agency-backend-5uzc.onrender.com/api/employer/list`, {
+            const res = await axios.get(`https://snj-global-agency-backend-5uzc.onrender.com/api/list`, {
                 params: { page, limit, search: searchTerm, status: statusFilter }
             });
             setEmployees(res.data.data || []);
