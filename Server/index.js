@@ -8,29 +8,43 @@ require('dotenv').config();
 const app    = express();
 const server = http.createServer(app);
 
-const ALLOWED_ORIGINS = [
-    'https://snj-global-agency-3el5.vercel.app',
-    'https://snj-global-agency-backend-5uzc.onrender.com',
-    'https://snj-global-agency-jflm.vercel.app/',
-    'https://snj-global-agency.vercel.app/',
-    'http://localhost:5173',
-    'http://localhost:5174',
-].filter(Boolean);
+// ─── CORS ──────────────────────────────────────────────────────────────────────
+const corsOptions = {
+    origin: function (origin, callback) {
+        // Allow requests with no origin (mobile apps, curl, etc.)
+        if (!origin) return callback(null, true);
+        // Allow all vercel deployments + localhost
+        if (
+            origin.includes('vercel.app') ||
+            origin.includes('localhost') ||
+            origin.includes('onrender.com')
+        ) {
+            return callback(null, true);
+        }
+        callback(new Error('Not allowed by CORS'));
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+};
 
 // ─── Socket.io ─────────────────────────────────────────────────────────────────
 const io = new Server(server, {
     cors: {
-        origin: ALLOWED_ORIGINS,
+        origin: function (origin, callback) {
+            if (!origin || origin.includes('vercel.app') || origin.includes('localhost') || origin.includes('onrender.com')) {
+                return callback(null, true);
+            }
+            callback(new Error('Not allowed by CORS'));
+        },
         credentials: true,
         methods: ['GET', 'POST', 'PUT', 'DELETE']
     }
 });
 
 // ─── Middleware ────────────────────────────────────────────────────────────────
-app.use(cors({
-    origin: ALLOWED_ORIGINS,
-    credentials: true
-}));
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions)); // ← preflight requests handle করবে
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
