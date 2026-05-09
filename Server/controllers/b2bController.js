@@ -83,8 +83,16 @@ exports.registerB2B = async (req, res) => {
 
 exports.getAllB2B = async (req, res) => {
     try {
-        let { page = 1, limit = 10, search = '', status = '', sort = 'created_at' } = req.query;
-        const offset = (page - 1) * limit;
+        let { page = 1, limit = 10, search = '', status = '', sortBy = 'id', sortOrder = 'desc' } = req.query;
+
+        // SQL injection থেকে বাঁচাতে whitelist করো
+        const allowedSortFields = ['id', 'company_name', 'country', 'created_at'];
+        const allowedSortOrders = ['asc', 'desc'];
+
+        if (!allowedSortFields.includes(sortBy)) sortBy = 'id';
+        if (!allowedSortOrders.includes(sortOrder.toLowerCase())) sortOrder = 'desc';
+
+        const offset = (parseInt(page) - 1) * parseInt(limit);
 
         let query = `SELECT * FROM b2b_partners WHERE (company_name LIKE ? OR full_name LIKE ? OR email LIKE ?)`;
         let params = [`%${search}%`, `%${search}%`, `%${search}%`];
@@ -94,11 +102,22 @@ exports.getAllB2B = async (req, res) => {
             params.push(status);
         }
 
-        query += ` ORDER BY ${sort} DESC LIMIT ? OFFSET ?`;
+        // ✅ sortBy + sortOrder দুটোই ব্যবহার হচ্ছে এখন
+        query += ` ORDER BY ${sortBy} ${sortOrder.toUpperCase()} LIMIT ? OFFSET ?`;
         params.push(parseInt(limit), parseInt(offset));
 
         const [rows] = await db.execute(query, params);
-        const [total] = await db.execute('SELECT COUNT(*) as count FROM b2b_partners');
+
+        // ✅ Total count ও filter অনুযায়ী হওয়া উচিত
+        let countQuery = `SELECT COUNT(*) as count FROM b2b_partners WHERE (company_name LIKE ? OR full_name LIKE ? OR email LIKE ?)`;
+        let countParams = [`%${search}%`, `%${search}%`, `%${search}%`];
+
+        if (status) {
+            countQuery += ` AND status = ?`;
+            countParams.push(status);
+        }
+
+        const [total] = await db.execute(countQuery, countParams);
 
         res.json({
             success: true,
@@ -106,7 +125,7 @@ exports.getAllB2B = async (req, res) => {
             pagination: {
                 total: total[0].count,
                 currentPage: parseInt(page),
-                totalPages: Math.ceil(total[0].count / limit)
+                totalPages: Math.ceil(total[0].count / parseInt(limit))
             }
         });
     } catch (error) {

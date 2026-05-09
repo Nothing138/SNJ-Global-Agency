@@ -190,16 +190,17 @@ const Hero = () => {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.36, duration: 0.7 }}
-              className="mb-8">
+              transition={{ delay: 0.3, duration: 0.7 }}
+              className="mb-8"
+            >
               <h1
-                className="font-black uppercase leading-[0.93] tracking-[-0.02em]"
+                className="font-black uppercase leading-[0.93] tracking-[-0.02em] text-[#0B1F3A]"
                 style={{
-                  fontSize: 'clamp(2.2rem, 5vw, 3.6rem)',
-                  color: 'transparent',
-                  WebkitTextStroke: '2px rgba(11,31,58,0.22)',
-                }}>
-                <span className="text-4xl md:text-6xl opacity-90">Opportunities.</span>.
+                  fontSize: 'clamp(2.2rem, 6.5vw, 4.2rem)',
+                  textShadow: '0 3px 0 rgba(11,31,58,0.07)',
+                }}
+              >
+                Opportunities.
               </h1>
             </motion.div>
 
