@@ -19,6 +19,9 @@ const query = (sql, params = []) => {
 };
 
 // ── Partner tier logic ────────────────────────────────────────────────────────
+
+// ── Partner tier logic ────────────────────────────────────────────────────────
+
 const getTier = (numFiles = 0) => {
     if (numFiles >= 500) return 'Platinum Partner';
     if (numFiles >= 100) return 'Gold Partner';
@@ -43,9 +46,7 @@ const formatDateTime = (date) => {
     });
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
 //  GET  /api/b2b/dashboard/profile
-// ─────────────────────────────────────────────────────────────────────────────
 exports.getProfile = async (req, res) => {
     try {
         const [partnerRows, statsRows] = await Promise.all([
@@ -114,7 +115,6 @@ exports.getProfile = async (req, res) => {
     }
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
 //  GET  /api/b2b/dashboard/pricing
 // ─────────────────────────────────────────────────────────────────────────────
 exports.getPricing = async (req, res) => {
@@ -133,10 +133,8 @@ exports.getPricing = async (req, res) => {
     }
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
 //  GET  /api/b2b/dashboard/files
 //  Returns all assigned_tasks for the logged-in partner
-// ─────────────────────────────────────────────────────────────────────────────
 exports.getFiles = async (req, res) => {
     try {
         const rows = await query(
